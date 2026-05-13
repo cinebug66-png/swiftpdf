@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import {
   Accordion,
   AccordionContent,
@@ -8,6 +7,7 @@ import {
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/lib/app-router";
 import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { getToolPath } from "@/lib/tool-routes";
 import { tools, type Tool } from "@/lib/tools";
@@ -124,8 +124,7 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
                 </h2>
               </div>
               <Link
-                to="/"
-                hash="tools"
+                to="/#tools"
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
               >
                 View all <ArrowRight className="h-4 w-4" />

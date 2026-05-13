@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Sparkles, FileText, ArrowRight, X } from "lucide-react";
 import {
   Dialog,
@@ -7,6 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useNavigate } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import { tools } from "@/lib/tools";
 import { suggestToolsFor } from "@/lib/pending-file";
@@ -28,7 +28,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
     onOpenChange(false);
     const tool = tools.find((item) => item.slug === slug);
     if (!tool) return;
-    navigate({ to: getToolPath(tool.slug) });
+    navigate(getToolPath(tool.slug));
   };
 
   return (

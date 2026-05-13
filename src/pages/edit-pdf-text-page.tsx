@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { ComingSoonToolCard, ToolPageShell } from "@/components/tools/tool-page-shell";
 import { requireTool } from "@/lib/tools";
 
 const tool = requireTool("edit-pdf-text");
 
-export const Route = createFileRoute("/edit-pdf-text")({
-  component: EditPdfTextRoute,
-});
-
-function EditPdfTextRoute() {
+export default function EditPdfTextPage() {
   return (
     <ToolPageShell tool={tool}>
       <ComingSoonToolCard

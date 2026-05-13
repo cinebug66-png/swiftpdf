@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun, FileText, Menu, X } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
+import { Link } from "@/lib/app-router";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -62,7 +62,7 @@ export function Navbar() {
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             <Button variant="hero" className="hidden sm:inline-flex" asChild>
-              <a href="/#tools">Get Started</a>
+              <Link to="/#tools">Get Started</Link>
             </Button>
             <Button
               variant="ghost"
@@ -79,14 +79,14 @@ export function Navbar() {
         {open && (
           <div className="md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3 animate-fade-in">
             {links.map((l) => (
-              <a
+              <Link
                 key={l.href}
-                href={l.href}
+                to={l.href}
                 onClick={() => setOpen(false)}
                 className="text-sm text-foreground/80 hover:text-foreground"
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </div>
         )}

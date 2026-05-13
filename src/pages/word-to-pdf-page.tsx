@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { ComingSoonToolCard, ToolPageShell } from "@/components/tools/tool-page-shell";
 import { requireTool } from "@/lib/tools";
 
 const tool = requireTool("word-to-pdf");
 
-export const Route = createFileRoute("/word-to-pdf")({
-  component: WordToPdfRoute,
-});
-
-function WordToPdfRoute() {
+export default function WordToPdfPage() {
   return (
     <ToolPageShell tool={tool}>
       <ComingSoonToolCard

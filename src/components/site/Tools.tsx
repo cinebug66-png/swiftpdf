@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { Link } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import { tools } from "@/lib/tools";
 

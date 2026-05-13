@@ -1,4 +1,4 @@
-const CLOUDCONVERT_API_BASE = "https://api.cloudconvert.com/v2";
+const CLOUDCONVERT_PROXY_BASE = "/api/cloudconvert";
 
 type CloudConvertOperation =
   | "import/upload"
@@ -58,22 +58,10 @@ export type CloudConvertOutput = {
   outputSize: number;
 };
 
-function getApiKey() {
-  const apiKey = import.meta.env.VITE_CLOUDCONVERT_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "Missing VITE_CLOUDCONVERT_API_KEY in .env.local. Add it and restart the dev server.",
-    );
-  }
-
-  return apiKey;
-}
-
 async function cloudConvertRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${CLOUDCONVERT_API_BASE}${path}`, {
+  const response = await fetch(`${CLOUDCONVERT_PROXY_BASE}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${getApiKey()}`,
       ...(init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...init?.headers,
     },

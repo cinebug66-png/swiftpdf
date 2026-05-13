@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { ComingSoonToolCard, ToolPageShell } from "@/components/tools/tool-page-shell";
 import { requireTool } from "@/lib/tools";
 
 const tool = requireTool("merge-pdf");
 
-export const Route = createFileRoute("/merge-pdf")({
-  component: MergePdfRoute,
-});
-
-function MergePdfRoute() {
+export default function MergePdfPage() {
   return (
     <ToolPageShell tool={tool}>
       <ComingSoonToolCard

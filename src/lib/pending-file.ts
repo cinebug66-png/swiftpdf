@@ -41,7 +41,7 @@ export function suggestToolsFor(file: File): Tool[] {
   const isWord = /\.(docx?|odt)$/.test(name) || /word|officedocument/.test(file.type);
 
   const order: string[] = isPdf
-    ? ["compress-pdf", "pdf-to-word", "merge-pdf", "edit-pdf-text"]
+    ? ["compress-pdf", "pdf-to-word", "merge-pdf", "split-pdf", "edit-pdf-text"]
     : isWord
       ? ["word-to-pdf"]
       : [];

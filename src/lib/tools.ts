@@ -4,6 +4,7 @@ import {
   Combine,
   Minimize2,
   PenLine,
+  Scissors,
   type LucideIcon,
 } from "lucide-react";
 
@@ -75,6 +76,25 @@ export const tools: Tool[] = [
     faqs: [
       { q: "Does merging happen on a server?", a: "No. Merge PDF runs client-side in your browser using pdf-lib." },
       { q: "What file types are supported?", a: "Upload PDF files only. If a file is invalid or corrupted, the page will show a friendly error." },
+    ],
+  },
+  {
+    slug: "split-pdf",
+    icon: Scissors,
+    name: "Split PDF",
+    desc: "Extract selected pages",
+    color: "from-blue-500 to-violet-500",
+    long: "Split a PDF by selecting the exact pages you want to keep, directly in your browser with the same SwiftPDF experience.",
+    cta: "Split PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      { title: "Flexible page selection", desc: "Pick single pages, full ranges, or mixed selections like 1-3,5,7-9." },
+      { title: "Client-side processing", desc: "Your PDF is split directly in the browser with no backend upload required." },
+      { title: "Quick download", desc: "Generate a new PDF with only the pages you want and download it as split.pdf." },
+    ],
+    faqs: [
+      { q: "What page formats are supported?", a: "You can enter single pages, ranges, or mixed values such as 3, 1-5, or 1-3,5,7-9." },
+      { q: "What happens if I enter an invalid range?", a: "The page shows a friendly error if the range is empty, invalid, or outside the total page count." },
     ],
   },
   {

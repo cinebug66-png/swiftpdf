@@ -9,6 +9,7 @@ import CompressPdfPage from "@/pages/compress-pdf-page";
 import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
 import EditPdfTextPage from "@/pages/edit-pdf-text-page";
+import SplitPdfPage from "@/pages/split-pdf-page";
 
 function AppRoutes() {
   const pathname = usePathname();
@@ -18,6 +19,11 @@ function AppRoutes() {
     if (!pathname.startsWith("/tools/")) return;
 
     const slug = pathname.replace(/^\/tools\//, "");
+    if (slug === "split-pdf") {
+      navigate("/split-pdf", { replace: true });
+      return;
+    }
+
     const tool = getTool(slug);
     navigate(tool ? getToolPath(tool.slug) : "/", { replace: true });
   }, [navigate, pathname]);
@@ -28,6 +34,7 @@ function AppRoutes() {
       "/pdf-to-word": "PDF to Word - SwiftPDF",
       "/compress-pdf": "Compress PDF - SwiftPDF",
       "/merge-pdf": "Merge PDF - SwiftPDF",
+      "/split-pdf": "Split PDF - SwiftPDF",
       "/word-to-pdf": "Word to PDF - SwiftPDF",
       "/edit-pdf-text": "Edit PDF Text - SwiftPDF",
     };
@@ -44,6 +51,8 @@ function AppRoutes() {
       return <CompressPdfPage />;
     case "/merge-pdf":
       return <MergePdfPage />;
+    case "/split-pdf":
+      return <SplitPdfPage />;
     case "/word-to-pdf":
       return <WordToPdfPage />;
     case "/edit-pdf-text":

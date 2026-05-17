@@ -2,6 +2,7 @@ import {
   FileText,
   FileType2,
   Combine,
+  Images,
   Minimize2,
   PenLine,
   Scissors,
@@ -33,13 +34,63 @@ export const tools: Tool[] = [
     cta: "Convert to Word",
     accept: ".pdf,application/pdf",
     benefits: [
-      { title: "Editable DOCX output", desc: "Download a Word document you can continue editing right away." },
-      { title: "CloudConvert powered", desc: "Uses the CloudConvert REST API directly from this Vite React project." },
-      { title: "Simple browser flow", desc: "Upload, wait, and download without leaving the page." },
+      {
+        title: "Editable DOCX output",
+        desc: "Download a Word document you can continue editing right away.",
+      },
+      {
+        title: "CloudConvert powered",
+        desc: "Uses the CloudConvert REST API directly from this Vite React project.",
+      },
+      {
+        title: "Simple browser flow",
+        desc: "Upload, wait, and download without leaving the page.",
+      },
     ],
     faqs: [
-      { q: "Will my formatting be preserved?", a: "CloudConvert is designed to preserve layout, fonts, tables, and images as closely as possible." },
-      { q: "Do I need to install anything?", a: "No. The conversion runs from the browser using your CloudConvert API key." },
+      {
+        q: "Will my formatting be preserved?",
+        a: "CloudConvert is designed to preserve layout, fonts, tables, and images as closely as possible.",
+      },
+      {
+        q: "Do I need to install anything?",
+        a: "No. The conversion runs from the browser using your CloudConvert API key.",
+      },
+    ],
+  },
+  {
+    slug: "jpg-to-pdf",
+    icon: Images,
+    name: "JPG to PDF",
+    desc: "Convert images into PDF",
+    color: "from-blue-500 to-violet-500",
+    long: "Convert JPG, PNG, and WEBP images into a single PDF directly in your browser while keeping the existing SwiftPDF experience exactly the same.",
+    cta: "Convert to PDF",
+    accept: ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
+    multiple: true,
+    benefits: [
+      {
+        title: "Multiple image support",
+        desc: "Upload several JPG, PNG, or WEBP files and combine them into one PDF.",
+      },
+      {
+        title: "Client-side conversion",
+        desc: "Everything runs directly in your browser with jsPDF and no backend upload.",
+      },
+      {
+        title: "Fast PDF download",
+        desc: "Generate and download your finished PDF in a single smooth flow.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Can I upload more than one image?",
+        a: "Yes. Add multiple JPG, PNG, or WEBP files and SwiftPDF will turn them into one PDF.",
+      },
+      {
+        q: "Does JPG to PDF use a server?",
+        a: "No. The conversion runs client-side in your browser using jsPDF.",
+      },
     ],
   },
   {
@@ -52,11 +103,22 @@ export const tools: Tool[] = [
     cta: "Convert to PDF",
     accept: ".doc,.docx",
     benefits: [
-      { title: "Planned DOCX support", desc: "This page is already set up so the feature can be added later." },
+      {
+        title: "Planned DOCX support",
+        desc: "This page is already set up so the feature can be added later.",
+      },
       { title: "Consistent UI", desc: "The design matches the rest of the SwiftPDF tool pages." },
-      { title: "Future-ready route", desc: "The public path is already in place for a smooth later launch." },
+      {
+        title: "Future-ready route",
+        desc: "The public path is already in place for a smooth later launch.",
+      },
     ],
-    faqs: [{ q: "Is Word to PDF live yet?", a: "Not yet. This page currently shows a clean coming-soon state." }],
+    faqs: [
+      {
+        q: "Is Word to PDF live yet?",
+        a: "Not yet. This page currently shows a clean coming-soon state.",
+      },
+    ],
   },
   {
     slug: "merge-pdf",
@@ -69,13 +131,28 @@ export const tools: Tool[] = [
     accept: ".pdf,application/pdf",
     multiple: true,
     benefits: [
-      { title: "Client-side merging", desc: "Your PDF files are merged directly in the browser with no backend upload required." },
-      { title: "Multiple file support", desc: "Add several PDFs, remove individual files, and merge them in one flow." },
-      { title: "Instant download", desc: "The final combined file downloads automatically as merged.pdf." },
+      {
+        title: "Client-side merging",
+        desc: "Your PDF files are merged directly in the browser with no backend upload required.",
+      },
+      {
+        title: "Multiple file support",
+        desc: "Add several PDFs, remove individual files, and merge them in one flow.",
+      },
+      {
+        title: "Instant download",
+        desc: "The final combined file downloads automatically as merged.pdf.",
+      },
     ],
     faqs: [
-      { q: "Does merging happen on a server?", a: "No. Merge PDF runs client-side in your browser using pdf-lib." },
-      { q: "What file types are supported?", a: "Upload PDF files only. If a file is invalid or corrupted, the page will show a friendly error." },
+      {
+        q: "Does merging happen on a server?",
+        a: "No. Merge PDF runs client-side in your browser using pdf-lib.",
+      },
+      {
+        q: "What file types are supported?",
+        a: "Upload PDF files only. If a file is invalid or corrupted, the page will show a friendly error.",
+      },
     ],
   },
   {
@@ -88,13 +165,28 @@ export const tools: Tool[] = [
     cta: "Split PDF",
     accept: ".pdf,application/pdf",
     benefits: [
-      { title: "Flexible page selection", desc: "Pick single pages, full ranges, or mixed selections like 1-3,5,7-9." },
-      { title: "Client-side processing", desc: "Your PDF is split directly in the browser with no backend upload required." },
-      { title: "Quick download", desc: "Generate a new PDF with only the pages you want and download it as split.pdf." },
+      {
+        title: "Flexible page selection",
+        desc: "Pick single pages, full ranges, or mixed selections like 1-3,5,7-9.",
+      },
+      {
+        title: "Client-side processing",
+        desc: "Your PDF is split directly in the browser with no backend upload required.",
+      },
+      {
+        title: "Quick download",
+        desc: "Generate a new PDF with only the pages you want and download it as split.pdf.",
+      },
     ],
     faqs: [
-      { q: "What page formats are supported?", a: "You can enter single pages, ranges, or mixed values such as 3, 1-5, or 1-3,5,7-9." },
-      { q: "What happens if I enter an invalid range?", a: "The page shows a friendly error if the range is empty, invalid, or outside the total page count." },
+      {
+        q: "What page formats are supported?",
+        a: "You can enter single pages, ranges, or mixed values such as 3, 1-5, or 1-3,5,7-9.",
+      },
+      {
+        q: "What happens if I enter an invalid range?",
+        a: "The page shows a friendly error if the range is empty, invalid, or outside the total page count.",
+      },
     ],
   },
   {
@@ -108,12 +200,24 @@ export const tools: Tool[] = [
     accept: ".pdf,application/pdf",
     benefits: [
       { title: "Smaller files", desc: "Optimize PDFs for easier sharing and upload." },
-      { title: "Size comparison", desc: "The page shows original and compressed file sizes when the result is ready." },
-      { title: "CloudConvert REST API", desc: "Compression runs through CloudConvert using your VITE_CLOUDCONVERT_API_KEY." },
+      {
+        title: "Size comparison",
+        desc: "The page shows original and compressed file sizes when the result is ready.",
+      },
+      {
+        title: "CloudConvert REST API",
+        desc: "Compression runs through CloudConvert using your VITE_CLOUDCONVERT_API_KEY.",
+      },
     ],
     faqs: [
-      { q: "How much can I reduce?", a: "The result depends on the PDF, but the app shows the before and after size when possible." },
-      { q: "Will the PDF still look good?", a: "The page uses CloudConvert's web optimization profile to keep the document readable while reducing size." },
+      {
+        q: "How much can I reduce?",
+        a: "The result depends on the PDF, but the app shows the before and after size when possible.",
+      },
+      {
+        q: "Will the PDF still look good?",
+        a: "The page uses CloudConvert's web optimization profile to keep the document readable while reducing size.",
+      },
     ],
   },
   {
@@ -126,11 +230,25 @@ export const tools: Tool[] = [
     cta: "Open Editor",
     accept: ".pdf,application/pdf",
     benefits: [
-      { title: "Planned text editing", desc: "Inline PDF text tools are being prepared for a future update." },
-      { title: "Route already live", desc: "The page is already available at its final public URL." },
-      { title: "Same SwiftPDF design", desc: "The coming-soon screen fits seamlessly into the current site." },
+      {
+        title: "Planned text editing",
+        desc: "Inline PDF text tools are being prepared for a future update.",
+      },
+      {
+        title: "Route already live",
+        desc: "The page is already available at its final public URL.",
+      },
+      {
+        title: "Same SwiftPDF design",
+        desc: "The coming-soon screen fits seamlessly into the current site.",
+      },
     ],
-    faqs: [{ q: "Can I edit PDF text today?", a: "Not yet. This route currently shows a clean coming-soon page." }],
+    faqs: [
+      {
+        q: "Can I edit PDF text today?",
+        a: "Not yet. This route currently shows a clean coming-soon page.",
+      },
+    ],
   },
 ];
 

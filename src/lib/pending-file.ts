@@ -39,12 +39,15 @@ export function suggestToolsFor(file: File): Tool[] {
   const name = file.name.toLowerCase();
   const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
   const isWord = /\.(docx?|odt)$/.test(name) || /word|officedocument/.test(file.type);
+  const isImage = /\.(jpe?g|png|webp)$/.test(name) || /^image\/(jpeg|png|webp)$/.test(file.type);
 
   const order: string[] = isPdf
     ? ["compress-pdf", "pdf-to-word", "merge-pdf", "split-pdf", "edit-pdf-text"]
     : isWord
       ? ["word-to-pdf"]
-      : [];
+      : isImage
+        ? ["jpg-to-pdf"]
+        : [];
 
   return order
     .map((slug) => tools.find((tool) => tool.slug === slug))

@@ -19,12 +19,12 @@ export function Tools() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))] [grid-auto-rows:1fr] gap-4 sm:gap-6">
           {tools.map((t) => (
             <Link
               key={t.slug}
               to={getToolPath(t.slug)}
-              className="group relative rounded-2xl p-6 bg-card border border-border shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
+              className="group relative h-full rounded-2xl p-6 bg-card border border-border shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
             >
               <div
                 className={`w-11 h-11 rounded-xl bg-gradient-to-br ${t.color} grid place-items-center text-white shadow-soft mb-4`}

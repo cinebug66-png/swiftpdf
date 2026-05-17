@@ -10,6 +10,7 @@ import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
 import EditPdfTextPage from "@/pages/edit-pdf-text-page";
 import SplitPdfPage from "@/pages/split-pdf-page";
+import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 
 function AppRoutes() {
   const pathname = usePathname();
@@ -35,6 +36,7 @@ function AppRoutes() {
       "/compress-pdf": "Compress PDF - SwiftPDF",
       "/merge-pdf": "Merge PDF - SwiftPDF",
       "/split-pdf": "Split PDF - SwiftPDF",
+      "/jpg-to-pdf": "JPG to PDF - SwiftPDF",
       "/word-to-pdf": "Word to PDF - SwiftPDF",
       "/edit-pdf-text": "Edit PDF Text - SwiftPDF",
     };
@@ -53,6 +55,8 @@ function AppRoutes() {
       return <MergePdfPage />;
     case "/split-pdf":
       return <SplitPdfPage />;
+    case "/jpg-to-pdf":
+      return <JpgToPdfPage />;
     case "/word-to-pdf":
       return <WordToPdfPage />;
     case "/edit-pdf-text":

@@ -42,7 +42,7 @@ export function suggestToolsFor(file: File): Tool[] {
   const isImage = /\.(jpe?g|png|webp)$/.test(name) || /^image\/(jpeg|png|webp)$/.test(file.type);
 
   const order: string[] = isPdf
-    ? ["compress-pdf", "pdf-to-word", "merge-pdf", "split-pdf"]
+    ? ["compress-pdf", "pdf-to-word", "merge-pdf", "split-pdf", "watermark-pdf"]
     : isWord
       ? ["word-to-pdf"]
       : isImage

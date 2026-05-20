@@ -3,7 +3,7 @@ import { FileText, Twitter, Github, Linkedin } from "lucide-react";
 const cols = [
   {
     title: "Tools",
-    links: ["PDF to Word", "Merge PDF", "Compress PDF", "Split PDF", "JPG to PDF"],
+    links: ["PDF to Word", "Merge PDF", "Compress PDF", "Watermark PDF", "Split PDF"],
   },
   {
     title: "Company",

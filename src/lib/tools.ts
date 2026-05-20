@@ -5,6 +5,7 @@ import {
   Images,
   Minimize2,
   Scissors,
+  Type,
   type LucideIcon,
 } from "lucide-react";
 
@@ -216,6 +217,40 @@ export const tools: Tool[] = [
       {
         q: "Will the PDF still look good?",
         a: "The page uses CloudConvert's web optimization profile to keep the document readable while reducing size.",
+      },
+    ],
+  },
+  {
+    slug: "watermark-pdf",
+    icon: Type,
+    name: "Watermark PDF",
+    desc: "Add text watermark",
+    color: "from-indigo-500 to-sky-500",
+    long: "Add a custom text watermark to every page of a PDF directly in your browser while keeping SwiftPDF fast and private.",
+    cta: "Add Watermark",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Custom watermark text",
+        desc: "Choose the text you want stamped across every page.",
+      },
+      {
+        title: "Adjustable appearance",
+        desc: "Control opacity, font size, and rotation before creating the final PDF.",
+      },
+      {
+        title: "Client-side processing",
+        desc: "Watermarks are applied in your browser with pdf-lib and no server upload.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does Watermark PDF use a server?",
+        a: "No. The watermark is applied client-side in your browser using pdf-lib.",
+      },
+      {
+        q: "Can I change the watermark style?",
+        a: "Yes. You can adjust the watermark text, opacity, font size, and rotation.",
       },
     ],
   },

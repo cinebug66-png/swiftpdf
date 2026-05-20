@@ -223,6 +223,58 @@ export async function convertPdfToWord(
   };
 }
 
+function getWordInputFormat(file: File) {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+
+  if (extension === "doc" || extension === "docx") {
+    return extension;
+  }
+
+  throw new Error("Please upload a DOC or DOCX file.");
+}
+
+export async function convertWordToPdf(
+  file: File,
+  onUpdate?: (job: CloudConvertJob) => void,
+): Promise<CloudConvertOutput> {
+  const inputFormat = getWordInputFormat(file);
+  const outputFilename = replaceExtension(file.name, ".pdf");
+
+  const job = await createJob({
+    tag: "swiftpdf-word-to-pdf",
+    tasks: {
+      "upload-file": {
+        operation: "import/upload",
+      },
+      "convert-file": {
+        operation: "convert",
+        input: "upload-file",
+        input_format: inputFormat,
+        output_format: "pdf",
+        filename: outputFilename,
+      },
+      "export-file": {
+        operation: "export/url",
+        input: "convert-file",
+      },
+    },
+  });
+
+  await uploadFileToTask(findTask(job, "upload-file"), file);
+  const finishedJob = await waitForJob(job.id, onUpdate);
+  const exportFile = getExportFile(finishedJob);
+  const blob = await downloadOutputFile(exportFile);
+
+  return {
+    blob,
+    filename: exportFile.filename || outputFilename,
+    downloadUrl: createDownloadUrl(blob),
+    job: finishedJob,
+    originalSize: file.size,
+    outputSize: blob.size,
+  };
+}
+
 export async function compressPdf(
   file: File,
   onUpdate?: (job: CloudConvertJob) => void,

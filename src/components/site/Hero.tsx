@@ -34,7 +34,7 @@ export function Hero() {
             Trusted by 2M+ users worldwide
           </div>
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05]">
-            Convert & Edit PDFs <br className="hidden sm:block" />
+            Convert & Manage PDFs <br className="hidden sm:block" />
             <span className="text-gradient">Instantly.</span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">

@@ -8,7 +8,6 @@ import PdfToWordPage from "@/pages/pdf-to-word-page";
 import CompressPdfPage from "@/pages/compress-pdf-page";
 import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
-import EditPdfTextPage from "@/pages/edit-pdf-text-page";
 import SplitPdfPage from "@/pages/split-pdf-page";
 import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 
@@ -38,7 +37,6 @@ function AppRoutes() {
       "/split-pdf": "Split PDF - SwiftPDF",
       "/jpg-to-pdf": "JPG to PDF - SwiftPDF",
       "/word-to-pdf": "Word to PDF - SwiftPDF",
-      "/edit-pdf-text": "Edit PDF Text - SwiftPDF",
     };
 
     document.title = titles[pathname] ?? "SwiftPDF";
@@ -59,8 +57,6 @@ function AppRoutes() {
       return <JpgToPdfPage />;
     case "/word-to-pdf":
       return <WordToPdfPage />;
-    case "/edit-pdf-text":
-      return <EditPdfTextPage />;
     default:
       return <HomePage />;
   }

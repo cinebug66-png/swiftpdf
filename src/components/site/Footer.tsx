@@ -3,7 +3,7 @@ import { FileText, Twitter, Github, Linkedin } from "lucide-react";
 const cols = [
   {
     title: "Tools",
-    links: ["PDF to Word", "Merge PDF", "Compress PDF", "Edit PDF", "Split PDF"],
+    links: ["PDF to Word", "Merge PDF", "Compress PDF", "Split PDF", "JPG to PDF"],
   },
   {
     title: "Company",
@@ -28,7 +28,7 @@ export function Footer() {
               <span className="text-lg">SwiftPDF</span>
             </a>
             <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-              The fastest way to convert, edit and manage PDFs. Built with care.
+              The fastest way to convert and manage PDFs. Built with care.
             </p>
             <div className="mt-5 flex gap-2">
               {[Twitter, Github, Linkedin].map((Icon, i) => (

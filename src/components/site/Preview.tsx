@@ -1,4 +1,4 @@
-import { FileText, Type, PenLine, Highlighter, Image as ImageIcon, Square, Download } from "lucide-react";
+import { Combine, Download, FileText, FileType2, Minimize2, Scissors } from "lucide-react";
 
 export function Preview() {
   return (
@@ -7,10 +7,10 @@ export function Preview() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
-            Live editor
+            Tool preview
           </div>
           <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight">
-            A delightful PDF studio in your browser
+            A delightful PDF toolkit in your browser
           </h2>
         </div>
 
@@ -27,11 +27,11 @@ export function Preview() {
             <div className="grid grid-cols-12 min-h-[420px]">
               {/* sidebar */}
               <div className="col-span-2 border-r border-border p-3 hidden sm:block">
-                {[Type, PenLine, Highlighter, ImageIcon, Square].map((Icon, i) => (
+                {[FileType2, Combine, Minimize2, Scissors].map((Icon, i) => (
                   <button
                     key={i}
                     className={`w-full aspect-square rounded-xl grid place-items-center mb-2 ${
-                      i === 1 ? "bg-gradient-primary text-primary-foreground shadow-soft" : "hover:bg-accent"
+                      i === 0 ? "bg-gradient-primary text-primary-foreground shadow-soft" : "hover:bg-accent"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -49,7 +49,7 @@ export function Preview() {
                   <div className="h-1.5 w-full bg-muted-foreground/30 rounded mb-1.5" />
                   <div className="h-1.5 w-9/12 bg-muted-foreground/30 rounded mb-1.5" />
                   <div className="h-1.5 w-11/12 bg-muted-foreground/30 rounded mb-3" />
-                  <div className="inline-block px-2 py-0.5 rounded bg-yellow-300/50 text-[8px]">highlighted</div>
+                  <div className="inline-block px-2 py-0.5 rounded bg-primary/15 text-[8px] text-primary">ready</div>
                 </div>
               </div>
               {/* right panel */}

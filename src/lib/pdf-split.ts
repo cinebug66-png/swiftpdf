@@ -99,7 +99,8 @@ export async function splitPdf(file: File, rangeInput: string): Promise<Uint8Arr
 }
 
 export function createPdfDownloadUrl(bytes: Uint8Array) {
-  const blob = new Blob([bytes], { type: "application/pdf" });
+  const normalizedBytes = new Uint8Array(bytes);
+  const blob = new Blob([normalizedBytes], { type: "application/pdf" });
   return URL.createObjectURL(blob);
 }
 

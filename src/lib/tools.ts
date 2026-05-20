@@ -4,7 +4,6 @@ import {
   Combine,
   Images,
   Minimize2,
-  PenLine,
   Scissors,
   type LucideIcon,
 } from "lucide-react";
@@ -99,24 +98,24 @@ export const tools: Tool[] = [
     name: "Word to PDF",
     desc: "Pixel-perfect conversion",
     color: "from-indigo-500 to-violet-500",
-    long: "Turn DOC and DOCX files into clean PDFs. This route is ready and reserved for a future release.",
+    long: "Turn DOC and DOCX files into clean PDFs with CloudConvert while keeping the existing SwiftPDF experience simple.",
     cta: "Convert to PDF",
     accept: ".doc,.docx",
     benefits: [
       {
-        title: "Planned DOCX support",
-        desc: "This page is already set up so the feature can be added later.",
+        title: "DOC and DOCX support",
+        desc: "Upload Word documents and convert them into shareable PDF files.",
       },
       { title: "Consistent UI", desc: "The design matches the rest of the SwiftPDF tool pages." },
       {
-        title: "Future-ready route",
-        desc: "The public path is already in place for a smooth later launch.",
+        title: "CloudConvert powered",
+        desc: "Conversion runs through the same CloudConvert REST flow used by SwiftPDF.",
       },
     ],
     faqs: [
       {
-        q: "Is Word to PDF live yet?",
-        a: "Not yet. This page currently shows a clean coming-soon state.",
+        q: "Which Word files are supported?",
+        a: "You can upload DOC or DOCX files and download the converted result as a PDF.",
       },
     ],
   },
@@ -217,36 +216,6 @@ export const tools: Tool[] = [
       {
         q: "Will the PDF still look good?",
         a: "The page uses CloudConvert's web optimization profile to keep the document readable while reducing size.",
-      },
-    ],
-  },
-  {
-    slug: "edit-pdf-text",
-    icon: PenLine,
-    name: "Edit PDF Text",
-    desc: "Text editing coming soon",
-    color: "from-violet-500 to-purple-500",
-    long: "Edit text inside PDF documents with a clean workflow. This route is reserved for a future release.",
-    cta: "Open Editor",
-    accept: ".pdf,application/pdf",
-    benefits: [
-      {
-        title: "Planned text editing",
-        desc: "Inline PDF text tools are being prepared for a future update.",
-      },
-      {
-        title: "Route already live",
-        desc: "The page is already available at its final public URL.",
-      },
-      {
-        title: "Same SwiftPDF design",
-        desc: "The coming-soon screen fits seamlessly into the current site.",
-      },
-    ],
-    faqs: [
-      {
-        q: "Can I edit PDF text today?",
-        a: "Not yet. This route currently shows a clean coming-soon page.",
       },
     ],
   },

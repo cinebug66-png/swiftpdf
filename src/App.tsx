@@ -12,6 +12,7 @@ import SplitPdfPage from "@/pages/split-pdf-page";
 import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 import WatermarkPdfPage from "@/pages/watermark-pdf-page";
 import RotatePdfPage from "@/pages/rotate-pdf-page";
+import DeletePagesPage from "@/pages/delete-pages-page";
 
 function AppRoutes() {
   const pathname = usePathname();
@@ -41,6 +42,7 @@ function AppRoutes() {
       "/word-to-pdf": "Word to PDF - SwiftPDF",
       "/watermark-pdf": "Watermark PDF - SwiftPDF",
       "/rotate-pdf": "Rotate PDF - SwiftPDF",
+      "/delete-pages": "Delete PDF Pages - SwiftPDF",
     };
 
     document.title = titles[pathname] ?? "SwiftPDF";
@@ -65,6 +67,8 @@ function AppRoutes() {
       return <WatermarkPdfPage />;
     case "/rotate-pdf":
       return <RotatePdfPage />;
+    case "/delete-pages":
+      return <DeletePagesPage />;
     default:
       return <HomePage />;
   }

@@ -6,6 +6,7 @@ import {
   Minimize2,
   RotateCw,
   Scissors,
+  Trash2,
   Type,
   type LucideIcon,
 } from "lucide-react";
@@ -286,6 +287,40 @@ export const tools: Tool[] = [
       {
         q: "Does Rotate PDF use a server?",
         a: "No. The rotation runs client-side in your browser using pdf-lib.",
+      },
+    ],
+  },
+  {
+    slug: "delete-pages",
+    icon: Trash2,
+    name: "Delete PDF Pages",
+    desc: "Remove selected pages",
+    color: "from-blue-500 to-sky-500",
+    long: "Delete selected pages from a PDF directly in your browser while keeping the existing SwiftPDF experience simple and private.",
+    cta: "Delete Pages",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Flexible page removal",
+        desc: "Delete single pages, comma-separated pages, or full ranges like 2-4.",
+      },
+      {
+        title: "Client-side processing",
+        desc: "Your PDF is updated directly in the browser with no backend upload required.",
+      },
+      {
+        title: "Validated page numbers",
+        desc: "The page shows a clear error for invalid, empty, or out-of-bounds selections.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Which page formats are supported?",
+        a: "You can enter a single page, comma-separated pages like 1,3,5, or ranges like 2-4.",
+      },
+      {
+        q: "Can I delete every page?",
+        a: "No. SwiftPDF keeps at least one page so the updated PDF remains valid.",
       },
     ],
   },

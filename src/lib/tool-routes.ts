@@ -7,7 +7,8 @@ export type ToolPath =
   | "/split-pdf"
   | "/jpg-to-pdf"
   | "/word-to-pdf"
-  | "/watermark-pdf";
+  | "/watermark-pdf"
+  | "/rotate-pdf";
 
 export function getToolPath(slug: Tool["slug"]): ToolPath {
   switch (slug) {
@@ -25,6 +26,8 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
       return "/word-to-pdf";
     case "watermark-pdf":
       return "/watermark-pdf";
+    case "rotate-pdf":
+      return "/rotate-pdf";
   }
 
   throw new Error(`No route path is mapped for tool slug "${slug}".`);

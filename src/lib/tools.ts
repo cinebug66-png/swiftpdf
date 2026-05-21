@@ -4,6 +4,7 @@ import {
   Combine,
   Images,
   Minimize2,
+  RotateCw,
   Scissors,
   Type,
   type LucideIcon,
@@ -251,6 +252,40 @@ export const tools: Tool[] = [
       {
         q: "Can I change the watermark style?",
         a: "Yes. You can adjust the watermark text, opacity, font size, and rotation.",
+      },
+    ],
+  },
+  {
+    slug: "rotate-pdf",
+    icon: RotateCw,
+    name: "Rotate PDF",
+    desc: "Rotate every page",
+    color: "from-sky-500 to-indigo-500",
+    long: "Rotate every page in a PDF by 90, 180, or 270 degrees directly in your browser while keeping SwiftPDF fast and private.",
+    cta: "Rotate PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Rotate all pages",
+        desc: "Apply the selected rotation to every page in one quick step.",
+      },
+      {
+        title: "Client-side processing",
+        desc: "Your PDF is rotated directly in the browser with no backend upload required.",
+      },
+      {
+        title: "Simple download",
+        desc: "Preview the completed state and download the rotated PDF only when you choose.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Which rotations are supported?",
+        a: "You can rotate the PDF by 90, 180, or 270 degrees.",
+      },
+      {
+        q: "Does Rotate PDF use a server?",
+        a: "No. The rotation runs client-side in your browser using pdf-lib.",
       },
     ],
   },

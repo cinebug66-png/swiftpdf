@@ -1,0 +1,321 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Loader2,
+  Lock,
+  Shield,
+  Upload,
+  Zap,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { consumePendingFiles } from "@/lib/pending-file";
+import { protectPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
+
+type ToolStatus = "idle" | "processing" | "done" | "error";
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+export function ProtectPdfTool() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [drag, setDrag] = useState(false);
+  const [status, setStatus] = useState<ToolStatus>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [progressNote, setProgressNote] = useState("Waiting for file");
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadName, setDownloadName] = useState("protected.pdf");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    const pending = consumePendingFiles(".pdf,application/pdf", false);
+    if (pending?.[0]) {
+      setFile(pending[0]);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => revokeDownloadUrl(downloadUrl);
+  }, [downloadUrl]);
+
+  const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
+
+  const selectFile = (nextFile: File | null) => {
+    revokeDownloadUrl(downloadUrl);
+    setDownloadUrl(null);
+    setDownloadName("protected.pdf");
+    setError(null);
+    setStatus("idle");
+    setProgressNote("Waiting for file");
+    setFile(nextFile);
+  };
+
+  const validatePasswords = () => {
+    if (!password) {
+      throw new Error("Enter a password.");
+    }
+
+    if (password.length < 6) {
+      throw new Error("Password must be at least 6 characters.");
+    }
+
+    if (password !== confirmPassword) {
+      throw new Error("Password confirmation does not match.");
+    }
+  };
+
+  const clearPasswords = () => {
+    setPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      inputRef.current?.click();
+      return;
+    }
+
+    try {
+      validatePasswords();
+      setStatus("processing");
+      setError(null);
+      setProgressNote("Uploading your PDF securely...");
+
+      const result = await protectPdf(file, password, (job) => {
+        const runningTask = job.tasks.find((task) => task.status === "processing");
+        if (runningTask?.operation === "pdf/encrypt") {
+          setProgressNote("Encrypting and password protecting your PDF...");
+        } else if (runningTask?.operation === "export/url") {
+          setProgressNote("Preparing your protected PDF download...");
+        }
+      });
+
+      revokeDownloadUrl(downloadUrl);
+      setDownloadUrl(result.downloadUrl);
+      setDownloadName(result.filename);
+      setProgressNote("Your protected PDF is ready.");
+      setStatus("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Protection failed. Please try again.");
+      setStatus("error");
+      setProgressNote("Protection failed.");
+    } finally {
+      clearPasswords();
+    }
+  };
+
+  return (
+    <>
+      <label
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDrag(true);
+        }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDrag(false);
+          selectFile(event.dataTransfer.files?.[0] ?? null);
+        }}
+        className={cn(
+          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-all duration-300 sm:p-16",
+          "glass shadow-card hover:shadow-glow",
+          drag && "scale-[1.01] ring-2 ring-primary",
+        )}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf,application/pdf"
+          className="sr-only"
+          onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+        />
+        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
+          <Upload className="h-7 w-7" />
+        </div>
+        <p className="text-lg font-medium">
+          {file ? file.name : "Drop your PDF here or click to browse"}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Upload one PDF, set a password, and download a protected copy.
+        </p>
+      </label>
+
+      {file && (
+        <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+                <FileText className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">{file.name}</div>
+                <div className="text-xs text-muted-foreground">{fileSize}</div>
+              </div>
+            </div>
+            {status !== "processing" && (
+              <button
+                type="button"
+                onClick={() => selectFile(null)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {file && (
+        <div className="mt-6 rounded-2xl glass p-5 shadow-card">
+          <div className="mb-3 text-sm font-medium">Password protection</div>
+          <div className="grid gap-4">
+            <div className="relative">
+              <Input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="h-12 rounded-xl border-border bg-card/70 px-4 pr-12 text-sm shadow-soft"
+                disabled={status === "processing"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                disabled={status === "processing"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                className="h-12 rounded-xl border-border bg-card/70 px-4 pr-12 text-sm shadow-soft"
+                disabled={status === "processing"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                disabled={status === "processing"}
+                aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-muted-foreground">
+            Use at least 6 characters. SwiftPDF clears the password fields after processing.
+          </div>
+        </div>
+      )}
+
+      {status === "processing" && (
+        <div className="mt-6 rounded-2xl glass p-5 shadow-card">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            {progressNote}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-full origin-left animate-pulse bg-gradient-primary" />
+          </div>
+        </div>
+      )}
+
+      {status === "error" && error && (
+        <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive shadow-soft">
+          {error}
+        </div>
+      )}
+
+      {status === "done" && downloadUrl && (
+        <div className="mt-6 rounded-2xl glass p-6 text-center shadow-glow">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
+            <CheckCircle2 className="h-6 w-6" />
+          </div>
+          <div className="font-semibold">Protection complete</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your protected PDF is ready to download.
+          </p>
+          <div className="mx-auto mt-4 grid max-w-md gap-2 rounded-2xl bg-card/70 p-4 text-left text-sm text-muted-foreground">
+            <div className="flex items-center justify-between gap-4">
+              <span>Password protection</span>
+              <span className="font-medium text-foreground">Enabled</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span>Original size</span>
+              <span className="font-medium text-foreground">{fileSize}</span>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Button variant="hero" size="lg" asChild>
+              <a href={downloadUrl} download={downloadName}>
+                <Download className="h-4 w-4" /> Download Protected PDF
+              </a>
+            </Button>
+            <Button variant="glass" size="lg" onClick={() => selectFile(null)}>
+              Start over
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {status !== "done" && (
+        <div className="mt-6 flex justify-center">
+          <Button
+            variant="hero"
+            size="xl"
+            onClick={handleSubmit}
+            disabled={status === "processing"}
+          >
+            {file ? (
+              <>
+                Protect PDF <ArrowRight className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                <Upload className="h-5 w-5" /> Choose PDF
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <Shield className="h-3.5 w-3.5 text-primary" /> Secure encryption
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Lock className="h-3.5 w-3.5 text-primary" /> Password required
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Zap className="h-3.5 w-3.5 text-primary" /> CloudConvert PDF encrypt
+        </span>
+      </div>
+    </>
+  );
+}

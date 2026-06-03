@@ -9,7 +9,10 @@ export type ToolPath =
   | "/word-to-pdf"
   | "/watermark-pdf"
   | "/rotate-pdf"
-  | "/delete-pages";
+  | "/delete-pages"
+  | "/protect-pdf"
+  | "/unlock-pdf"
+  | "/sign-pdf";
 
 export function getToolPath(slug: Tool["slug"]): ToolPath {
   switch (slug) {
@@ -31,6 +34,12 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
       return "/rotate-pdf";
     case "delete-pages":
       return "/delete-pages";
+    case "protect-pdf":
+      return "/protect-pdf";
+    case "unlock-pdf":
+      return "/unlock-pdf";
+    case "sign-pdf":
+      return "/sign-pdf";
   }
 
   throw new Error(`No route path is mapped for tool slug "${slug}".`);

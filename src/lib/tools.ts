@@ -3,7 +3,10 @@ import {
   FileType2,
   Combine,
   Images,
+  Lock,
+  LockOpen,
   Minimize2,
+  PenLine,
   RotateCw,
   Scissors,
   Trash2,
@@ -321,6 +324,108 @@ export const tools: Tool[] = [
       {
         q: "Can I delete every page?",
         a: "No. SwiftPDF keeps at least one page so the updated PDF remains valid.",
+      },
+    ],
+  },
+  {
+    slug: "protect-pdf",
+    icon: Lock,
+    name: "Protect PDF",
+    desc: "Add password protection",
+    color: "from-indigo-500 to-blue-500",
+    long: "Add real password protection to a PDF using CloudConvert's PDF encryption operation while keeping the existing SwiftPDF flow simple.",
+    cta: "Protect PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Real PDF encryption",
+        desc: "Uses CloudConvert's PDF encrypt operation instead of fake or metadata-only protection.",
+      },
+      {
+        title: "Password validation",
+        desc: "Checks minimum length and confirmation before the file is processed.",
+      },
+      {
+        title: "Manual download",
+        desc: "The protected PDF is only downloaded when you click the download button.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does Protect PDF use pdf-lib?",
+        a: "No. pdf-lib does not securely encrypt PDFs, so this tool uses CloudConvert's PDF encryption operation.",
+      },
+      {
+        q: "Does SwiftPDF store the password?",
+        a: "No. The password is not stored or logged, and the password fields are cleared after processing.",
+      },
+    ],
+  },
+  {
+    slug: "unlock-pdf",
+    icon: LockOpen,
+    name: "Unlock PDF",
+    desc: "Remove PDF password",
+    color: "from-sky-500 to-cyan-500",
+    long: "Remove password protection from a PDF using CloudConvert's PDF decrypt operation while keeping the existing SwiftPDF experience simple.",
+    cta: "Unlock PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Real PDF unlocking",
+        desc: "Uses CloudConvert's PDF decrypt operation instead of fake client-side handling.",
+      },
+      {
+        title: "Password required",
+        desc: "The tool validates that you enter the current PDF password before processing.",
+      },
+      {
+        title: "Manual download",
+        desc: "The unlocked PDF is only downloaded when you click the download button.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does Unlock PDF use pdf-lib?",
+        a: "No. pdf-lib cannot reliably unlock encrypted PDFs, so this tool uses CloudConvert's PDF decrypt operation.",
+      },
+      {
+        q: "What if the password is wrong?",
+        a: "SwiftPDF shows an error and does not create an unlocked PDF.",
+      },
+    ],
+  },
+  {
+    slug: "sign-pdf",
+    icon: PenLine,
+    name: "Sign PDF",
+    desc: "Draw or upload signature",
+    color: "from-blue-500 to-indigo-500",
+    long: "Draw or upload a signature, place it on a PDF page, and create a signed PDF directly in your browser.",
+    cta: "Sign PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Draw or upload",
+        desc: "Create a signature with the drawing pad or upload a PNG or JPG image.",
+      },
+      {
+        title: "Precise placement",
+        desc: "Move and resize the signature on the selected page before signing.",
+      },
+      {
+        title: "Client-side signing",
+        desc: "The signature is embedded into the PDF in your browser using pdf-lib.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Can I preserve PNG transparency?",
+        a: "Yes. Uploaded PNG signatures are embedded with transparency preserved.",
+      },
+      {
+        q: "Does signing use a server?",
+        a: "No. Sign PDF runs client-side in your browser using pdf-lib.",
       },
     ],
   },

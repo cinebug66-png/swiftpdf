@@ -13,6 +13,9 @@ import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 import WatermarkPdfPage from "@/pages/watermark-pdf-page";
 import RotatePdfPage from "@/pages/rotate-pdf-page";
 import DeletePagesPage from "@/pages/delete-pages-page";
+import ProtectPdfPage from "@/pages/protect-pdf-page";
+import UnlockPdfPage from "@/pages/unlock-pdf-page";
+import SignPdfPage from "@/pages/sign-pdf-page";
 
 function AppRoutes() {
   const pathname = usePathname();
@@ -43,6 +46,9 @@ function AppRoutes() {
       "/watermark-pdf": "Watermark PDF - SwiftPDF",
       "/rotate-pdf": "Rotate PDF - SwiftPDF",
       "/delete-pages": "Delete PDF Pages - SwiftPDF",
+      "/protect-pdf": "Protect PDF - SwiftPDF",
+      "/unlock-pdf": "Unlock PDF - SwiftPDF",
+      "/sign-pdf": "Sign PDF - SwiftPDF",
     };
 
     document.title = titles[pathname] ?? "SwiftPDF";
@@ -69,6 +75,12 @@ function AppRoutes() {
       return <RotatePdfPage />;
     case "/delete-pages":
       return <DeletePagesPage />;
+    case "/protect-pdf":
+      return <ProtectPdfPage />;
+    case "/unlock-pdf":
+      return <UnlockPdfPage />;
+    case "/sign-pdf":
+      return <SignPdfPage />;
     default:
       return <HomePage />;
   }

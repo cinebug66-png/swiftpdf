@@ -4,6 +4,8 @@ type CloudConvertOperation =
   | "import/upload"
   | "convert"
   | "optimize"
+  | "pdf/encrypt"
+  | "pdf/decrypt"
   | "export/url";
 
 type CloudConvertTaskDefinition = {
@@ -13,6 +15,9 @@ type CloudConvertTaskDefinition = {
   output_format?: string;
   filename?: string;
   profile?: "web" | "print" | "archive" | "mrc" | "max";
+  set_password?: string;
+  set_owner_password?: string;
+  password?: string;
 };
 
 type CloudConvertJobRequest = {
@@ -314,4 +319,118 @@ export async function compressPdf(
     originalSize: file.size,
     outputSize: blob.size,
   };
+}
+
+export async function protectPdf(
+  file: File,
+  password: string,
+  onUpdate?: (job: CloudConvertJob) => void,
+): Promise<CloudConvertOutput> {
+  const outputFilename = replaceExtension(file.name, "-protected.pdf");
+
+  const job = await createJob({
+    tag: "swiftpdf-protect-pdf",
+    tasks: {
+      "upload-file": {
+        operation: "import/upload",
+      },
+      "encrypt-file": {
+        operation: "pdf/encrypt",
+        input: "upload-file",
+        filename: outputFilename,
+        set_password: password,
+        set_owner_password: password,
+      },
+      "export-file": {
+        operation: "export/url",
+        input: "encrypt-file",
+      },
+    },
+  });
+
+  await uploadFileToTask(findTask(job, "upload-file"), file);
+  const finishedJob = await waitForJob(job.id, onUpdate);
+  const exportFile = getExportFile(finishedJob);
+  const blob = await downloadOutputFile(exportFile);
+
+  return {
+    blob,
+    filename: exportFile.filename || outputFilename,
+    downloadUrl: createDownloadUrl(blob),
+    job: finishedJob,
+    originalSize: file.size,
+    outputSize: blob.size,
+  };
+}
+
+function normalizeUnlockError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("invalid password") ||
+    lowerMessage.includes("incorrect password") ||
+    lowerMessage.includes("bad password") ||
+    lowerMessage.includes("password is invalid") ||
+    lowerMessage.includes("wrong password")
+  ) {
+    return new Error("The PDF password is wrong. Please check it and try again.");
+  }
+
+  if (
+    lowerMessage.includes("not encrypted") ||
+    lowerMessage.includes("not password protected") ||
+    lowerMessage.includes("file is not encrypted")
+  ) {
+    return new Error("This PDF is not encrypted or password protected.");
+  }
+
+  return error instanceof Error
+    ? error
+    : new Error("Unlock failed. Please try again with a password-protected PDF.");
+}
+
+export async function unlockPdf(
+  file: File,
+  password: string,
+  onUpdate?: (job: CloudConvertJob) => void,
+): Promise<CloudConvertOutput> {
+  const outputFilename = replaceExtension(file.name, "-unlocked.pdf");
+
+  try {
+    const job = await createJob({
+      tag: "swiftpdf-unlock-pdf",
+      tasks: {
+        "upload-file": {
+          operation: "import/upload",
+        },
+        "decrypt-file": {
+          operation: "pdf/decrypt",
+          input: "upload-file",
+          filename: outputFilename,
+          password,
+        },
+        "export-file": {
+          operation: "export/url",
+          input: "decrypt-file",
+        },
+      },
+    });
+
+    await uploadFileToTask(findTask(job, "upload-file"), file);
+    const finishedJob = await waitForJob(job.id, onUpdate);
+    const exportFile = getExportFile(finishedJob);
+    const blob = await downloadOutputFile(exportFile);
+
+    return {
+      blob,
+      filename: exportFile.filename || outputFilename,
+      downloadUrl: createDownloadUrl(blob),
+      job: finishedJob,
+      originalSize: file.size,
+      outputSize: blob.size,
+    };
+  } catch (error) {
+    throw normalizeUnlockError(error);
+  }
 }

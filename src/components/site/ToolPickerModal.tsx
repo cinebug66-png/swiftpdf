@@ -1,4 +1,5 @@
 import { Sparkles, FileText, ArrowRight, X } from "lucide-react";
+import { useLayoutEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,8 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
   const suggestedSlugs = new Set(suggested.map((t) => t.slug));
   const others = tools.filter((t) => !suggestedSlugs.has(t.slug));
 
+  useLockedBodyScroll(open);
+
   const go = (slug: string) => {
     onOpenChange(false);
     const tool = tools.find((item) => item.slug === slug);
@@ -35,11 +38,11 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-3xl p-0 overflow-hidden border-border/60",
+          "max-h-[min(90vh,760px)] max-w-3xl overflow-hidden border-border/60 p-0",
           "glass shadow-glow rounded-3xl",
         )}
       >
-        <div className="p-6 sm:p-8">
+        <div className="max-h-[min(90vh,760px)] overflow-y-auto p-6 sm:p-8">
           <DialogHeader className="space-y-3 text-left">
             <div className="inline-flex w-fit items-center gap-2 glass rounded-full px-3 py-1 text-xs font-medium text-foreground/80">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -83,7 +86,13 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
               </div>
               <div className="grid sm:grid-cols-3 gap-3">
                 {suggested.map((t, i) => (
-                  <ToolCard key={t.slug} tool={t} onClick={() => go(t.slug)} delay={i * 60} highlight />
+                  <ToolCard
+                    key={t.slug}
+                    tool={t}
+                    onClick={() => go(t.slug)}
+                    delay={i * 60}
+                    highlight
+                  />
                 ))}
               </div>
             </div>
@@ -93,7 +102,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               All tools
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[44vh] overflow-y-auto pr-1">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {others.map((t, i) => (
                 <ToolCard key={t.slug} tool={t} onClick={() => go(t.slug)} delay={i * 30} />
               ))}
@@ -103,6 +112,31 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
       </DialogContent>
     </Dialog>
   );
+}
+
+function useLockedBodyScroll(open: boolean) {
+  useLayoutEffect(() => {
+    if (!open || typeof window === "undefined") return;
+
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousBodyPaddingRight = body.style.paddingRight;
+    const previousHtmlOverflow = documentElement.style.overflow;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      body.style.paddingRight = previousBodyPaddingRight;
+      documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [open]);
 }
 
 function ToolCard({

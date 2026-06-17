@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -12,15 +12,17 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
-import {
-  createPdfDownloadUrl,
-  revokeObjectUrl,
-  watermarkPdf,
-} from "@/lib/pdf-watermark";
+import { createPdfDownloadUrl, revokeObjectUrl, watermarkPdf } from "@/lib/pdf-watermark";
 
 type ToolStatus = "idle" | "processing" | "done" | "error";
+
+type WatermarkPosition = {
+  x: number;
+  y: number;
+};
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -28,13 +30,23 @@ function formatFileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
+function clamp(value: number, min = 0, max = 1) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function getDownloadName(file: File | null) {
   if (!file) return "watermarked.pdf";
   return `${file.name.replace(/\.pdf$/i, "")}-watermarked.pdf`;
 }
 
+function getRotationLabel(rotation: number) {
+  if (rotation === 0) return "Rotation: 0\u00b0";
+  return `${rotation}\u00b0 ${rotation > 0 ? "clockwise" : "counter-clockwise"}`;
+}
+
 export function WatermarkPdfTool() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const watermarkDragRef = useRef(false);
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [status, setStatus] = useState<ToolStatus>("idle");
@@ -43,15 +55,20 @@ export function WatermarkPdfTool() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadName, setDownloadName] = useState("watermarked.pdf");
   const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
-  const [opacity, setOpacity] = useState(0.22);
+  const [opacity, setOpacity] = useState(0.36);
   const [fontSize, setFontSize] = useState(56);
   const [rotation, setRotation] = useState(-35);
+  const [color, setColor] = useState("#111827");
+  const [position, setPosition] = useState<WatermarkPosition>({ x: 0.5, y: 0.5 });
+  const [watermarkDragging, setWatermarkDragging] = useState(false);
 
   useEffect(() => {
     const pending = consumePendingFiles(".pdf,application/pdf", false);
     if (pending?.[0]) {
       selectFile(pending[0]);
     }
+    // Pending-file bootstrapping should only run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -90,6 +107,9 @@ export function WatermarkPdfTool() {
         opacity,
         fontSize,
         rotation,
+        color,
+        x: position.x,
+        y: position.y,
       });
       const nextDownloadUrl = createPdfDownloadUrl(bytes);
 
@@ -103,6 +123,48 @@ export function WatermarkPdfTool() {
       setStatus("error");
       setProgressNote("Watermark failed.");
     }
+  };
+
+  const resetWatermarkPosition = () => {
+    setPosition({ x: 0.5, y: 0.5 });
+  };
+
+  const updateWatermarkPosition = (
+    event: PointerEvent<HTMLElement>,
+    renderSize: { width: number; height: number },
+  ) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = clamp((event.clientX - bounds.left) / renderSize.width);
+    const y = clamp(1 - (event.clientY - bounds.top) / renderSize.height);
+    setPosition({ x, y });
+  };
+
+  const startWatermarkDrag = (
+    event: PointerEvent<HTMLDivElement>,
+    renderSize: { width: number; height: number },
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    watermarkDragRef.current = true;
+    setWatermarkDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    updateWatermarkPosition(event, renderSize);
+  };
+
+  const moveWatermarkDrag = (
+    event: PointerEvent<HTMLDivElement>,
+    renderSize: { width: number; height: number },
+  ) => {
+    if (!watermarkDragRef.current) return;
+    event.preventDefault();
+    updateWatermarkPosition(event, renderSize);
+  };
+
+  const stopWatermarkDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!watermarkDragRef.current) return;
+    watermarkDragRef.current = false;
+    setWatermarkDragging(false);
+    event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   return (
@@ -178,7 +240,7 @@ export function WatermarkPdfTool() {
               className="h-12 rounded-xl border-border bg-card/70 px-4 text-sm shadow-soft"
               disabled={status === "processing"}
             />
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <label className="text-xs text-muted-foreground">
                 <div className="mb-2 flex items-center justify-between">
                   <span>Opacity</span>
@@ -212,7 +274,7 @@ export function WatermarkPdfTool() {
               <label className="text-xs text-muted-foreground">
                 <div className="mb-2 flex items-center justify-between">
                   <span>Rotation</span>
-                  <span className="text-foreground">{rotation}°</span>
+                  <span className="text-foreground">{getRotationLabel(rotation)}</span>
                 </div>
                 <input
                   type="range"
@@ -224,9 +286,75 @@ export function WatermarkPdfTool() {
                   disabled={status === "processing"}
                 />
               </label>
+              <label className="text-xs text-muted-foreground">
+                <div className="mb-2 flex items-center justify-between">
+                  <span>Color</span>
+                  <span className="text-foreground">{color.toUpperCase()}</span>
+                </div>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(event) => setColor(event.target.value)}
+                  className="h-8 w-full cursor-pointer rounded-lg border border-border bg-card/70 p-1 shadow-soft"
+                  disabled={status === "processing"}
+                />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card/70 px-3 py-2 text-xs text-muted-foreground shadow-soft">
+              <span>Watermark position applies to every page.</span>
+              <button
+                type="button"
+                onClick={resetWatermarkPosition}
+                disabled={status === "processing"}
+                className="font-medium text-primary hover:text-primary-glow disabled:pointer-events-none disabled:opacity-60"
+              >
+                Center
+              </button>
             </div>
           </div>
         </div>
+      )}
+
+      {file && (
+        <PdfPagePreview
+          file={file}
+          pageNumber={1}
+          title="PDF preview"
+          note="Watermark position applies to every page."
+          overlay={(renderSize) => (
+            <div
+              className="absolute inset-0 overflow-hidden rounded-xl"
+              onPointerDown={(event) => startWatermarkDrag(event, renderSize)}
+              onPointerMove={(event) => moveWatermarkDrag(event, renderSize)}
+              onPointerUp={stopWatermarkDrag}
+              onPointerCancel={stopWatermarkDrag}
+            >
+              <div
+                className={cn(
+                  "absolute max-w-[92%] touch-none select-none whitespace-nowrap text-center font-bold uppercase leading-none",
+                  "cursor-move rounded-md px-2 py-1",
+                  watermarkDragging && "outline outline-2 outline-primary/70",
+                )}
+                style={{
+                  left: position.x * renderSize.width,
+                  top: (1 - position.y) * renderSize.height,
+                  fontSize: fontSize * renderSize.scale,
+                  opacity,
+                  color,
+                  textShadow:
+                    color.toLowerCase() === "#ffffff"
+                      ? "0 0 1px rgba(0,0,0,0.75), 0 1px 2px rgba(0,0,0,0.35)"
+                      : "0 0 1px rgba(255,255,255,0.8), 0 1px 2px rgba(255,255,255,0.35)",
+                  transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                  transformOrigin: "center",
+                  maxWidth: renderSize.width * 0.92,
+                }}
+              >
+                {watermarkText.trim() || "WATERMARK"}
+              </div>
+            </div>
+          )}
+        />
       )}
 
       {status === "processing" && (

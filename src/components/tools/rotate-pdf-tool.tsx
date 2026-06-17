@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import {
@@ -183,6 +184,16 @@ export function RotatePdfTool() {
             ))}
           </div>
         </div>
+      )}
+
+      {file && (
+        <PdfPagePreview
+          file={file}
+          pageNumber={1}
+          title="PDF preview"
+          note={`Preview: pages will rotate by ${rotation}\u00b0`}
+          visualRotation={rotation}
+        />
       )}
 
       {status === "processing" && (

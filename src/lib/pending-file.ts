@@ -3,7 +3,8 @@ import { tools, type Tool } from "./tools";
 let pending: File[] | null = null;
 
 export function setPendingFiles(files: File[]) {
-  pending = files;
+  const readableFiles = files.filter(isReadableFile);
+  pending = readableFiles.length > 0 ? readableFiles : null;
 }
 
 export function consumePendingFiles(accept: string, multiple?: boolean): File[] | null {
@@ -22,7 +23,19 @@ export function clearPending() {
   pending = null;
 }
 
+function isReadableFile(file: File | null | undefined): file is File {
+  return Boolean(
+    file &&
+    typeof file.name === "string" &&
+    typeof file.type === "string" &&
+    typeof file.size === "number" &&
+    typeof file.arrayBuffer === "function",
+  );
+}
+
 function fileMatchesAccept(file: File, accept: string): boolean {
+  if (!isReadableFile(file)) return false;
+
   const tokens = accept.split(",").map((token) => token.trim().toLowerCase());
   const name = file.name.toLowerCase();
   const type = file.type.toLowerCase();
@@ -36,6 +49,8 @@ function fileMatchesAccept(file: File, accept: string): boolean {
 }
 
 export function suggestToolsFor(file: File): Tool[] {
+  if (!isReadableFile(file)) return [];
+
   const name = file.name.toLowerCase();
   const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
   const isWord = /\.(docx?|odt)$/.test(name) || /word|officedocument/.test(file.type);

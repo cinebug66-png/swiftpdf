@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { RouterProvider, useNavigate, usePathname } from "@/lib/app-router";
 import { getTool } from "@/lib/tools";
@@ -16,6 +16,80 @@ import DeletePagesPage from "@/pages/delete-pages-page";
 import ProtectPdfPage from "@/pages/protect-pdf-page";
 import UnlockPdfPage from "@/pages/unlock-pdf-page";
 import SignPdfPage from "@/pages/sign-pdf-page";
+
+type RouteErrorBoundaryProps = {
+  children: ReactNode;
+  routeKey: string;
+};
+
+type RouteErrorBoundaryState = {
+  error: Error | null;
+};
+
+class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBoundaryState> {
+  state: RouteErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): RouteErrorBoundaryState {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("SwiftPDF tool crashed", error, errorInfo);
+  }
+
+  componentDidUpdate(previousProps: RouteErrorBoundaryProps) {
+    if (previousProps.routeKey !== this.props.routeKey && this.state.error) {
+      this.setState({ error: null });
+    }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="min-h-screen bg-gradient-mesh px-4 py-24">
+          <div className="mx-auto max-w-2xl rounded-3xl border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive shadow-soft">
+            Something went wrong while loading this tool. Please remove the file and try again.
+          </div>
+        </main>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function renderRoute(pathname: string) {
+  switch (pathname) {
+    case "/":
+      return <HomePage />;
+    case "/pdf-to-word":
+      return <PdfToWordPage />;
+    case "/compress-pdf":
+      return <CompressPdfPage />;
+    case "/merge-pdf":
+      return <MergePdfPage />;
+    case "/split-pdf":
+      return <SplitPdfPage />;
+    case "/jpg-to-pdf":
+      return <JpgToPdfPage />;
+    case "/word-to-pdf":
+      return <WordToPdfPage />;
+    case "/watermark-pdf":
+      return <WatermarkPdfPage />;
+    case "/rotate-pdf":
+      return <RotatePdfPage />;
+    case "/delete-pages":
+      return <DeletePagesPage />;
+    case "/protect-pdf":
+      return <ProtectPdfPage />;
+    case "/unlock-pdf":
+      return <UnlockPdfPage />;
+    case "/sign-pdf":
+      return <SignPdfPage />;
+    default:
+      return <HomePage />;
+  }
+}
 
 function AppRoutes() {
   const pathname = usePathname();
@@ -54,36 +128,7 @@ function AppRoutes() {
     document.title = titles[pathname] ?? "SwiftPDF";
   }, [pathname]);
 
-  switch (pathname) {
-    case "/":
-      return <HomePage />;
-    case "/pdf-to-word":
-      return <PdfToWordPage />;
-    case "/compress-pdf":
-      return <CompressPdfPage />;
-    case "/merge-pdf":
-      return <MergePdfPage />;
-    case "/split-pdf":
-      return <SplitPdfPage />;
-    case "/jpg-to-pdf":
-      return <JpgToPdfPage />;
-    case "/word-to-pdf":
-      return <WordToPdfPage />;
-    case "/watermark-pdf":
-      return <WatermarkPdfPage />;
-    case "/rotate-pdf":
-      return <RotatePdfPage />;
-    case "/delete-pages":
-      return <DeletePagesPage />;
-    case "/protect-pdf":
-      return <ProtectPdfPage />;
-    case "/unlock-pdf":
-      return <UnlockPdfPage />;
-    case "/sign-pdf":
-      return <SignPdfPage />;
-    default:
-      return <HomePage />;
-  }
+  return <RouteErrorBoundary routeKey={pathname}>{renderRoute(pathname)}</RouteErrorBoundary>;
 }
 
 export default function App() {

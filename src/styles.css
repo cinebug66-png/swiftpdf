@@ -137,13 +137,63 @@
 
 .upload-signature-preview {
   width: 100%;
+  max-width: 100%;
   height: 160px;
+  box-sizing: border-box;
   border-radius: 24px;
   background-color: white;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   overflow: hidden;
+}
+
+.sign-pdf-tool,
+.sign-pdf-tool *,
+.sign-pdf-tool *::before,
+.sign-pdf-tool *::after {
+  box-sizing: border-box;
+}
+
+html.pdf-overlay-dragging,
+body.pdf-overlay-dragging {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+[data-signature-overlay] {
+  touch-action: none;
+}
+
+.sign-pdf-tool,
+.sign-pdf-layout,
+.sign-pdf-card,
+.sign-pdf-preview-frame {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .sign-pdf-tool {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .sign-pdf-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sign-pdf-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sign-pdf-preview-frame,
+  .sign-pdf-preview-page,
+  .sign-pdf-preview-page canvas {
+    max-width: 100%;
+  }
 }
 
 @utility glass {

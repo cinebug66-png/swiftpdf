@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
+import { lockPdfOverlayTouchDrag } from "@/lib/pdf-overlay-drag";
 import { createPdfDownloadUrl, revokeObjectUrl, watermarkPdf } from "@/lib/pdf-watermark";
 
 type ToolStatus = "idle" | "processing" | "done" | "error";
@@ -47,6 +48,7 @@ function getRotationLabel(rotation: number) {
 export function WatermarkPdfTool() {
   const inputRef = useRef<HTMLInputElement>(null);
   const watermarkDragRef = useRef(false);
+  const unlockTouchDragRef = useRef<(() => void) | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [status, setStatus] = useState<ToolStatus>("idle");
@@ -72,7 +74,11 @@ export function WatermarkPdfTool() {
   }, []);
 
   useEffect(() => {
-    return () => revokeObjectUrl(downloadUrl);
+    return () => {
+      revokeObjectUrl(downloadUrl);
+      unlockTouchDragRef.current?.();
+      unlockTouchDragRef.current = null;
+    };
   }, [downloadUrl]);
 
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
@@ -145,6 +151,8 @@ export function WatermarkPdfTool() {
   ) => {
     event.preventDefault();
     event.stopPropagation();
+    unlockTouchDragRef.current?.();
+    unlockTouchDragRef.current = lockPdfOverlayTouchDrag(event.pointerType);
     watermarkDragRef.current = true;
     setWatermarkDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -162,9 +170,14 @@ export function WatermarkPdfTool() {
 
   const stopWatermarkDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (!watermarkDragRef.current) return;
+    event.preventDefault();
     watermarkDragRef.current = false;
     setWatermarkDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    unlockTouchDragRef.current?.();
+    unlockTouchDragRef.current = null;
   };
 
   return (
@@ -323,11 +336,12 @@ export function WatermarkPdfTool() {
           note="Watermark position applies to every page."
           overlay={(renderSize) => (
             <div
-              className="absolute inset-0 overflow-hidden rounded-xl"
+              className="absolute inset-0 touch-none overflow-hidden rounded-xl"
               onPointerDown={(event) => startWatermarkDrag(event, renderSize)}
               onPointerMove={(event) => moveWatermarkDrag(event, renderSize)}
               onPointerUp={stopWatermarkDrag}
               onPointerCancel={stopWatermarkDrag}
+              onLostPointerCapture={stopWatermarkDrag}
             >
               <div
                 className={cn(

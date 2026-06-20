@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
+import { lockPdfOverlayTouchDrag } from "@/lib/pdf-overlay-drag";
 import {
   createPdfDownloadUrl,
   getPdfPageInfo,
@@ -199,6 +200,7 @@ export function SignPdfTool() {
   const typedPreviewTextRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
   const interactionRef = useRef<InteractionState | null>(null);
+  const unlockTouchDragRef = useRef<(() => void) | null>(null);
   const previewTimeoutRef = useRef<number | null>(null);
   const pdfDocumentRef = useRef<PdfDocumentProxy | null>(null);
   const pdfLoadingTaskRef = useRef<PdfLoadingTask | null>(null);
@@ -281,6 +283,8 @@ export function SignPdfTool() {
       pdfRenderTaskRef.current?.cancel();
       void pdfLoadingTaskRef.current?.destroy();
       void pdfDocumentRef.current?.destroy();
+      unlockTouchDragRef.current?.();
+      unlockTouchDragRef.current = null;
     };
   }, []);
 
@@ -335,7 +339,7 @@ export function SignPdfTool() {
     if (!frame) return;
 
     const updatePageWidth = () => {
-      setPageWidth(Math.max(280, frame.clientWidth - 32));
+      setPageWidth(Math.max(1, frame.clientWidth - 32));
     };
 
     updatePageWidth();
@@ -748,6 +752,8 @@ export function SignPdfTool() {
   ) => {
     event.preventDefault();
     event.stopPropagation();
+    unlockTouchDragRef.current?.();
+    unlockTouchDragRef.current = lockPdfOverlayTouchDrag(event.pointerType);
     event.currentTarget.setPointerCapture(event.pointerId);
     setActiveSignatureId(placement.id ?? null);
     if (placement.type === "typed") {
@@ -821,13 +827,20 @@ export function SignPdfTool() {
 
   const endInteraction = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!interactionRef.current) return;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    event.preventDefault();
     interactionRef.current = null;
+    unlockTouchDragRef.current?.();
+    unlockTouchDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   const deleteSignature = (id: string | undefined) => {
     if (!id) return;
     interactionRef.current = null;
+    unlockTouchDragRef.current?.();
+    unlockTouchDragRef.current = null;
     setPlacements((current) => current.filter((placement) => placement.id !== id));
     setActiveSignatureId((current) => (current === id ? null : current));
   };
@@ -906,14 +919,14 @@ export function SignPdfTool() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="sign-pdf-tool w-full max-w-full space-y-6 overflow-x-hidden">
       <label
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
           void selectFile(event.dataTransfer.files?.[0]);
         }}
-        className="group block cursor-pointer rounded-3xl glass p-8 text-center shadow-card transition-all duration-300 hover:shadow-glow sm:p-10"
+        className="sign-pdf-card group block w-full max-w-full cursor-pointer rounded-3xl glass p-8 text-center shadow-card transition-all duration-300 hover:shadow-glow sm:p-10"
       >
         <input
           ref={pdfInputRef}
@@ -938,8 +951,8 @@ export function SignPdfTool() {
       </label>
 
       {file && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="rounded-3xl glass p-4 shadow-card sm:p-5">
+        <div className="sign-pdf-layout grid w-full max-w-full gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="sign-pdf-card min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <FileText className="h-4 w-4 text-primary" />
@@ -979,7 +992,7 @@ export function SignPdfTool() {
 
             <div
               ref={pdfFrameRef}
-              className="relative grid min-h-[560px] place-items-start overflow-auto rounded-2xl border border-border bg-muted/50 p-4 shadow-soft"
+              className="sign-pdf-preview-frame relative grid min-h-[420px] w-full max-w-full place-items-start overflow-auto rounded-2xl border border-border bg-muted/50 p-4 shadow-soft sm:min-h-[560px]"
             >
               {(previewLoading || (status === "loading" && !renderSize)) && !renderError && (
                 <div className="absolute inset-0 z-20 grid place-items-center bg-card/70 text-sm text-muted-foreground backdrop-blur-sm">
@@ -996,7 +1009,9 @@ export function SignPdfTool() {
                 </div>
               ) : (
                 <div
-                  className={cn("relative mx-auto bg-white shadow-card")}
+                  className={cn(
+                    "sign-pdf-preview-page relative mx-auto max-w-full bg-white shadow-card",
+                  )}
                   style={
                     selectedPage && previewPageWidth
                       ? {
@@ -1006,7 +1021,7 @@ export function SignPdfTool() {
                       : { width: 360, minHeight: 480 }
                   }
                 >
-                  <canvas ref={pdfCanvasRef} className="block" />
+                  <canvas ref={pdfCanvasRef} className="block max-w-full" />
                   {renderSize &&
                     selectedPage &&
                     visiblePlacements.map((placement) => {
@@ -1016,7 +1031,7 @@ export function SignPdfTool() {
                           key={placement.id}
                           data-signature-overlay
                           className={cn(
-                            "absolute z-20 select-none rounded-md border bg-white/10",
+                            "absolute z-20 touch-none select-none rounded-md border bg-white/10",
                             isActive
                               ? "border-primary shadow-glow"
                               : "border-primary/50 shadow-soft",
@@ -1026,6 +1041,7 @@ export function SignPdfTool() {
                           onPointerMove={updateInteraction}
                           onPointerUp={endInteraction}
                           onPointerCancel={endInteraction}
+                          onLostPointerCapture={endInteraction}
                         >
                           <img
                             src={placement.signatureData}
@@ -1054,7 +1070,7 @@ export function SignPdfTool() {
                                 role="button"
                                 tabIndex={0}
                                 aria-label="Resize signature"
-                                className="absolute -bottom-2 -right-2 h-5 w-5 cursor-se-resize rounded-full border-2 border-white bg-primary shadow-soft"
+                                className="absolute -bottom-2 -right-2 h-5 w-5 touch-none cursor-se-resize rounded-full border-2 border-white bg-primary shadow-soft"
                                 onPointerDown={(event) =>
                                   beginInteraction(event, placement, "resize")
                                 }
@@ -1069,8 +1085,8 @@ export function SignPdfTool() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-3xl glass p-5 shadow-card">
+          <div className="min-w-0 max-w-full space-y-6">
+            <div className="sign-pdf-card rounded-3xl glass p-5 shadow-card">
               <div className="mb-4 text-sm font-semibold">Signature</div>
               <div className="mb-4 grid grid-cols-3 gap-2 rounded-2xl bg-card/70 p-1 shadow-soft">
                 {[
@@ -1087,7 +1103,7 @@ export function SignPdfTool() {
                       setError(null);
                     }}
                     className={cn(
-                      "flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-medium transition-all",
+                      "flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-medium transition-all",
                       method === item.id
                         ? "bg-primary text-primary-foreground shadow-soft"
                         : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -1109,11 +1125,21 @@ export function SignPdfTool() {
                     onPointerUp={stopDrawing}
                     onPointerCancel={stopDrawing}
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="glass" size="lg" onClick={clearDrawing}>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button
+                      variant="glass"
+                      size="lg"
+                      className="w-full min-w-0 px-4"
+                      onClick={clearDrawing}
+                    >
                       <X className="h-4 w-4" /> Clear
                     </Button>
-                    <Button variant="hero" size="lg" onClick={saveDrawing}>
+                    <Button
+                      variant="hero"
+                      size="lg"
+                      className="w-full min-w-0 px-4"
+                      onClick={saveDrawing}
+                    >
                       Save Drawing
                     </Button>
                   </div>
@@ -1237,7 +1263,7 @@ export function SignPdfTool() {
               )}
             </div>
 
-            <div className="rounded-3xl glass p-5 shadow-card">
+            <div className="sign-pdf-card rounded-3xl glass p-5 shadow-card">
               <div className="mb-4 text-sm font-semibold">Placement</div>
               <div className="rounded-2xl bg-card/70 p-4 text-sm text-muted-foreground shadow-soft">
                 {signatureDataUrl
@@ -1267,13 +1293,13 @@ export function SignPdfTool() {
             </div>
 
             {status === "error" && error && (
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-soft">
+              <div className="sign-pdf-card rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive shadow-soft">
                 {error}
               </div>
             )}
 
             {status === "done" && downloadUrl && (
-              <div className="rounded-3xl glass p-5 text-center shadow-glow">
+              <div className="sign-pdf-card rounded-3xl glass p-5 text-center shadow-glow">
                 <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
@@ -1289,7 +1315,7 @@ export function SignPdfTool() {
             <Button
               variant="hero"
               size="xl"
-              className="w-full"
+              className="w-full max-w-full px-4"
               onClick={applySignature}
               disabled={status === "processing"}
             >

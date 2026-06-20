@@ -36,15 +36,10 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "max-h-[min(90vh,760px)] max-w-3xl overflow-hidden border-border/60 p-0",
-          "glass shadow-glow rounded-3xl",
-        )}
-      >
-        <div className="max-h-[min(90vh,760px)] overflow-y-auto p-6 sm:p-8">
+      <DialogContent className="tool-picker-modal" overlayClassName="tool-picker-overlay">
+        <div className="tool-picker-modal-scroll">
           <DialogHeader className="space-y-3 text-left">
-            <div className="inline-flex w-fit items-center gap-2 glass rounded-full px-3 py-1 text-xs font-medium text-foreground/80">
+            <div className="tool-picker-badge inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               File ready
             </div>
@@ -57,13 +52,15 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
           </DialogHeader>
 
           {file && (
-            <div className="mt-5 glass rounded-2xl px-4 py-3 flex items-center justify-between shadow-soft animate-fade-up">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="tool-picker-file mt-5 flex items-center justify-between rounded-2xl px-4 py-3 shadow-soft animate-fade-up">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-gradient-primary grid place-items-center text-primary-foreground shrink-0">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{file.name}</div>
+                  <div className="tool-picker-file-name text-sm font-medium" title={file.name}>
+                    {file.name}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB · attached
                   </div>
@@ -84,7 +81,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
               <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
                 Suggested for this file
               </div>
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="tool-picker-grid grid sm:grid-cols-3">
                 {suggested.map((t, i) => (
                   <ToolCard
                     key={t.slug}
@@ -102,7 +99,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               All tools
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="tool-picker-grid grid sm:grid-cols-2 lg:grid-cols-3">
               {others.map((t, i) => (
                 <ToolCard key={t.slug} tool={t} onClick={() => go(t.slug)} delay={i * 30} />
               ))}
@@ -156,11 +153,9 @@ function ToolCard({
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
       className={cn(
-        "group relative text-left rounded-2xl p-4 border transition-all duration-300 animate-fade-up",
-        "hover:-translate-y-1 hover:shadow-glow",
-        highlight
-          ? "glass border-primary/40 shadow-card"
-          : "bg-card border-border shadow-soft hover:border-primary/30",
+        "tool-picker-card group relative rounded-2xl border p-4 text-left transition-all duration-300 animate-fade-up",
+        "hover:-translate-y-1",
+        highlight && "tool-picker-card-highlight",
       )}
     >
       <div className="flex items-start gap-3">

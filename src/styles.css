@@ -96,6 +96,21 @@
   --shadow-card: 0 1px 2px oklch(0.18 0.04 260 / 0.04), 0 8px 32px -12px oklch(0.5 0.22 264 / 0.12);
 }
 
+html:not(.dark) {
+  --modal-overlay-bg: rgba(15, 23, 42, 0.62);
+  --modal-panel-bg: rgba(248, 250, 255, 0.84);
+  --modal-border: rgba(59, 130, 246, 0.22);
+  --modal-shadow: 0 28px 80px -28px rgba(15, 23, 42, 0.42);
+  --modal-glow: 0 0 72px -26px rgba(59, 130, 246, 0.48);
+  --modal-surface-bg: rgba(255, 255, 255, 0.62);
+  --modal-surface-hover-bg: rgba(255, 255, 255, 0.78);
+  --modal-surface-border: rgba(100, 116, 139, 0.2);
+  --modal-highlight-bg: rgba(239, 246, 255, 0.72);
+  --modal-highlight-border: rgba(59, 130, 246, 0.34);
+  --modal-text: rgb(15, 23, 42);
+  --modal-muted-text: rgb(71, 85, 105);
+}
+
 .dark {
   --background: oklch(0.14 0.025 264);
   --foreground: oklch(0.98 0.005 255);
@@ -122,6 +137,21 @@
 
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 32px -12px oklch(0.5 0.22 264 / 0.3);
   --shadow-glow: 0 20px 60px -20px oklch(0.68 0.2 250 / 0.5);
+}
+
+html.dark {
+  --modal-overlay-bg: rgba(2, 6, 23, 0.8);
+  --modal-panel-bg: rgba(15, 23, 42, 0.82);
+  --modal-border: rgba(96, 165, 250, 0.24);
+  --modal-shadow: 0 32px 90px -30px rgba(0, 0, 0, 0.78);
+  --modal-glow: 0 0 82px -24px rgba(59, 130, 246, 0.5);
+  --modal-surface-bg: rgba(30, 41, 59, 0.58);
+  --modal-surface-hover-bg: rgba(30, 41, 59, 0.74);
+  --modal-surface-border: rgba(148, 163, 184, 0.18);
+  --modal-highlight-bg: rgba(30, 58, 138, 0.28);
+  --modal-highlight-border: rgba(96, 165, 250, 0.38);
+  --modal-text: rgb(248, 250, 252);
+  --modal-muted-text: rgb(148, 163, 184);
 }
 
 @layer base {
@@ -165,6 +195,99 @@ body.pdf-overlay-dragging {
   touch-action: none;
 }
 
+.tool-picker-overlay.tool-picker-overlay {
+  background: var(--modal-overlay-bg);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tool-picker-modal.tool-picker-modal {
+  width: min(92vw, 1100px);
+  max-width: 1100px;
+  max-height: 90vh;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  border: 1px solid var(--modal-border);
+  border-radius: 24px;
+  background: var(--modal-panel-bg);
+  color: var(--modal-text);
+  box-shadow:
+    var(--modal-shadow),
+    var(--modal-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  isolation: isolate;
+}
+
+.tool-picker-modal-scroll {
+  width: 100%;
+  min-width: 0;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.tool-picker-badge,
+.tool-picker-file {
+  min-width: 0;
+  border: 1px solid var(--modal-surface-border);
+  background: var(--modal-surface-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+.tool-picker-file {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tool-picker-file-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--modal-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-picker-grid {
+  gap: 12px;
+}
+
+.tool-picker-card {
+  min-width: 0;
+  border-color: var(--modal-surface-border);
+  background: var(--modal-surface-bg);
+  box-shadow: 0 12px 30px -20px rgba(15, 23, 42, 0.5);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+.tool-picker-card:hover {
+  border-color: var(--modal-highlight-border);
+  background: var(--modal-surface-hover-bg);
+  box-shadow:
+    0 18px 38px -22px rgba(15, 23, 42, 0.58),
+    0 0 32px -18px rgba(59, 130, 246, 0.5);
+}
+
+.tool-picker-card-highlight {
+  border-color: var(--modal-highlight-border);
+  background: var(--modal-highlight-bg);
+}
+
+.tool-picker-modal .text-foreground,
+.tool-picker-modal .text-foreground\/80 {
+  color: var(--modal-text);
+}
+
+.tool-picker-modal .text-muted-foreground {
+  color: var(--modal-muted-text);
+}
+
 .sign-pdf-tool,
 .sign-pdf-layout,
 .sign-pdf-card,
@@ -174,6 +297,15 @@ body.pdf-overlay-dragging {
 }
 
 @media (max-width: 767px) {
+  .tool-picker-modal.tool-picker-modal {
+    width: 95vw;
+    max-width: 95vw;
+  }
+
+  .tool-picker-modal-scroll {
+    padding: 24px;
+  }
+
   .sign-pdf-tool {
     width: 100%;
     max-width: 100vw;

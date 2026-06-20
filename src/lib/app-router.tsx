@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type MouseEvent,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type MouseEvent } from "react";
 
 type NavigateOptions = {
   replace?: boolean;
@@ -36,6 +29,7 @@ function scrollToHashIfNeeded(hash: string) {
 function navigateToPath(to: string, options?: NavigateOptions) {
   const url = new URL(to, window.location.origin);
   const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+  const pathnameChanged = url.pathname !== window.location.pathname;
 
   if (options?.replace) {
     window.history.replaceState({}, "", nextUrl);
@@ -44,7 +38,11 @@ function navigateToPath(to: string, options?: NavigateOptions) {
   }
 
   window.dispatchEvent(new PopStateEvent("popstate"));
-  scrollToHashIfNeeded(url.hash);
+  if (url.hash) {
+    scrollToHashIfNeeded(url.hash);
+  } else if (pathnameChanged) {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
 }
 
 export function RouterProvider({ children }: { children: React.ReactNode }) {

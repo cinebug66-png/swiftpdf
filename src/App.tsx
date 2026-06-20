@@ -16,6 +16,10 @@ import DeletePagesPage from "@/pages/delete-pages-page";
 import ProtectPdfPage from "@/pages/protect-pdf-page";
 import UnlockPdfPage from "@/pages/unlock-pdf-page";
 import SignPdfPage from "@/pages/sign-pdf-page";
+import AboutPage from "@/pages/about-page";
+import ContactPage from "@/pages/contact-page";
+import PrivacyPolicyPage from "@/pages/privacy-policy-page";
+import TermsPage from "@/pages/terms-page";
 
 type RouteErrorBoundaryProps = {
   children: ReactNode;
@@ -86,6 +90,14 @@ function renderRoute(pathname: string) {
       return <UnlockPdfPage />;
     case "/sign-pdf":
       return <SignPdfPage />;
+    case "/about":
+      return <AboutPage />;
+    case "/contact":
+      return <ContactPage />;
+    case "/privacy-policy":
+      return <PrivacyPolicyPage />;
+    case "/terms":
+      return <TermsPage />;
     default:
       return <HomePage />;
   }
@@ -123,6 +135,10 @@ function AppRoutes() {
       "/protect-pdf": "Protect PDF - SwiftPDF",
       "/unlock-pdf": "Unlock PDF - SwiftPDF",
       "/sign-pdf": "Sign PDF - SwiftPDF",
+      "/about": "About - SwiftPDF",
+      "/contact": "Contact - SwiftPDF",
+      "/privacy-policy": "Privacy Policy - SwiftPDF",
+      "/terms": "Terms of Service - SwiftPDF",
     };
 
     document.title = titles[pathname] ?? "SwiftPDF";

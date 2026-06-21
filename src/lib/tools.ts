@@ -35,7 +35,7 @@ export const tools: Tool[] = [
     name: "PDF to Word",
     desc: "Editable .docx export",
     color: "from-blue-500 to-indigo-500",
-    long: "Convert any PDF into an editable Word document using CloudConvert while keeping the existing SwiftPDF design intact.",
+    long: "Convert PDF files into editable Word documents while preserving formatting.",
     cta: "Convert to Word",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -44,8 +44,8 @@ export const tools: Tool[] = [
         desc: "Download a Word document you can continue editing right away.",
       },
       {
-        title: "CloudConvert powered",
-        desc: "Uses the CloudConvert REST API directly from this Vite React project.",
+        title: "Formatting preserved",
+        desc: "Keep layouts, fonts, tables, and images as close to the original as possible.",
       },
       {
         title: "Simple browser flow",
@@ -55,11 +55,11 @@ export const tools: Tool[] = [
     faqs: [
       {
         q: "Will my formatting be preserved?",
-        a: "CloudConvert is designed to preserve layout, fonts, tables, and images as closely as possible.",
+        a: "SwiftPDF works to preserve layouts, fonts, tables, and images as closely as possible.",
       },
       {
         q: "Do I need to install anything?",
-        a: "No. The conversion runs from the browser using your CloudConvert API key.",
+        a: "No. Upload your PDF, convert it, and download the editable Word file online.",
       },
     ],
   },
@@ -69,7 +69,7 @@ export const tools: Tool[] = [
     name: "JPG to PDF",
     desc: "Convert images into PDF",
     color: "from-blue-500 to-violet-500",
-    long: "Convert JPG, PNG, and WEBP images into a single PDF directly in your browser while keeping the existing SwiftPDF experience exactly the same.",
+    long: "Convert JPG, PNG, and WEBP images into a polished PDF document.",
     cta: "Convert to PDF",
     accept: ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
     multiple: true,
@@ -79,8 +79,8 @@ export const tools: Tool[] = [
         desc: "Upload several JPG, PNG, or WEBP files and combine them into one PDF.",
       },
       {
-        title: "Client-side conversion",
-        desc: "Everything runs directly in your browser with jsPDF and no backend upload.",
+        title: "Private processing",
+        desc: "Create your PDF securely without a complicated setup.",
       },
       {
         title: "Fast PDF download",
@@ -93,8 +93,8 @@ export const tools: Tool[] = [
         a: "Yes. Add multiple JPG, PNG, or WEBP files and SwiftPDF will turn them into one PDF.",
       },
       {
-        q: "Does JPG to PDF use a server?",
-        a: "No. The conversion runs client-side in your browser using jsPDF.",
+        q: "Will my images keep their quality?",
+        a: "SwiftPDF keeps images clear and fits them neatly onto each PDF page.",
       },
     ],
   },
@@ -104,7 +104,7 @@ export const tools: Tool[] = [
     name: "Word to PDF",
     desc: "Pixel-perfect conversion",
     color: "from-indigo-500 to-violet-500",
-    long: "Turn DOC and DOCX files into clean PDFs with CloudConvert while keeping the existing SwiftPDF experience simple.",
+    long: "Convert Word documents into clean, shareable PDF files.",
     cta: "Convert to PDF",
     accept: ".doc,.docx",
     benefits: [
@@ -112,10 +112,10 @@ export const tools: Tool[] = [
         title: "DOC and DOCX support",
         desc: "Upload Word documents and convert them into shareable PDF files.",
       },
-      { title: "Consistent UI", desc: "The design matches the rest of the SwiftPDF tool pages." },
+      { title: "Reliable PDF output", desc: "Create a polished PDF that is ready to share." },
       {
-        title: "CloudConvert powered",
-        desc: "Conversion runs through the same CloudConvert REST flow used by SwiftPDF.",
+        title: "Simple conversion",
+        desc: "Upload your document and download the finished PDF in a few steps.",
       },
     ],
     faqs: [
@@ -131,14 +131,14 @@ export const tools: Tool[] = [
     name: "Merge PDF",
     desc: "Combine multiple files",
     color: "from-sky-500 to-blue-500",
-    long: "Combine multiple PDFs into one document directly in your browser while keeping the current SwiftPDF experience exactly the same.",
+    long: "Combine multiple PDF files into one document in seconds.",
     cta: "Merge PDFs",
     accept: ".pdf,application/pdf",
     multiple: true,
     benefits: [
       {
-        title: "Client-side merging",
-        desc: "Your PDF files are merged directly in the browser with no backend upload required.",
+        title: "Quick, secure merging",
+        desc: "Combine your documents in one simple, privacy-friendly workflow.",
       },
       {
         title: "Multiple file support",
@@ -151,8 +151,8 @@ export const tools: Tool[] = [
     ],
     faqs: [
       {
-        q: "Does merging happen on a server?",
-        a: "No. Merge PDF runs client-side in your browser using pdf-lib.",
+        q: "Will the page order stay the same?",
+        a: "Yes. Files are combined in the order shown in your uploaded PDF list.",
       },
       {
         q: "What file types are supported?",
@@ -166,7 +166,7 @@ export const tools: Tool[] = [
     name: "Split PDF",
     desc: "Extract selected pages",
     color: "from-blue-500 to-violet-500",
-    long: "Split a PDF by selecting the exact pages you want to keep, directly in your browser with the same SwiftPDF experience.",
+    long: "Extract selected pages into a new PDF instantly.",
     cta: "Split PDF",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -175,8 +175,8 @@ export const tools: Tool[] = [
         desc: "Pick single pages, full ranges, or mixed selections like 1-3,5,7-9.",
       },
       {
-        title: "Client-side processing",
-        desc: "Your PDF is split directly in the browser with no backend upload required.",
+        title: "Secure page extraction",
+        desc: "Create a focused PDF while keeping the workflow simple and private.",
       },
       {
         title: "Quick download",
@@ -200,7 +200,7 @@ export const tools: Tool[] = [
     name: "Compress PDF",
     desc: "Reduce size, keep quality",
     color: "from-cyan-500 to-sky-500",
-    long: "Shrink PDF size with CloudConvert's optimization tools while keeping the current SwiftPDF interface and flow simple.",
+    long: "Reduce PDF file size without sacrificing quality.",
     cta: "Compress PDF",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -210,8 +210,8 @@ export const tools: Tool[] = [
         desc: "The page shows original and compressed file sizes when the result is ready.",
       },
       {
-        title: "CloudConvert REST API",
-        desc: "Compression runs through CloudConvert using your VITE_CLOUDCONVERT_API_KEY.",
+        title: "Ready to share",
+        desc: "Create a lighter PDF for email, uploads, and everyday storage.",
       },
     ],
     faqs: [
@@ -221,7 +221,7 @@ export const tools: Tool[] = [
       },
       {
         q: "Will the PDF still look good?",
-        a: "The page uses CloudConvert's web optimization profile to keep the document readable while reducing size.",
+        a: "SwiftPDF balances file-size reduction with clear, readable document quality.",
       },
     ],
   },
@@ -231,7 +231,7 @@ export const tools: Tool[] = [
     name: "Watermark PDF",
     desc: "Add text watermark",
     color: "from-indigo-500 to-sky-500",
-    long: "Add a custom text watermark to every page of a PDF directly in your browser while keeping SwiftPDF fast and private.",
+    long: "Add text watermarks to protect and brand your PDFs.",
     cta: "Add Watermark",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -244,14 +244,14 @@ export const tools: Tool[] = [
         desc: "Control opacity, font size, and rotation before creating the final PDF.",
       },
       {
-        title: "Client-side processing",
-        desc: "Watermarks are applied in your browser with pdf-lib and no server upload.",
+        title: "Consistent protection",
+        desc: "Apply your watermark across every page in one step.",
       },
     ],
     faqs: [
       {
-        q: "Does Watermark PDF use a server?",
-        a: "No. The watermark is applied client-side in your browser using pdf-lib.",
+        q: "Can I watermark every page?",
+        a: "Yes. Your chosen watermark is applied consistently across the full PDF.",
       },
       {
         q: "Can I change the watermark style?",
@@ -265,7 +265,7 @@ export const tools: Tool[] = [
     name: "Rotate PDF",
     desc: "Rotate every page",
     color: "from-sky-500 to-indigo-500",
-    long: "Rotate every page in a PDF by 90, 180, or 270 degrees directly in your browser while keeping SwiftPDF fast and private.",
+    long: "Rotate PDF pages and save the corrected document.",
     cta: "Rotate PDF",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -274,8 +274,8 @@ export const tools: Tool[] = [
         desc: "Apply the selected rotation to every page in one quick step.",
       },
       {
-        title: "Client-side processing",
-        desc: "Your PDF is rotated directly in the browser with no backend upload required.",
+        title: "Quick correction",
+        desc: "Fix page orientation without recreating or rescanning the document.",
       },
       {
         title: "Simple download",
@@ -288,8 +288,8 @@ export const tools: Tool[] = [
         a: "You can rotate the PDF by 90, 180, or 270 degrees.",
       },
       {
-        q: "Does Rotate PDF use a server?",
-        a: "No. The rotation runs client-side in your browser using pdf-lib.",
+        q: "Will rotation change the page quality?",
+        a: "No. Rotating pages changes their orientation without reducing document quality.",
       },
     ],
   },
@@ -299,7 +299,7 @@ export const tools: Tool[] = [
     name: "Delete PDF Pages",
     desc: "Remove selected pages",
     color: "from-blue-500 to-sky-500",
-    long: "Delete selected pages from a PDF directly in your browser while keeping the existing SwiftPDF experience simple and private.",
+    long: "Remove unwanted pages and keep only what matters.",
     cta: "Delete Pages",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -308,8 +308,8 @@ export const tools: Tool[] = [
         desc: "Delete single pages, comma-separated pages, or full ranges like 2-4.",
       },
       {
-        title: "Client-side processing",
-        desc: "Your PDF is updated directly in the browser with no backend upload required.",
+        title: "Clean final document",
+        desc: "Create a focused PDF containing only the pages you need.",
       },
       {
         title: "Validated page numbers",
@@ -333,13 +333,13 @@ export const tools: Tool[] = [
     name: "Protect PDF",
     desc: "Add password protection",
     color: "from-indigo-500 to-blue-500",
-    long: "Add real password protection to a PDF using CloudConvert's PDF encryption operation while keeping the existing SwiftPDF flow simple.",
+    long: "Secure your PDF with password protection.",
     cta: "Protect PDF",
     accept: ".pdf,application/pdf",
     benefits: [
       {
-        title: "Real PDF encryption",
-        desc: "Uses CloudConvert's PDF encrypt operation instead of fake or metadata-only protection.",
+        title: "Strong document security",
+        desc: "Add password protection that helps prevent unauthorized access.",
       },
       {
         title: "Password validation",
@@ -352,8 +352,8 @@ export const tools: Tool[] = [
     ],
     faqs: [
       {
-        q: "Does Protect PDF use pdf-lib?",
-        a: "No. pdf-lib does not securely encrypt PDFs, so this tool uses CloudConvert's PDF encryption operation.",
+        q: "How strong should my password be?",
+        a: "Use a unique password with a mix of letters, numbers, and symbols for better protection.",
       },
       {
         q: "Does SwiftPDF store the password?",
@@ -367,13 +367,13 @@ export const tools: Tool[] = [
     name: "Unlock PDF",
     desc: "Remove PDF password",
     color: "from-sky-500 to-cyan-500",
-    long: "Remove password protection from a PDF using CloudConvert's PDF decrypt operation while keeping the existing SwiftPDF experience simple.",
+    long: "Remove password restrictions from PDFs you own.",
     cta: "Unlock PDF",
     accept: ".pdf,application/pdf",
     benefits: [
       {
-        title: "Real PDF unlocking",
-        desc: "Uses CloudConvert's PDF decrypt operation instead of fake client-side handling.",
+        title: "Restore easy access",
+        desc: "Create an unlocked copy for documents you are authorized to use.",
       },
       {
         title: "Password required",
@@ -386,8 +386,8 @@ export const tools: Tool[] = [
     ],
     faqs: [
       {
-        q: "Does Unlock PDF use pdf-lib?",
-        a: "No. pdf-lib cannot reliably unlock encrypted PDFs, so this tool uses CloudConvert's PDF decrypt operation.",
+        q: "Can I unlock any PDF?",
+        a: "You must know the current password and have permission to remove the document restriction.",
       },
       {
         q: "What if the password is wrong?",
@@ -401,7 +401,7 @@ export const tools: Tool[] = [
     name: "Sign PDF",
     desc: "Draw or upload signature",
     color: "from-blue-500 to-indigo-500",
-    long: "Draw or upload a signature, place it on a PDF page, and create a signed PDF directly in your browser.",
+    long: "Add typed, drawn, or uploaded signatures online.",
     cta: "Sign PDF",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -414,8 +414,8 @@ export const tools: Tool[] = [
         desc: "Move and resize the signature on the selected page before signing.",
       },
       {
-        title: "Client-side signing",
-        desc: "The signature is embedded into the PDF in your browser using pdf-lib.",
+        title: "Secure signing workflow",
+        desc: "Place your signature and create the finished document in one simple flow.",
       },
     ],
     faqs: [
@@ -424,8 +424,8 @@ export const tools: Tool[] = [
         a: "Yes. Uploaded PNG signatures are embedded with transparency preserved.",
       },
       {
-        q: "Does signing use a server?",
-        a: "No. Sign PDF runs client-side in your browser using pdf-lib.",
+        q: "Can I place signatures on different pages?",
+        a: "Yes. Add, position, and resize signatures on the pages where they are needed.",
       },
     ],
   },

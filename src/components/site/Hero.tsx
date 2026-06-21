@@ -38,7 +38,7 @@ export function Hero() {
             <span className="text-gradient">Instantly.</span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Fast, secure, and completely free PDF tools for everyone — no sign up, no watermarks.
+            Fast, secure PDF tools — all in your browser.
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
@@ -82,7 +82,7 @@ export function Hero() {
             <div className="mx-auto mb-5 grid place-items-center w-16 h-16 rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow group-hover:scale-110 transition-transform">
               <Upload className="w-7 h-7" />
             </div>
-            <p className="text-lg font-medium">
+            <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
               {file ? file.name : "Drop your PDF here or click to browse"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">

@@ -2,7 +2,71 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/((?!api(?:/|$)).*)",
+      "source": "/pdf-to-word",
+      "destination": "/pdf-to-word/index.html"
+    },
+    {
+      "source": "/compress-pdf",
+      "destination": "/compress-pdf/index.html"
+    },
+    {
+      "source": "/merge-pdf",
+      "destination": "/merge-pdf/index.html"
+    },
+    {
+      "source": "/split-pdf",
+      "destination": "/split-pdf/index.html"
+    },
+    {
+      "source": "/jpg-to-pdf",
+      "destination": "/jpg-to-pdf/index.html"
+    },
+    {
+      "source": "/word-to-pdf",
+      "destination": "/word-to-pdf/index.html"
+    },
+    {
+      "source": "/watermark-pdf",
+      "destination": "/watermark-pdf/index.html"
+    },
+    {
+      "source": "/rotate-pdf",
+      "destination": "/rotate-pdf/index.html"
+    },
+    {
+      "source": "/delete-pages",
+      "destination": "/delete-pages/index.html"
+    },
+    {
+      "source": "/protect-pdf",
+      "destination": "/protect-pdf/index.html"
+    },
+    {
+      "source": "/unlock-pdf",
+      "destination": "/unlock-pdf/index.html"
+    },
+    {
+      "source": "/sign-pdf",
+      "destination": "/sign-pdf/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/((?!api(?:/|$)|assets(?:/|$)|robots\\.txt$|sitemap\\.xml$).*)",
       "destination": "/index.html"
     }
   ]

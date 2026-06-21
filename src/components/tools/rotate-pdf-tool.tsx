@@ -129,7 +129,7 @@ export function RotatePdfTool() {
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
           <Upload className="h-7 w-7" />
         </div>
-        <p className="text-lg font-medium">
+        <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -139,13 +139,15 @@ export function RotatePdfTool() {
 
       {file && (
         <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{file.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="responsive-file-name text-sm font-medium" title={file.name}>
+                  {file.name}
+                </div>
                 <div className="text-xs text-muted-foreground">{fileSize}</div>
               </div>
             </div>
@@ -153,7 +155,7 @@ export function RotatePdfTool() {
               <button
                 type="button"
                 onClick={() => selectFile(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
               </button>
@@ -231,7 +233,7 @@ export function RotatePdfTool() {
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName}>
+              <a href={downloadUrl} download={downloadName} title={downloadName}>
                 <Download className="h-4 w-4" /> Download Rotated PDF
               </a>
             </Button>
@@ -271,7 +273,7 @@ export function RotatePdfTool() {
           <RotateCw className="h-3.5 w-3.5 text-primary" /> All pages
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary" /> Powered by pdf-lib
+          <Zap className="h-3.5 w-3.5 text-primary" /> Fast rotation
         </span>
       </div>
     </>

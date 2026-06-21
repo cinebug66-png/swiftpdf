@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { convertWordToPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
+import { LIMITED_TOOL_KEYS } from "@/lib/daily-usage-limits";
+import { useDailyUsageLimit } from "@/hooks/use-daily-usage-limit";
 import {
   ArrowRight,
   CheckCircle2,
@@ -38,6 +40,7 @@ export function WordToPdfTool() {
   const [progressNote, setProgressNote] = useState("Waiting for file");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadName, setDownloadName] = useState("converted.pdf");
+  const usageLimit = useDailyUsageLimit(LIMITED_TOOL_KEYS.wordToPdf);
 
   useEffect(() => {
     const pending = consumePendingFiles(ACCEPTED_WORD_TYPES, false);
@@ -76,10 +79,16 @@ export function WordToPdfTool() {
       return;
     }
 
+    if (!usageLimit.canUse) {
+      setStatus("error");
+      setError("Free daily limit reached. Please try again tomorrow.");
+      return;
+    }
+
     try {
       setStatus("processing");
       setError(null);
-      setProgressNote("Uploading your Word file to CloudConvert...");
+      setProgressNote("Preparing your Word file for conversion...");
 
       const result = await convertWordToPdf(file, (job) => {
         const runningTask = job.tasks.find((task) => task.status === "processing");
@@ -94,6 +103,7 @@ export function WordToPdfTool() {
       setDownloadUrl(result.downloadUrl);
       setDownloadName(result.filename);
       setProgressNote("Your PDF is ready.");
+      usageLimit.recordSuccessfulUse();
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Conversion failed. Please try again.");
@@ -131,23 +141,25 @@ export function WordToPdfTool() {
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
           <Upload className="h-7 w-7" />
         </div>
-        <p className="text-lg font-medium">
+        <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your Word file here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload a DOC or DOCX file and CloudConvert will return a clean PDF.
+          Upload a DOC or DOCX file and download a clean PDF.
         </p>
       </label>
 
       {file && (
         <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{file.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="responsive-file-name text-sm font-medium" title={file.name}>
+                  {file.name}
+                </div>
                 <div className="text-xs text-muted-foreground">{fileSize}</div>
               </div>
             </div>
@@ -155,7 +167,7 @@ export function WordToPdfTool() {
               <button
                 type="button"
                 onClick={() => selectFile(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
               </button>
@@ -188,12 +200,10 @@ export function WordToPdfTool() {
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="font-semibold">Conversion complete</div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your PDF is ready to download.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Your PDF is ready to download.</p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName}>
+              <a href={downloadUrl} download={downloadName} title={downloadName}>
                 <Download className="h-4 w-4" /> Download PDF
               </a>
             </Button>
@@ -205,8 +215,26 @@ export function WordToPdfTool() {
       )}
 
       {status !== "done" && (
-        <div className="mt-6 flex justify-center">
-          <Button variant="hero" size="xl" onClick={handleSubmit}>
+        <div className="mt-6 flex flex-col items-center">
+          <p
+            className={cn(
+              "mb-2 text-center text-xs text-muted-foreground",
+              !usageLimit.canUse && "text-destructive",
+            )}
+            aria-live="polite"
+          >
+            {usageLimit.canUse
+              ? `${usageLimit.remainingUses} free ${
+                  usageLimit.remainingUses === 1 ? "conversion" : "conversions"
+                } remaining today`
+              : "Free daily limit reached. Please try again tomorrow."}
+          </p>
+          <Button
+            variant="hero"
+            size="xl"
+            onClick={handleSubmit}
+            disabled={status === "processing" || (Boolean(file) && !usageLimit.canUse)}
+          >
             {file ? (
               <>
                 Convert to PDF <ArrowRight className="h-4 w-4" />
@@ -225,7 +253,7 @@ export function WordToPdfTool() {
           <Shield className="h-3.5 w-3.5 text-primary" /> Secure
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary" /> CloudConvert REST API
+          <Zap className="h-3.5 w-3.5 text-primary" /> Fast conversion
         </span>
         <span className="inline-flex items-center gap-1.5">
           <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> PDF output

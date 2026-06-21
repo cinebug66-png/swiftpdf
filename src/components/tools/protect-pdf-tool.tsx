@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { protectPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
+import { LIMITED_TOOL_KEYS } from "@/lib/daily-usage-limits";
+import { useDailyUsageLimit } from "@/hooks/use-daily-usage-limit";
 
 type ToolStatus = "idle" | "processing" | "done" | "error";
 
@@ -39,6 +41,7 @@ export function ProtectPdfTool() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const usageLimit = useDailyUsageLimit(LIMITED_TOOL_KEYS.protectPdf);
 
   useEffect(() => {
     const pending = consumePendingFiles(".pdf,application/pdf", false);
@@ -90,6 +93,12 @@ export function ProtectPdfTool() {
       return;
     }
 
+    if (!usageLimit.canUse) {
+      setStatus("error");
+      setError("Free daily limit reached. Please try again tomorrow.");
+      return;
+    }
+
     try {
       validatePasswords();
       setStatus("processing");
@@ -109,6 +118,7 @@ export function ProtectPdfTool() {
       setDownloadUrl(result.downloadUrl);
       setDownloadName(result.filename);
       setProgressNote("Your protected PDF is ready.");
+      usageLimit.recordSuccessfulUse();
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Protection failed. Please try again.");
@@ -148,7 +158,7 @@ export function ProtectPdfTool() {
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
           <Upload className="h-7 w-7" />
         </div>
-        <p className="text-lg font-medium">
+        <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -158,13 +168,15 @@ export function ProtectPdfTool() {
 
       {file && (
         <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{file.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="responsive-file-name text-sm font-medium" title={file.name}>
+                  {file.name}
+                </div>
                 <div className="text-xs text-muted-foreground">{fileSize}</div>
               </div>
             </div>
@@ -172,7 +184,7 @@ export function ProtectPdfTool() {
               <button
                 type="button"
                 onClick={() => selectFile(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
               </button>
@@ -218,13 +230,11 @@ export function ProtectPdfTool() {
                 onClick={() => setShowConfirmPassword((current) => !current)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 disabled={status === "processing"}
-                aria-label={showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"}
+                aria-label={
+                  showConfirmPassword ? "Hide password confirmation" : "Show password confirmation"
+                }
               >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
@@ -273,7 +283,7 @@ export function ProtectPdfTool() {
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName}>
+              <a href={downloadUrl} download={downloadName} title={downloadName}>
                 <Download className="h-4 w-4" /> Download Protected PDF
               </a>
             </Button>
@@ -285,12 +295,25 @@ export function ProtectPdfTool() {
       )}
 
       {status !== "done" && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col items-center">
+          <p
+            className={cn(
+              "mb-2 text-center text-xs text-muted-foreground",
+              !usageLimit.canUse && "text-destructive",
+            )}
+            aria-live="polite"
+          >
+            {usageLimit.canUse
+              ? `${usageLimit.remainingUses} free ${
+                  usageLimit.remainingUses === 1 ? "use" : "uses"
+                } remaining today`
+              : "Free daily limit reached. Please try again tomorrow."}
+          </p>
           <Button
             variant="hero"
             size="xl"
             onClick={handleSubmit}
-            disabled={status === "processing"}
+            disabled={status === "processing" || (Boolean(file) && !usageLimit.canUse)}
           >
             {file ? (
               <>
@@ -313,7 +336,7 @@ export function ProtectPdfTool() {
           <Lock className="h-3.5 w-3.5 text-primary" /> Password required
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary" /> CloudConvert PDF encrypt
+          <Zap className="h-3.5 w-3.5 text-primary" /> Secure encryption
         </span>
       </div>
     </>

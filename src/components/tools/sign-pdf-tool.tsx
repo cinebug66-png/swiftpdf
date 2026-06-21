@@ -942,7 +942,9 @@ export function SignPdfTool() {
             <Upload className="h-6 w-6" />
           )}
         </div>
-        <div className="text-lg font-semibold">{file ? file.name : "Upload PDF"}</div>
+        <div className="responsive-file-name mx-auto text-lg font-semibold" title={file?.name}>
+          {file ? file.name : "Upload PDF"}
+        </div>
         <div className="mt-1 text-sm text-muted-foreground">
           {file
             ? `${fileSize} ${pageInfo.length ? `| ${pageInfo.length} pages` : ""}`
@@ -1045,7 +1047,7 @@ export function SignPdfTool() {
                         >
                           <img
                             src={placement.signatureData}
-                            alt="Placed signature"
+                            alt="Signature placed on the PDF page"
                             draggable={false}
                             className="h-full w-full object-fill"
                           />
@@ -1305,7 +1307,7 @@ export function SignPdfTool() {
                 </div>
                 <div className="font-semibold">Signed PDF ready</div>
                 <Button variant="hero" size="lg" className="mt-4 w-full" asChild>
-                  <a href={downloadUrl} download={downloadName}>
+                  <a href={downloadUrl} download={downloadName} title={downloadName}>
                     <Download className="h-4 w-4" /> Download Signed PDF
                   </a>
                 </Button>

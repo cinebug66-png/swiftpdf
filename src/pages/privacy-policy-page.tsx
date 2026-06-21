@@ -27,9 +27,9 @@ export default function PrivacyPolicyPage() {
                 SwiftPDF server.
               </p>
               <p>
-                Some conversion and optimization tools may use secure third-party APIs such as
-                CloudConvert. Files sent to those providers are used only to perform the tool you
-                selected and are subject to the provider&apos;s processing practices.
+                Some conversion and optimization tools may use a secure processing provider. Files
+                sent for processing are used only to perform the tool you selected and are subject
+                to the provider&apos;s processing practices.
               </p>
             </>
           ),

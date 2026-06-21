@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { compressPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
+import { LIMITED_TOOL_KEYS } from "@/lib/daily-usage-limits";
+import { useDailyUsageLimit } from "@/hooks/use-daily-usage-limit";
 import {
   ArrowRight,
   CheckCircle2,
@@ -32,6 +34,7 @@ export function CompressPdfTool() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadName, setDownloadName] = useState("compressed.pdf");
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
+  const usageLimit = useDailyUsageLimit(LIMITED_TOOL_KEYS.compressPdf);
 
   useEffect(() => {
     const pending = consumePendingFiles(".pdf,application/pdf", false);
@@ -71,10 +74,16 @@ export function CompressPdfTool() {
       return;
     }
 
+    if (!usageLimit.canUse) {
+      setStatus("error");
+      setError("Free daily limit reached. Please try again tomorrow.");
+      return;
+    }
+
     try {
       setStatus("processing");
       setError(null);
-      setProgressNote("Uploading your PDF to CloudConvert...");
+      setProgressNote("Preparing your PDF for compression...");
 
       const result = await compressPdf(file, (job) => {
         const runningTask = job.tasks.find((task) => task.status === "processing");
@@ -90,6 +99,7 @@ export function CompressPdfTool() {
       setDownloadName(result.filename);
       setCompressedSize(result.outputSize);
       setProgressNote("Your compressed PDF is ready.");
+      usageLimit.recordSuccessfulUse();
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Compression failed. Please try again.");
@@ -127,23 +137,25 @@ export function CompressPdfTool() {
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
           <Upload className="h-7 w-7" />
         </div>
-        <p className="text-lg font-medium">
+        <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload a PDF and CloudConvert will optimize it for a smaller file size.
+          Upload a PDF and download a smaller, optimized copy.
         </p>
       </label>
 
       {file && (
         <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{file.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="responsive-file-name text-sm font-medium" title={file.name}>
+                  {file.name}
+                </div>
                 <div className="text-xs text-muted-foreground">{originalSize}</div>
               </div>
             </div>
@@ -151,7 +163,7 @@ export function CompressPdfTool() {
               <button
                 type="button"
                 onClick={() => selectFile(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
               </button>
@@ -205,7 +217,7 @@ export function CompressPdfTool() {
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName}>
+              <a href={downloadUrl} download={downloadName} title={downloadName}>
                 <Download className="h-4 w-4" /> Download Compressed PDF
               </a>
             </Button>
@@ -217,8 +229,26 @@ export function CompressPdfTool() {
       )}
 
       {status !== "done" && (
-        <div className="mt-6 flex justify-center">
-          <Button variant="hero" size="xl" onClick={handleSubmit}>
+        <div className="mt-6 flex flex-col items-center">
+          <p
+            className={cn(
+              "mb-2 text-center text-xs text-muted-foreground",
+              !usageLimit.canUse && "text-destructive",
+            )}
+            aria-live="polite"
+          >
+            {usageLimit.canUse
+              ? `${usageLimit.remainingUses} free ${
+                  usageLimit.remainingUses === 1 ? "compression" : "compressions"
+                } remaining today`
+              : "Free daily limit reached. Please try again tomorrow."}
+          </p>
+          <Button
+            variant="hero"
+            size="xl"
+            onClick={handleSubmit}
+            disabled={status === "processing" || (Boolean(file) && !usageLimit.canUse)}
+          >
             {file ? (
               <>
                 Compress PDF <ArrowRight className="h-4 w-4" />

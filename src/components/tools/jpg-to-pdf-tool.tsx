@@ -201,14 +201,16 @@ export function JpgToPdfTool() {
             {files.map((file, index) => (
               <div
                 key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
-                className="flex items-center justify-between gap-3 rounded-xl bg-card/70 px-3 py-2"
+                className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-card/70 px-3 py-2"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
                     <FileImage className="h-4 w-4" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{file.name}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="responsive-file-name text-sm font-medium" title={file.name}>
+                      {file.name}
+                    </div>
                     <div className="text-xs text-muted-foreground">{formatFileSize(file.size)}</div>
                   </div>
                 </div>
@@ -216,7 +218,7 @@ export function JpgToPdfTool() {
                   <button
                     type="button"
                     onClick={() => removeFile(index)}
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3.5 w-3.5" /> Remove
                   </button>
@@ -264,7 +266,7 @@ export function JpgToPdfTool() {
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName}>
+              <a href={downloadUrl} download={downloadName} title={downloadName}>
                 <Download className="h-4 w-4" /> Download PDF
               </a>
             </Button>
@@ -298,7 +300,7 @@ export function JpgToPdfTool() {
           <Shield className="h-3.5 w-3.5 text-primary" /> Client-side only
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary" /> Powered by jsPDF
+          <Zap className="h-3.5 w-3.5 text-primary" /> Fast conversion
         </span>
         <span className="inline-flex items-center gap-1.5">
           <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Multiple image support

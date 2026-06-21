@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SeoHead } from "@/components/seo-head";
 import { RouterProvider, useNavigate, usePathname } from "@/lib/app-router";
 import { getTool } from "@/lib/tools";
 import { getToolPath } from "@/lib/tool-routes";
@@ -120,31 +121,12 @@ function AppRoutes() {
     navigate(tool ? getToolPath(tool.slug) : "/", { replace: true });
   }, [navigate, pathname]);
 
-  useEffect(() => {
-    const titles: Record<string, string> = {
-      "/": "SwiftPDF",
-      "/pdf-to-word": "PDF to Word - SwiftPDF",
-      "/compress-pdf": "Compress PDF - SwiftPDF",
-      "/merge-pdf": "Merge PDF - SwiftPDF",
-      "/split-pdf": "Split PDF - SwiftPDF",
-      "/jpg-to-pdf": "JPG to PDF - SwiftPDF",
-      "/word-to-pdf": "Word to PDF - SwiftPDF",
-      "/watermark-pdf": "Watermark PDF - SwiftPDF",
-      "/rotate-pdf": "Rotate PDF - SwiftPDF",
-      "/delete-pages": "Delete PDF Pages - SwiftPDF",
-      "/protect-pdf": "Protect PDF - SwiftPDF",
-      "/unlock-pdf": "Unlock PDF - SwiftPDF",
-      "/sign-pdf": "Sign PDF - SwiftPDF",
-      "/about": "About - SwiftPDF",
-      "/contact": "Contact - SwiftPDF",
-      "/privacy-policy": "Privacy Policy - SwiftPDF",
-      "/terms": "Terms of Service - SwiftPDF",
-    };
-
-    document.title = titles[pathname] ?? "SwiftPDF";
-  }, [pathname]);
-
-  return <RouteErrorBoundary routeKey={pathname}>{renderRoute(pathname)}</RouteErrorBoundary>;
+  return (
+    <>
+      <SeoHead pathname={pathname} />
+      <RouteErrorBoundary routeKey={pathname}>{renderRoute(pathname)}</RouteErrorBoundary>
+    </>
+  );
 }
 
 export default function App() {

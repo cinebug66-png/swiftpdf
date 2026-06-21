@@ -57,7 +57,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
                 <div className="w-9 h-9 rounded-lg bg-gradient-primary grid place-items-center text-primary-foreground shrink-0">
                   <FileText className="w-4 h-4" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="tool-picker-file-name text-sm font-medium" title={file.name}>
                     {file.name}
                   </div>
@@ -68,7 +68,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
               </div>
               <button
                 onClick={() => onOpenChange(false)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md"
+                className="shrink-0 text-muted-foreground hover:text-foreground p-1 rounded-md"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />

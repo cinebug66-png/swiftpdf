@@ -253,6 +253,14 @@ body.pdf-overlay-dragging {
   white-space: nowrap;
 }
 
+.responsive-file-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tool-picker-grid {
   gap: 12px;
 }

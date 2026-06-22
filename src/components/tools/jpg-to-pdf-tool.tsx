@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { createPdfDownloadUrl, createPdfFromImages, revokeObjectUrl } from "@/lib/jpg-to-pdf";
@@ -121,6 +122,7 @@ export function JpgToPdfTool() {
     }
 
     try {
+      trackConversionStarted("jpg_to_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote(
@@ -133,6 +135,7 @@ export function JpgToPdfTool() {
       revokeObjectUrl(downloadUrl);
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(files));
+      trackConversionCompleted("jpg_to_pdf");
       setStatus("done");
       setProgressNote("Your PDF is ready");
     } catch (err) {

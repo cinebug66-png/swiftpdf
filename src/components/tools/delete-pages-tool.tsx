@@ -15,6 +15,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { parsePageRangePreview } from "@/lib/pdf-page-ranges";
@@ -259,6 +260,7 @@ export function DeletePagesTool() {
     }
 
     try {
+      trackConversionStarted("delete_pages");
       setStatus("processing");
       setError(null);
       setProgressNote("Removing selected pages...");
@@ -270,6 +272,7 @@ export function DeletePagesTool() {
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(file));
       setProgressNote("Your updated PDF is ready.");
+      trackConversionCompleted("delete_pages");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete pages failed. Please try again.");

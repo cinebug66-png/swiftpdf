@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { lockPdfOverlayTouchDrag } from "@/lib/pdf-overlay-drag";
@@ -104,6 +105,7 @@ export function WatermarkPdfTool() {
     }
 
     try {
+      trackConversionStarted("watermark_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Adding watermark to every page...");
@@ -123,6 +125,7 @@ export function WatermarkPdfTool() {
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(file));
       setProgressNote("Your watermarked PDF is ready.");
+      trackConversionCompleted("watermark_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Watermark failed. Please try again.");

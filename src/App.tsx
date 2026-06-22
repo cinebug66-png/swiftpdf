@@ -2,6 +2,8 @@ import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SeoHead } from "@/components/seo-head";
 import { RouterProvider, useNavigate, usePathname } from "@/lib/app-router";
+import { trackPageView } from "@/lib/analytics";
+import { getSeoMetadata } from "@/lib/seo";
 import { getTool } from "@/lib/tools";
 import { getToolPath } from "@/lib/tool-routes";
 import HomePage from "@/pages/home-page";
@@ -107,6 +109,10 @@ function renderRoute(pathname: string) {
 function AppRoutes() {
   const pathname = usePathname();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackPageView(pathname, getSeoMetadata(pathname).title);
+  }, [pathname]);
 
   useEffect(() => {
     if (!pathname.startsWith("/tools/")) return;

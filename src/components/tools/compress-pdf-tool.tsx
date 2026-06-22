@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { compressPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
@@ -81,6 +82,7 @@ export function CompressPdfTool() {
     }
 
     try {
+      trackConversionStarted("compress_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Preparing your PDF for compression...");
@@ -100,6 +102,7 @@ export function CompressPdfTool() {
       setCompressedSize(result.outputSize);
       setProgressNote("Your compressed PDF is ready.");
       usageLimit.recordSuccessfulUse();
+      trackConversionCompleted("compress_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Compression failed. Please try again.");

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { revokeDownloadUrl, unlockPdf } from "@/lib/cloudconvert";
@@ -89,6 +90,7 @@ export function UnlockPdfTool() {
     }
 
     try {
+      trackConversionStarted("unlock_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Uploading your protected PDF securely...");
@@ -107,6 +109,7 @@ export function UnlockPdfTool() {
       setDownloadName(result.filename);
       setProgressNote("Your unlocked PDF is ready.");
       usageLimit.recordSuccessfulUse();
+      trackConversionCompleted("unlock_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unlock failed. Please try again.");

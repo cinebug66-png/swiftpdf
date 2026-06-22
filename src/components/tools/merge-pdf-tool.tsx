@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { createPdfDownloadUrl, mergePdfs, revokeObjectUrl } from "@/lib/pdf-merge";
@@ -105,6 +106,7 @@ export function MergePdfTool() {
     }
 
     try {
+      trackConversionStarted("merge_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote(`Merging ${files.length} PDF files...`);
@@ -114,6 +116,7 @@ export function MergePdfTool() {
 
       revokeObjectUrl(downloadUrl);
       setDownloadUrl(nextDownloadUrl);
+      trackConversionCompleted("merge_pdf");
       setStatus("done");
       setProgressNote("Your merged PDF is ready");
     } catch (err) {

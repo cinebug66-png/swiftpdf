@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { convertWordToPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
@@ -86,6 +87,7 @@ export function WordToPdfTool() {
     }
 
     try {
+      trackConversionStarted("word_to_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Preparing your Word file for conversion...");
@@ -104,6 +106,7 @@ export function WordToPdfTool() {
       setDownloadName(result.filename);
       setProgressNote("Your PDF is ready.");
       usageLimit.recordSuccessfulUse();
+      trackConversionCompleted("word_to_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Conversion failed. Please try again.");

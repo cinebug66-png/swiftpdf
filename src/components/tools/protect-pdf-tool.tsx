@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import { protectPdf, revokeDownloadUrl } from "@/lib/cloudconvert";
@@ -101,6 +102,7 @@ export function ProtectPdfTool() {
 
     try {
       validatePasswords();
+      trackConversionStarted("protect_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Uploading your PDF securely...");
@@ -119,6 +121,7 @@ export function ProtectPdfTool() {
       setDownloadName(result.filename);
       setProgressNote("Your protected PDF is ready.");
       usageLimit.recordSuccessfulUse();
+      trackConversionCompleted("protect_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Protection failed. Please try again.");

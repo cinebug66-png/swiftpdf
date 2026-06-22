@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
+import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { consumePendingFiles } from "@/lib/pending-file";
 import {
@@ -81,6 +82,7 @@ export function RotatePdfTool() {
     }
 
     try {
+      trackConversionStarted("rotate_pdf");
       setStatus("processing");
       setError(null);
       setProgressNote("Rotating every page...");
@@ -92,6 +94,7 @@ export function RotatePdfTool() {
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(file));
       setProgressNote("Your rotated PDF is ready.");
+      trackConversionCompleted("rotate_pdf");
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Rotate failed. Please try again.");

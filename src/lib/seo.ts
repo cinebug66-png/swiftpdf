@@ -8,7 +8,7 @@ import {
 export { publicRoutes, routeMetadata };
 
 export const SITE_NAME = "SwiftPDF";
-export const SITE_URL = (import.meta.env.VITE_SITE_URL?.trim() || "https://swiftpdf.in").replace(
+export const SITE_URL = (import.meta.env.VITE_SITE_URL?.trim() || "https://swiftpdftools.in").replace(
   /\/+$/,
   "",
 );

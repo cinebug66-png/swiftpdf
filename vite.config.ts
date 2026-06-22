@@ -8,7 +8,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { proxyCloudConvertRequest } from "./src/lib/cloudconvert-proxy";
 import { routeMetadata, toolFeatureNames } from "./src/lib/seo-routes";
 
-const DEFAULT_SITE_URL = "https://swiftpdf.in";
+const DEFAULT_SITE_URL = "https://swiftpdftools.in";
 
 function escapeHtml(value: string) {
   return value

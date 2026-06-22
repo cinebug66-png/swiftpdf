@@ -1,87 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://swiftpdf.in/</loc>
+    <loc>https://swiftpdftools.in/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/pdf-to-word</loc>
+    <loc>https://swiftpdftools.in/pdf-to-word</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/compress-pdf</loc>
+    <loc>https://swiftpdftools.in/compress-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/merge-pdf</loc>
+    <loc>https://swiftpdftools.in/merge-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/split-pdf</loc>
+    <loc>https://swiftpdftools.in/split-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/jpg-to-pdf</loc>
+    <loc>https://swiftpdftools.in/jpg-to-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/word-to-pdf</loc>
+    <loc>https://swiftpdftools.in/word-to-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/watermark-pdf</loc>
+    <loc>https://swiftpdftools.in/watermark-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/rotate-pdf</loc>
+    <loc>https://swiftpdftools.in/rotate-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/delete-pages</loc>
+    <loc>https://swiftpdftools.in/delete-pages</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/protect-pdf</loc>
+    <loc>https://swiftpdftools.in/protect-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/unlock-pdf</loc>
+    <loc>https://swiftpdftools.in/unlock-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/sign-pdf</loc>
+    <loc>https://swiftpdftools.in/sign-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/about</loc>
+    <loc>https://swiftpdftools.in/about</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/contact</loc>
+    <loc>https://swiftpdftools.in/contact</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/privacy-policy</loc>
+    <loc>https://swiftpdftools.in/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://swiftpdf.in/terms</loc>
+    <loc>https://swiftpdftools.in/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

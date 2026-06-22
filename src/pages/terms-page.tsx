@@ -1,6 +1,6 @@
 import { InfoPageShell } from "@/components/site/info-page-shell";
 
-const email = "support@swiftpdf.in";
+const email = "support@swiftpdftools.in";
 
 export default function TermsPage() {
   return (

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://swiftpdf.in/sitemap.xml
+Sitemap: https://swiftpdftools.in/sitemap.xml

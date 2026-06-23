@@ -6,12 +6,15 @@ const columns = [
     title: "Tools",
     links: [
       { label: "PDF to Word", to: "/pdf-to-word" },
+      { label: "PDF to JPG", to: "/pdf-to-jpg" },
       { label: "Compress PDF", to: "/compress-pdf" },
       { label: "Merge PDF", to: "/merge-pdf" },
       { label: "Split PDF", to: "/split-pdf" },
       { label: "Sign PDF", to: "/sign-pdf" },
       { label: "Watermark PDF", to: "/watermark-pdf" },
       { label: "Delete PDF Pages", to: "/delete-pages" },
+      { label: "Reorder PDF Pages", to: "/reorder-pdf" },
+      { label: "Add Page Numbers", to: "/add-page-numbers" },
     ],
   },
   {

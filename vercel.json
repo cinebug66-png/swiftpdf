@@ -6,6 +6,10 @@
       "destination": "/pdf-to-word/index.html"
     },
     {
+      "source": "/pdf-to-jpg",
+      "destination": "/pdf-to-jpg/index.html"
+    },
+    {
       "source": "/compress-pdf",
       "destination": "/compress-pdf/index.html"
     },
@@ -36,6 +40,14 @@
     {
       "source": "/delete-pages",
       "destination": "/delete-pages/index.html"
+    },
+    {
+      "source": "/reorder-pdf",
+      "destination": "/reorder-pdf/index.html"
+    },
+    {
+      "source": "/add-page-numbers",
+      "destination": "/add-page-numbers/index.html"
     },
     {
       "source": "/protect-pdf",

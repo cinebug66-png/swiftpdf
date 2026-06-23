@@ -42,25 +42,54 @@
   --animate-blob: blob 18s ease-in-out infinite;
 
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-14px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-14px);
+    }
   }
   @keyframes glow {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 0.9; }
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.9;
+    }
   }
   @keyframes blob {
-    0%, 100% { transform: translate(0,0) scale(1); }
-    33% { transform: translate(40px,-30px) scale(1.08); }
-    66% { transform: translate(-30px,30px) scale(0.95); }
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(40px, -30px) scale(1.08);
+    }
+    66% {
+      transform: translate(-30px, 30px) scale(0.95);
+    }
   }
 }
 
@@ -89,7 +118,12 @@
 
   --gradient-primary: linear-gradient(135deg, oklch(0.5 0.22 264), oklch(0.68 0.18 250));
   --gradient-hero: radial-gradient(ellipse at top, oklch(0.95 0.05 255 / 0.8), transparent 60%);
-  --gradient-mesh: linear-gradient(135deg, oklch(0.97 0.02 255) 0%, oklch(0.99 0.005 255) 50%, oklch(0.96 0.04 250) 100%);
+  --gradient-mesh: linear-gradient(
+    135deg,
+    oklch(0.97 0.02 255) 0%,
+    oklch(0.99 0.005 255) 50%,
+    oklch(0.96 0.04 250) 100%
+  );
 
   --shadow-soft: 0 4px 20px -6px oklch(0.5 0.22 264 / 0.12);
   --shadow-glow: 0 20px 60px -20px oklch(0.5 0.22 264 / 0.4);
@@ -155,13 +189,27 @@ html.dark {
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 }
 
@@ -189,6 +237,15 @@ html.pdf-overlay-dragging,
 body.pdf-overlay-dragging {
   touch-action: none;
   overscroll-behavior: none;
+}
+
+html.pdf-reorder-dragging,
+body.pdf-reorder-dragging {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 [data-signature-overlay] {
@@ -356,6 +413,12 @@ body.pdf-overlay-dragging {
 @utility bg-gradient-mesh {
   background: var(--gradient-mesh);
 }
-@utility shadow-soft { box-shadow: var(--shadow-soft); }
-@utility shadow-card { box-shadow: var(--shadow-card); }
-@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}

@@ -20,6 +20,13 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Convert PDF files to editable Word documents online with SwiftPDF. Fast, secure PDF to DOCX conversion with no signup required.",
     type: "website",
   },
+  "/pdf-to-jpg": {
+    path: "/pdf-to-jpg",
+    title: "PDF to JPG Converter - Convert PDF Pages to JPG Online Free | SwiftPDF",
+    description:
+      "Convert PDF pages into high-quality JPG images online for free. Fast, secure, and works directly in your browser.",
+    type: "website",
+  },
   "/compress-pdf": {
     path: "/compress-pdf",
     title: "Compress PDF Online Free | SwiftPDF",
@@ -74,6 +81,20 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
     title: "Delete PDF Pages Online Free | SwiftPDF",
     description:
       "Delete selected pages from a PDF online. Remove single pages or page ranges quickly and securely with SwiftPDF.",
+    type: "website",
+  },
+  "/reorder-pdf": {
+    path: "/reorder-pdf",
+    title: "Reorder PDF Pages Online Free | SwiftPDF",
+    description:
+      "Reorder PDF pages online for free. Drag and arrange pages in your browser and download the updated PDF instantly.",
+    type: "website",
+  },
+  "/add-page-numbers": {
+    path: "/add-page-numbers",
+    title: "Add Page Numbers to PDF Online Free | SwiftPDF",
+    description:
+      "Add page numbers to PDF files online for free. Choose position, style, and format directly in your browser.",
     type: "website",
   },
   "/protect-pdf": {
@@ -131,6 +152,7 @@ export const publicRoutes = Object.keys(routeMetadata);
 
 export const toolFeatureNames = [
   "PDF to Word",
+  "PDF to JPG",
   "Compress PDF",
   "Merge PDF",
   "Split PDF",
@@ -139,6 +161,8 @@ export const toolFeatureNames = [
   "Watermark PDF",
   "Rotate PDF",
   "Delete PDF Pages",
+  "Reorder PDF Pages",
+  "Add Page Numbers",
   "Protect PDF",
   "Unlock PDF",
   "Sign PDF",

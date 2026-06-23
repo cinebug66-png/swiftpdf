@@ -31,6 +31,10 @@ function sendEvent(eventName: string, parameters: Record<string, string>) {
   window.gtag("event", eventName, parameters);
 }
 
+export function trackAnalyticsEvent(eventName: string, parameters: Record<string, string> = {}) {
+  sendEvent(eventName, parameters);
+}
+
 export function trackPageView(pathname: string, pageTitle: string) {
   if (typeof window === "undefined") return;
 

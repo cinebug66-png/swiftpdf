@@ -8,6 +8,7 @@ import { getTool } from "@/lib/tools";
 import { getToolPath } from "@/lib/tool-routes";
 import HomePage from "@/pages/home-page";
 import PdfToWordPage from "@/pages/pdf-to-word-page";
+import PdfToJpgPage from "@/pages/pdf-to-jpg-page";
 import CompressPdfPage from "@/pages/compress-pdf-page";
 import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
@@ -16,6 +17,8 @@ import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 import WatermarkPdfPage from "@/pages/watermark-pdf-page";
 import RotatePdfPage from "@/pages/rotate-pdf-page";
 import DeletePagesPage from "@/pages/delete-pages-page";
+import ReorderPdfPage from "@/pages/reorder-pdf-page";
+import AddPageNumbersPage from "@/pages/add-page-numbers-page";
 import ProtectPdfPage from "@/pages/protect-pdf-page";
 import UnlockPdfPage from "@/pages/unlock-pdf-page";
 import SignPdfPage from "@/pages/sign-pdf-page";
@@ -71,6 +74,8 @@ function renderRoute(pathname: string) {
       return <HomePage />;
     case "/pdf-to-word":
       return <PdfToWordPage />;
+    case "/pdf-to-jpg":
+      return <PdfToJpgPage />;
     case "/compress-pdf":
       return <CompressPdfPage />;
     case "/merge-pdf":
@@ -87,6 +92,10 @@ function renderRoute(pathname: string) {
       return <RotatePdfPage />;
     case "/delete-pages":
       return <DeletePagesPage />;
+    case "/reorder-pdf":
+      return <ReorderPdfPage />;
+    case "/add-page-numbers":
+      return <AddPageNumbersPage />;
     case "/protect-pdf":
       return <ProtectPdfPage />;
     case "/unlock-pdf":

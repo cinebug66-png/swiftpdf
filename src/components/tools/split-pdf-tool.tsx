@@ -82,15 +82,15 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
         if (cancelled) return;
 
         loadingTask = pdfjsLib.getDocument({ data: data.slice(0) }) as unknown as PdfLoadingTask;
-        const document = await loadingTask.promise;
+        const pdfDoc = await loadingTask.promise;
         if (cancelled) {
-          await document.destroy().catch(() => undefined);
+          await pdfDoc.destroy().catch(() => undefined);
           return;
         }
 
-        const page = await document.getPage(pageNumber);
+        const page = await pdfDoc.getPage(pageNumber);
         if (cancelled) {
-          await document.destroy().catch(() => undefined);
+          await pdfDoc.destroy().catch(() => undefined);
           return;
         }
 
@@ -112,7 +112,7 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
 
         renderTask = page.render({ canvasContext: context, viewport });
         await renderTask.promise;
-        await document.destroy().catch(() => undefined);
+        await pdfDoc.destroy().catch(() => undefined);
 
         if (!cancelled) setFailed(false);
       } catch {

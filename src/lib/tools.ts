@@ -1,5 +1,6 @@
 import {
   FileText,
+  FileImage,
   FileType2,
   Combine,
   Images,
@@ -7,6 +8,8 @@ import {
   LockOpen,
   Minimize2,
   PenLine,
+  ListOrdered,
+  Hash,
   RotateCw,
   Scissors,
   Trash2,
@@ -60,6 +63,44 @@ export const tools: Tool[] = [
       {
         q: "Do I need to install anything?",
         a: "No. Upload your PDF, convert it, and download the editable Word file online.",
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-jpg",
+    icon: FileImage,
+    name: "PDF to JPG",
+    desc: "Export pages as images",
+    color: "from-violet-500 to-fuchsia-500",
+    long: "Convert every PDF page into a crisp, downloadable JPG image in your browser.",
+    cta: "Convert to JPG",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Every page converted",
+        desc: "Render the complete PDF into high-quality JPG images with clear page numbering.",
+      },
+      {
+        title: "Private browser processing",
+        desc: "Your PDF stays on your device and is never sent to a conversion server.",
+      },
+      {
+        title: "Flexible downloads",
+        desc: "Preview and download individual pages or bundle every JPG into one ZIP file.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does SwiftPDF upload my PDF?",
+        a: "No. PDF.js renders every page locally in your browser, so the file stays on your device.",
+      },
+      {
+        q: "Can I download all pages at once?",
+        a: "Yes. Download any page individually or create a ZIP containing every generated JPG.",
+      },
+      {
+        q: "Which JPG quality should I choose?",
+        a: "High gives the clearest images, Medium balances quality and file size, and Low creates smaller downloads.",
       },
     ],
   },
@@ -324,6 +365,82 @@ export const tools: Tool[] = [
       {
         q: "Can I delete every page?",
         a: "No. SwiftPDF keeps at least one page so the updated PDF remains valid.",
+      },
+    ],
+  },
+  {
+    slug: "reorder-pdf",
+    icon: ListOrdered,
+    name: "Reorder PDF Pages",
+    desc: "Drag pages into order",
+    color: "from-fuchsia-500 to-indigo-500",
+    long: "Drag and arrange PDF pages, then download the reordered document instantly.",
+    cta: "Reorder Pages",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Visual page sorting",
+        desc: "Use clear page thumbnails and numbers to arrange the document exactly as needed.",
+      },
+      {
+        title: "Quality preserved",
+        desc: "Reorder original PDF pages without rasterizing or reducing their content quality.",
+      },
+      {
+        title: "Private browser editing",
+        desc: "Your PDF stays on your device with no upload, API, or backend processing.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does reordering reduce PDF quality?",
+        a: "No. SwiftPDF copies the original PDF pages into the new order without converting them to images.",
+      },
+      {
+        q: "Does this work on mobile?",
+        a: "Yes. Use the grip handle beside each page to drag it to a new position on touch devices.",
+      },
+      {
+        q: "Is my PDF uploaded?",
+        a: "No. Page previews and the reordered PDF are created entirely in your browser.",
+      },
+    ],
+  },
+  {
+    slug: "add-page-numbers",
+    icon: Hash,
+    name: "Add Page Numbers",
+    desc: "Number PDF pages",
+    color: "from-indigo-500 to-sky-500",
+    long: "Add page numbers to PDF files with custom position, style, and format.",
+    cta: "Add Page Numbers",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Flexible numbering",
+        desc: "Choose the number format, start value, and whether the first page should be skipped.",
+      },
+      {
+        title: "Precise placement",
+        desc: "Place page numbers in any corner or centered at the top or bottom.",
+      },
+      {
+        title: "Private browser editing",
+        desc: "Preview and number your PDF locally with no upload, API, or backend processing.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Can I choose where page numbers appear?",
+        a: "Yes. Place numbers at the top or bottom, left, center, or right.",
+      },
+      {
+        q: "Can I skip the cover page?",
+        a: "Yes. Enable skip first page to start numbering from the second page.",
+      },
+      {
+        q: "Is my PDF uploaded?",
+        a: "No. Page numbers are added entirely in your browser.",
       },
     ],
   },

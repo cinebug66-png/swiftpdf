@@ -2,6 +2,7 @@ import type { Tool } from "./tools";
 
 export type ToolPath =
   | "/pdf-to-word"
+  | "/pdf-to-jpg"
   | "/compress-pdf"
   | "/merge-pdf"
   | "/split-pdf"
@@ -10,6 +11,8 @@ export type ToolPath =
   | "/watermark-pdf"
   | "/rotate-pdf"
   | "/delete-pages"
+  | "/reorder-pdf"
+  | "/add-page-numbers"
   | "/protect-pdf"
   | "/unlock-pdf"
   | "/sign-pdf";
@@ -18,6 +21,8 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
   switch (slug) {
     case "pdf-to-word":
       return "/pdf-to-word";
+    case "pdf-to-jpg":
+      return "/pdf-to-jpg";
     case "compress-pdf":
       return "/compress-pdf";
     case "merge-pdf":
@@ -34,6 +39,10 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
       return "/rotate-pdf";
     case "delete-pages":
       return "/delete-pages";
+    case "reorder-pdf":
+      return "/reorder-pdf";
+    case "add-page-numbers":
+      return "/add-page-numbers";
     case "protect-pdf":
       return "/protect-pdf";
     case "unlock-pdf":

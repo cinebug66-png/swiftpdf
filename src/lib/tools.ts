@@ -10,6 +10,7 @@ import {
   PenLine,
   ListOrdered,
   Hash,
+  Layers,
   RotateCw,
   Scissors,
   Trash2,
@@ -232,6 +233,44 @@ export const tools: Tool[] = [
       {
         q: "What happens if I enter an invalid range?",
         a: "The page shows a friendly error if the range is empty, invalid, or outside the total page count.",
+      },
+    ],
+  },
+  {
+    slug: "extract-pages",
+    icon: Layers,
+    name: "Extract PDF Pages",
+    desc: "Save selected pages",
+    color: "from-sky-500 to-indigo-500",
+    long: "Extract selected PDF pages into a new document instantly in your browser.",
+    cta: "Extract Pages",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Visual page picking",
+        desc: "Select pages by clicking thumbnails or entering page ranges like 1,3-5.",
+      },
+      {
+        title: "Quality preserved",
+        desc: "Extract original PDF pages without converting or reducing their quality.",
+      },
+      {
+        title: "Private browser editing",
+        desc: "Your PDF stays on your device with no upload, API, or backend processing.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Which page range formats are supported?",
+        a: "You can enter single pages, comma-separated pages, or ranges such as 1,3,5, 1-3, or 1,3-5.",
+      },
+      {
+        q: "Can I preview selected pages?",
+        a: "Yes. Selected pages are highlighted and shown in a separate preview before download.",
+      },
+      {
+        q: "Does extraction reduce PDF quality?",
+        a: "No. SwiftPDF copies the original PDF pages into a new file without rasterizing them.",
       },
     ],
   },

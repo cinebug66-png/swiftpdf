@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
+  Check,
   CheckCircle2,
   Download,
   FileText,
+  Layers,
   Loader2,
+  RotateCcw,
   Shield,
-  Trash2,
   Upload,
   Zap,
 } from "lucide-react";
@@ -14,20 +16,18 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { consumePendingFiles } from "@/lib/pending-file";
-import { parsePageRangePreview } from "@/lib/pdf-page-ranges";
 import {
   createPdfDownloadUrl,
-  deletePdfPages,
+  extractPdfPages,
   getPdfPageCount,
   revokeObjectUrl,
-} from "@/lib/pdf-delete-pages";
+} from "@/lib/pdf-extract";
+import { parsePageRangePreview } from "@/lib/pdf-page-ranges";
+import { cn } from "@/lib/utils";
 
 type ToolStatus = "idle" | "processing" | "done" | "error";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 type PdfRenderTask = {
   cancel: () => void;
@@ -54,28 +54,41 @@ type PdfLoadingTask = {
   destroy: () => Promise<void>;
 };
 
+const ACCEPTED_PDF_TYPES = ".pdf,application/pdf";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function getDownloadName(file: File | null) {
-  if (!file) return "updated.pdf";
-  return `${file.name.replace(/\.pdf$/i, "")}-updated.pdf`;
-}
-
-function formatPageSummary(pages: number[]) {
-  if (pages.length === 0) return "";
-  const visiblePages = pages.slice(0, 18).join(", ");
-  return pages.length > 18 ? `${visiblePages}, +${pages.length - 18} more` : visiblePages;
-}
-
 function formatPagesForInput(pages: number[]) {
   return pages.join(",");
 }
 
-function DeletePageThumbnail({
+function formatPageSummary(pages: number[]) {
+  if (pages.length === 0) return "";
+  const visiblePages = pages.slice(0, 24).join(", ");
+  return pages.length > 24 ? `${visiblePages}, +${pages.length - 24} more` : visiblePages;
+}
+
+function getDownloadName(file: File | null) {
+  if (!file) return "extracted-pages.pdf";
+  return `${file.name.replace(/\.pdf$/i, "")}-extracted-pages.pdf`;
+}
+
+function isPdfFile(file: File | null | undefined): file is File {
+  return Boolean(
+    file &&
+    typeof file.name === "string" &&
+    typeof file.arrayBuffer === "function" &&
+    (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")),
+  );
+}
+
+function ExtractPageThumbnail({
   pdfDocument,
   pageNumber,
 }: {
@@ -98,7 +111,7 @@ function DeletePageThumbnail({
     }
 
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
-      rootMargin: "600px 0px",
+      rootMargin: "500px 0px",
     });
     observer.observe(frame);
     return () => observer.disconnect();
@@ -121,7 +134,7 @@ function DeletePageThumbnail({
         const scale = Math.min(150 / baseViewport.width, 190 / baseViewport.height);
         const viewport = page.getViewport({ scale });
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-        const context = canvas.getContext("2d");
+        const context = canvas.getContext("2d", { alpha: false });
 
         if (!context) throw new Error("Thumbnail failed.");
 
@@ -131,7 +144,8 @@ function DeletePageThumbnail({
         canvas.style.height = `${viewport.height}px`;
 
         context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-        context.clearRect(0, 0, viewport.width, viewport.height);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, viewport.width, viewport.height);
 
         renderTask = page.render({ canvasContext: context, viewport });
         await renderTask.promise;
@@ -196,7 +210,7 @@ function DeletePageThumbnail({
   );
 }
 
-function DeletePageGrid({
+function ExtractPageGrid({
   file,
   pageCount,
   selectedPages,
@@ -258,57 +272,57 @@ function DeletePageGrid({
       <div className="rounded-2xl border border-border/70 bg-muted/25 p-3 shadow-inner">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => {
-            const deleted = selectedPages.has(page);
+            const selected = selectedPages.has(page);
             return (
               <button
                 key={page}
                 type="button"
-                aria-pressed={deleted}
-                aria-label={`${deleted ? "Keep" : "Delete"} page ${page}`}
+                aria-pressed={selected}
+                aria-label={`${selected ? "Deselect" : "Select"} page ${page}`}
                 onClick={() => onTogglePage(page)}
                 disabled={disabled}
                 className={cn(
                   "group relative isolate min-w-0 overflow-hidden rounded-2xl border bg-card text-left shadow-soft outline-none transition-all duration-300",
-                  "hover:-translate-y-0.5 hover:shadow-card focus-visible:border-destructive focus-visible:shadow-glow",
+                  "hover:-translate-y-0.5 hover:shadow-card focus-visible:border-primary focus-visible:shadow-glow",
                   "disabled:pointer-events-none disabled:opacity-70",
-                  deleted
-                    ? "border-destructive shadow-glow"
+                  selected
+                    ? "border-primary shadow-glow"
                     : "border-border/80 hover:border-primary/50",
                 )}
               >
                 <div className="relative h-40 overflow-hidden bg-muted/30 p-2 sm:h-44">
-                  <DeletePageThumbnail pdfDocument={pdfDocument} pageNumber={page} />
+                  <ExtractPageThumbnail pdfDocument={pdfDocument} pageNumber={page} />
                   <div
                     className={cn(
-                      "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-destructive/78 px-2 text-center text-destructive-foreground backdrop-blur-[1px] transition-opacity duration-300",
-                      deleted ? "opacity-100" : "opacity-0",
+                      "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-primary/72 px-2 text-center text-primary-foreground backdrop-blur-[1px] transition-opacity duration-300",
+                      selected ? "opacity-100" : "opacity-0",
                     )}
                   >
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-white/95 text-destructive shadow-lg">
-                      <Trash2 className="h-4 w-4" />
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-white/95 text-primary shadow-lg">
+                      <Check className="h-4 w-4" />
                     </span>
                     <span className="rounded-full bg-black/20 px-3 py-1 text-[11px] font-semibold sm:text-xs">
-                      Will be deleted
+                      Selected
                     </span>
                   </div>
                 </div>
                 <div
                   className={cn(
                     "flex items-center justify-between gap-2 border-t border-border/70 px-3 py-2.5 transition-colors",
-                    deleted ? "bg-destructive/10" : "bg-card",
+                    selected ? "bg-primary/10" : "bg-card",
                   )}
                 >
                   <span className="text-sm font-semibold">Page {page}</span>
                   <span
                     className={cn(
                       "grid h-6 w-6 place-items-center rounded-full border transition-all",
-                      deleted
-                        ? "border-destructive bg-destructive text-destructive-foreground"
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground"
                         : "border-border text-muted-foreground group-hover:border-primary/60 group-hover:text-primary",
                     )}
                   >
-                    {deleted ? (
-                      <Trash2 className="h-3.5 w-3.5" />
+                    {selected ? (
+                      <Check className="h-3.5 w-3.5" />
                     ) : (
                       <span className="h-2 w-2 rounded-full bg-current" />
                     )}
@@ -323,20 +337,21 @@ function DeletePageGrid({
   );
 }
 
-export function DeletePagesTool() {
+export function ExtractPagesTool() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const downloadUrlRef = useRef<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [status, setStatus] = useState<ToolStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [progressNote, setProgressNote] = useState("Waiting for file");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [downloadName, setDownloadName] = useState("updated.pdf");
+  const [downloadName, setDownloadName] = useState("extracted-pages.pdf");
   const [pageCount, setPageCount] = useState<number | null>(null);
-  const [pagesInput, setPagesInput] = useState("");
+  const [rangeInput, setRangeInput] = useState("");
 
   useEffect(() => {
-    const pending = consumePendingFiles(".pdf,application/pdf", false);
+    const pending = consumePendingFiles(ACCEPTED_PDF_TYPES, false);
     if (pending?.[0]) {
       void selectFile(pending[0]);
     }
@@ -345,25 +360,27 @@ export function DeletePagesTool() {
   }, []);
 
   useEffect(() => {
-    return () => revokeObjectUrl(downloadUrl);
+    downloadUrlRef.current = downloadUrl;
   }, [downloadUrl]);
 
+  useEffect(() => {
+    return () => revokeObjectUrl(downloadUrlRef.current);
+  }, []);
+
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
-  const deletePagePreview = useMemo(
+  const pageRangePreview = useMemo(
     () =>
       pageCount == null
         ? { pages: [] as number[], error: null as string | null }
-        : parsePageRangePreview(pagesInput, pageCount, { requireRemaining: true }),
-    [pageCount, pagesInput],
+        : parsePageRangePreview(rangeInput, pageCount),
+    [pageCount, rangeInput],
   );
-  const deletePageSet = useMemo(() => new Set(deletePagePreview.pages), [deletePagePreview.pages]);
-  const remainingPages = useMemo(() => {
-    if (pageCount == null) return [];
-    return Array.from({ length: pageCount }, (_, index) => index + 1).filter(
-      (page) => !deletePageSet.has(page),
-    );
-  }, [deletePageSet, pageCount]);
-  const deletePreviewInvalid = Boolean(deletePagePreview.error);
+  const selectedPages = useMemo(
+    () => (pageRangePreview.error ? [] : pageRangePreview.pages),
+    [pageRangePreview.error, pageRangePreview.pages],
+  );
+  const selectedPageSet = useMemo(() => new Set(selectedPages), [selectedPages]);
+  const canExtract = Boolean(file && selectedPages.length > 0 && !pageRangePreview.error);
 
   const resetResultState = (nextFile: File | null) => {
     revokeObjectUrl(downloadUrl);
@@ -371,23 +388,33 @@ export function DeletePagesTool() {
     setDownloadName(getDownloadName(nextFile));
     setStatus("idle");
     setError(null);
+    setProgressNote("Waiting for file");
   };
 
   const selectFile = async (nextFile: File | null) => {
     resetResultState(nextFile);
-    setPagesInput("");
+    setRangeInput("");
     setPageCount(null);
-    setProgressNote("Waiting for file");
-    setFile(nextFile);
 
     if (!nextFile) {
+      setFile(null);
       return;
     }
+
+    if (!isPdfFile(nextFile)) {
+      setFile(null);
+      setStatus("error");
+      setError("Please choose a valid PDF file.");
+      setProgressNote("Invalid file type");
+      return;
+    }
+
+    setFile(nextFile);
 
     try {
       const totalPages = await getPdfPageCount(nextFile);
       setPageCount(totalPages);
-      setProgressNote("Choose pages to delete");
+      setProgressNote("Select pages to extract");
     } catch (err) {
       setFile(null);
       setStatus("error");
@@ -399,46 +426,81 @@ export function DeletePagesTool() {
   const togglePage = (page: number) => {
     if (status === "processing") return;
 
-    const currentPages = deletePagePreview.error ? [] : deletePagePreview.pages;
-    const nextPages = deletePageSet.has(page)
-      ? currentPages.filter((deletedPage) => deletedPage !== page)
+    const currentPages = pageRangePreview.error ? [] : selectedPages;
+    const nextPages = selectedPageSet.has(page)
+      ? currentPages.filter((selectedPage) => selectedPage !== page)
       : [...currentPages, page];
 
-    setPagesInput(formatPagesForInput(nextPages.sort((left, right) => left - right)));
+    setRangeInput(formatPagesForInput(nextPages.sort((left, right) => left - right)));
+    setStatus((current) => (current === "done" ? "idle" : current));
+    revokeObjectUrl(downloadUrl);
+    setDownloadUrl(null);
   };
 
-  const handleSubmit = async () => {
+  const updateRangeInput = (value: string) => {
+    setRangeInput(value);
+    setStatus((current) => (current === "done" ? "idle" : current));
+    revokeObjectUrl(downloadUrl);
+    setDownloadUrl(null);
+  };
+
+  const resetAll = () => {
+    void selectFile(null);
+  };
+
+  const handleExtract = async () => {
     if (!file) {
       inputRef.current?.click();
       return;
     }
 
-    if (deletePreviewInvalid && deletePagePreview.error) {
+    if (pageRangePreview.error) {
       setStatus("error");
-      setError(deletePagePreview.error);
-      setProgressNote("Choose valid pages to delete");
+      setError(pageRangePreview.error);
+      setProgressNote("Choose valid pages to extract");
+      return;
+    }
+
+    if (selectedPages.length === 0) {
+      setStatus("error");
+      setError("Select at least one page to extract.");
+      setProgressNote("Choose pages to extract");
       return;
     }
 
     try {
-      trackConversionStarted("delete_pages");
+      trackAnalyticsEvent("extract_pages_started", { tool_name: "extract_pages" });
       setStatus("processing");
       setError(null);
-      setProgressNote("Removing selected pages...");
+      setProgressNote("Extracting selected pages...");
 
-      const bytes = await deletePdfPages(file, pagesInput);
+      const bytes = await extractPdfPages(file, selectedPages);
       const nextDownloadUrl = createPdfDownloadUrl(bytes);
 
       revokeObjectUrl(downloadUrl);
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(file));
-      setProgressNote("Your updated PDF is ready.");
-      trackConversionCompleted("delete_pages");
       setStatus("done");
+      setProgressNote("Your extracted PDF is ready.");
+      trackAnalyticsEvent("extract_pages_completed", {
+        tool_name: "extract_pages",
+        page_count: String(selectedPages.length),
+      });
+
+      const anchor = window.document.createElement("a");
+      anchor.href = nextDownloadUrl;
+      anchor.download = getDownloadName(file);
+      window.document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      trackAnalyticsEvent("extract_pages_download", {
+        tool_name: "extract_pages",
+        page_count: String(selectedPages.length),
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete pages failed. Please try again.");
+      setError(err instanceof Error ? err.message : "Extract pages failed. Please try again.");
       setStatus("error");
-      setProgressNote("Delete pages failed.");
+      setProgressNote("Extract pages failed.");
     }
   };
 
@@ -464,10 +526,11 @@ export function DeletePagesTool() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept={ACCEPTED_PDF_TYPES}
           className="sr-only"
           onChange={(event) => {
             void selectFile(event.target.files?.[0] ?? null);
+            event.target.value = "";
           }}
         />
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
@@ -477,7 +540,7 @@ export function DeletePagesTool() {
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload one PDF and choose the pages you want to remove.
+          Select pages or enter page ranges to extract.
         </p>
       </label>
 
@@ -501,9 +564,7 @@ export function DeletePagesTool() {
             {status !== "processing" && (
               <button
                 type="button"
-                onClick={() => {
-                  void selectFile(null);
-                }}
+                onClick={resetAll}
                 className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
@@ -517,71 +578,53 @@ export function DeletePagesTool() {
         <div className="mt-6 rounded-3xl glass p-4 shadow-card sm:p-6">
           <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="text-base font-semibold">Select pages to delete</div>
+              <div className="text-base font-semibold">Select pages to extract</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                Click any page preview to mark it for removal.
+                Click page previews or enter a page range.
               </div>
             </div>
             <div className="rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-medium shadow-soft">
-              {deletePagePreview.error ? 0 : deletePagePreview.pages.length} of {pageCount} selected
+              {selectedPages.length} of {pageCount} selected
             </div>
           </div>
           <Input
-            value={pagesInput}
-            onChange={(event) => setPagesInput(event.target.value)}
-            placeholder="Examples: 2, 1,3,5, 2-4"
+            value={rangeInput}
+            onChange={(event) => updateRangeInput(event.target.value)}
+            placeholder="Examples: 1,3,5 or 1-3 or 1,3-5"
             className="h-12 rounded-xl border-border bg-card/70 px-4 text-sm shadow-soft"
             disabled={status === "processing"}
           />
           <div className="mt-2 text-xs text-muted-foreground">
-            Enter single pages or ranges from 1 to {pageCount}. Example: 1,3,5 or 2-4
+            Select pages or enter page ranges to extract.
           </div>
-          {deletePagePreview.error && (
+          {pageRangePreview.error && (
             <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-              {deletePagePreview.error}
+              {pageRangePreview.error}
             </div>
           )}
           <div className="mt-5">
-            <DeletePageGrid
+            <ExtractPageGrid
               file={file}
               pageCount={pageCount}
-              selectedPages={deletePageSet}
+              selectedPages={selectedPageSet}
               disabled={status === "processing"}
               onTogglePage={togglePage}
             />
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            {[
-              { label: "Total pages", value: pageCount },
-              {
-                label: "Selected for deletion",
-                value: deletePagePreview.error ? 0 : deletePagePreview.pages.length,
-              },
-              { label: "Remaining pages", value: remainingPages.length },
-              { label: "Output pages", value: remainingPages.length },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-border/80 bg-card/75 p-3 shadow-soft sm:p-4"
-              >
-                <div className="text-xl font-semibold tracking-tight sm:text-2xl">{item.value}</div>
-                <div className="mt-1 text-[11px] leading-tight text-muted-foreground sm:text-xs">
-                  {item.label}
-                </div>
+          {!pageRangePreview.error && selectedPages.length > 0 && (
+            <div className="mt-4 grid gap-2 rounded-xl bg-card/70 p-3 text-xs text-muted-foreground shadow-soft sm:grid-cols-2">
+              <div>
+                Selected pages:{" "}
+                <span className="text-foreground">{formatPageSummary(selectedPages)}</span>
               </div>
-            ))}
-          </div>
-          {deletePagePreview.pages.length > 0 && !deletePagePreview.error && (
-            <div className="mt-3 rounded-xl bg-card/60 px-3 py-2.5 text-xs text-muted-foreground">
-              Deleting:{" "}
-              <span className="font-medium text-foreground">
-                {formatPageSummary(deletePagePreview.pages)}
-              </span>
+              <div>
+                Output pages: <span className="text-foreground">{selectedPages.length}</span>
+              </div>
             </div>
           )}
-          {!deletePagePreview.error && deletePagePreview.pages.length === 0 && (
+          {!pageRangePreview.error && selectedPages.length === 0 && (
             <div className="mt-3 text-xs text-muted-foreground">
-              Type a range or click a page card to mark pages for deletion.
+              Type a range or click a page card to choose pages.
             </div>
           )}
         </div>
@@ -610,27 +653,39 @@ export function DeletePagesTool() {
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
             <CheckCircle2 className="h-6 w-6" />
           </div>
-          <div className="font-semibold">Pages deleted</div>
+          <div className="font-semibold">Pages extracted</div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your updated PDF is ready to download.
+            Your extracted PDF is ready to download.
           </p>
           <div className="mx-auto mt-4 grid max-w-md gap-2 rounded-2xl bg-card/70 p-4 text-left text-sm text-muted-foreground">
             <div className="flex items-center justify-between gap-4">
-              <span>Deleted pages</span>
-              <span className="font-medium text-foreground">{pagesInput}</span>
+              <span>Selected pages</span>
+              <span className="font-medium text-foreground">
+                {formatPageSummary(selectedPages)}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span>Total pages in source</span>
-              <span className="font-medium text-foreground">{pageCount}</span>
+              <span>Output pages</span>
+              <span className="font-medium text-foreground">{selectedPages.length}</span>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button variant="hero" size="lg" asChild>
-              <a href={downloadUrl} download={downloadName} title={downloadName}>
-                <Download className="h-4 w-4" /> Download Updated PDF
+              <a
+                href={downloadUrl}
+                download={downloadName}
+                title={downloadName}
+                onClick={() =>
+                  trackAnalyticsEvent("extract_pages_download", {
+                    tool_name: "extract_pages",
+                    page_count: String(selectedPages.length),
+                  })
+                }
+              >
+                <Download className="h-4 w-4" /> Download Extracted PDF
               </a>
             </Button>
-            <Button variant="glass" size="lg" onClick={() => void selectFile(null)}>
+            <Button variant="glass" size="lg" onClick={resetAll}>
               Start over
             </Button>
           </div>
@@ -638,19 +693,24 @@ export function DeletePagesTool() {
       )}
 
       {status !== "done" && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button
+            variant="glass"
+            size="xl"
+            onClick={resetAll}
+            disabled={!file || status === "processing"}
+          >
+            <RotateCcw className="h-4 w-4" /> Clear
+          </Button>
           <Button
             variant="hero"
             size="xl"
-            onClick={handleSubmit}
-            disabled={
-              status === "processing" ||
-              Boolean(file && (deletePreviewInvalid || deletePagePreview.pages.length === 0))
-            }
+            onClick={handleExtract}
+            disabled={status === "processing" || !canExtract}
           >
             {file ? (
               <>
-                Delete Pages <ArrowRight className="h-4 w-4" />
+                Extract pages <ArrowRight className="h-4 w-4" />
               </>
             ) : (
               <>
@@ -661,15 +721,15 @@ export function DeletePagesTool() {
         </div>
       )}
 
-      <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground sm:gap-6">
         <span className="inline-flex items-center gap-1.5">
-          <Shield className="h-3.5 w-3.5 text-primary" /> Client-side only
+          <Shield className="h-3.5 w-3.5 text-primary" /> Browser-based only
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Trash2 className="h-3.5 w-3.5 text-primary" /> Precise page removal
+          <Layers className="h-3.5 w-3.5 text-primary" /> Selected pages
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Zap className="h-3.5 w-3.5 text-primary" /> Fast page removal
+          <Zap className="h-3.5 w-3.5 text-primary" /> Original quality
         </span>
       </div>
     </>

@@ -65,6 +65,7 @@ export function suggestToolsFor(file: File): Tool[] {
         "pdf-to-word",
         "merge-pdf",
         "split-pdf",
+        "extract-pages",
         "watermark-pdf",
       ]
     : isWord

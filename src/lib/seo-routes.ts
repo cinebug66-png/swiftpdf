@@ -48,6 +48,13 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Split PDF files and extract the exact pages you need online. Create a new PDF quickly and securely with SwiftPDF.",
     type: "website",
   },
+  "/extract-pages": {
+    path: "/extract-pages",
+    title: "Extract PDF Pages Online Free | SwiftPDF",
+    description:
+      "Extract selected pages from a PDF online for free. Choose pages, preview them, and download a new PDF instantly in your browser.",
+    type: "website",
+  },
   "/jpg-to-pdf": {
     path: "/jpg-to-pdf",
     title: "JPG to PDF Online Free | SwiftPDF",
@@ -156,6 +163,7 @@ export const toolFeatureNames = [
   "Compress PDF",
   "Merge PDF",
   "Split PDF",
+  "Extract PDF Pages",
   "JPG to PDF",
   "Word to PDF",
   "Watermark PDF",

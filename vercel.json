@@ -22,6 +22,10 @@
       "destination": "/split-pdf/index.html"
     },
     {
+      "source": "/extract-pages",
+      "destination": "/extract-pages/index.html"
+    },
+    {
       "source": "/jpg-to-pdf",
       "destination": "/jpg-to-pdf/index.html"
     },

@@ -4,14 +4,18 @@ import {
   CloudOff,
   Download,
   FileImage,
+  FileText,
   Gauge,
   Image,
+  ListChecks,
   MonitorDown,
   ShieldCheck,
   Upload,
   UserRoundCheck,
   type LucideIcon,
 } from "lucide-react";
+import { getToolSeoContent } from "@/lib/tool-seo-content";
+import type { Tool } from "@/lib/tools";
 
 type SafeSeoStep = {
   id: string;
@@ -176,3 +180,123 @@ export const PDF_TO_JPG_SAFE_SEO: SafeToolSeoContent = {
   ],
   relatedToolSlugs: ["pdf-to-png", "jpg-to-pdf", "extract-pages", "compress-pdf"],
 };
+
+const STEP_ICONS = [Upload, ListChecks, FileText, Download] as const;
+const BENEFIT_ICONS = [ShieldCheck, CheckCircle2, Gauge, MonitorDown] as const;
+const safeContentCache = new Map<string, SafeToolSeoContent>();
+
+function stableId(prefix: string, value: string) {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return `${prefix}-${normalized || "item"}`;
+}
+
+function createFallbackSafeSeoContent(tool: Tool): SafeToolSeoContent {
+  const source = getToolSeoContent(tool.slug);
+  const steps = source?.steps ?? [
+    { title: `Choose your ${tool.name} file`, description: `Select a supported file to begin.` },
+    { title: "Review your settings", description: "Confirm the available options for the task." },
+    { title: `Run ${tool.name}`, description: "Process the file using the tool interface above." },
+    { title: "Download the result", description: "Save the completed file to your device." },
+  ];
+  const sourceBenefits =
+    tool.benefits.length > 0
+      ? tool.benefits
+      : [
+          {
+            title: "Simple browser workflow",
+            desc: "Complete the task without installing separate desktop software.",
+          },
+        ];
+  const descriptionParagraphs = source
+    ? [
+        ...source.intro.map((text, position) => ({
+          id: `${tool.slug}-intro-${position + 1}`,
+          text,
+        })),
+        {
+          id: `${tool.slug}-why`,
+          text: source.why,
+        },
+        ...(source.note
+          ? [
+              {
+                id: `${tool.slug}-note`,
+                text: source.note,
+              },
+            ]
+          : []),
+      ]
+    : [
+        {
+          id: `${tool.slug}-overview`,
+          text: `${tool.long} The workflow stays focused on the file and settings shown above, so you can complete the task without moving between several applications.`,
+        },
+        {
+          id: `${tool.slug}-usage`,
+          text: `Review the source file before processing, choose the settings that match your intended result, and inspect the downloaded file before sharing or archiving it.`,
+        },
+      ];
+  const tips =
+    source?.whyPoints.slice(0, 3).map((text) => ({
+      id: stableId(`${tool.slug}-tip`, text),
+      text,
+    })) ??
+    sourceBenefits.slice(0, 3).map((benefit) => ({
+      id: stableId(`${tool.slug}-tip`, benefit.title),
+      text: benefit.desc,
+    }));
+  const sourceFaqs = source?.faqs ?? tool.faqs;
+
+  return {
+    steps: steps.map((step, position) => ({
+      id: stableId(`${tool.slug}-step`, step.title),
+      title: step.title,
+      description: step.description,
+      icon: STEP_ICONS[position % STEP_ICONS.length],
+    })),
+    benefits: [
+      ...sourceBenefits.map((benefit, position) => ({
+        id: stableId(`${tool.slug}-benefit`, benefit.title),
+        title: benefit.title,
+        description: benefit.desc,
+        icon: BENEFIT_ICONS[position % BENEFIT_ICONS.length],
+      })),
+      ...(sourceBenefits.length < 4
+        ? [
+            {
+              id: `${tool.slug}-benefit-browser`,
+              title: "Works in your browser",
+              description: "Use the tool without installing separate desktop software.",
+              icon: MonitorDown,
+            },
+          ]
+        : []),
+    ].slice(0, 4),
+    description: {
+      heading: source?.heading ?? `A practical guide to ${tool.name}`,
+      paragraphs: descriptionParagraphs,
+      tips,
+    },
+    faqs: sourceFaqs.slice(0, 6).map((faq) => ({
+      id: stableId(`${tool.slug}-faq`, faq.q),
+      question: faq.q,
+      answer: faq.a,
+    })),
+    relatedToolSlugs: source?.related ?? [],
+  };
+}
+
+export function getSafeToolSeoContent(tool: Tool): SafeToolSeoContent {
+  if (tool.slug === "pdf-to-jpg") return PDF_TO_JPG_SAFE_SEO;
+
+  const cached = safeContentCache.get(tool.slug);
+  if (cached) return cached;
+
+  const content = createFallbackSafeSeoContent(tool);
+  safeContentCache.set(tool.slug, content);
+  return content;
+}

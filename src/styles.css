@@ -494,7 +494,6 @@ body.pdf-reorder-dragging {
 
   .site-navbar,
   .site-navbar > div,
-  .site-navbar nav,
   .tool-shared-section,
   .tool-seo-section,
   .tool-static-card {
@@ -502,7 +501,6 @@ body.pdf-reorder-dragging {
     will-change: auto !important;
   }
 
-  .site-navbar .glass,
   .tool-page-root .glass,
   .tool-seo-section {
     -webkit-backdrop-filter: none !important;
@@ -511,20 +509,24 @@ body.pdf-reorder-dragging {
     mix-blend-mode: normal !important;
   }
 
-  .tool-seo-section *,
-  .tool-shared-section * {
+  .site-navbar-panel,
+  .site-navbar-panel.glass,
+  .site-mobile-menu,
+  .site-mobile-menu.glass {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.12) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+    transition: none !important;
+    transform: none !important;
     will-change: auto !important;
   }
 
-  .tool-faq-content,
-  .tool-seo-section [data-state] {
+  .tool-faq-content {
     animation: none !important;
-  }
-
-  .tool-seo-section svg,
-  .tool-shared-section svg {
-    transition: none !important;
-    transform: none !important;
   }
 }
 
@@ -534,10 +536,7 @@ body.pdf-reorder-dragging {
   }
 }
 
-.tool-shared-section,
-.tool-seo-section,
 .tool-static-card {
-  position: static;
   max-width: 100%;
   filter: none;
   mix-blend-mode: normal;

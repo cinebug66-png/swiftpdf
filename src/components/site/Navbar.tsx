@@ -43,14 +43,14 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "site-navbar fixed top-0 inset-x-0 z-50 transition-all duration-300",
+        "site-navbar fixed top-0 inset-x-0 z-50 transition-[padding] duration-300 motion-reduce:transition-none",
         scrolled ? "py-2" : "py-4",
       )}
     >
       <div className="mx-auto max-w-7xl px-4">
         <nav
           className={cn(
-            "flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all duration-300",
+            "site-navbar-panel flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none",
             scrolled ? "glass shadow-soft" : "bg-transparent",
           )}
         >
@@ -93,7 +93,7 @@ export function Navbar() {
         </nav>
 
         {open && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3 animate-fade-in">
+          <div className="site-mobile-menu md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3 animate-fade-in">
             {links.map((l) => (
               <Link
                 key={l.href}

@@ -110,11 +110,11 @@ const DeletePageThumbnail = memo(function DeletePageThumbnail({
   }, []);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
     let cancelled = false;
     let renderTask: PdfRenderTask | null = null;
 
     const renderThumbnail = async () => {
-      const canvas = canvasRef.current;
       if (!canvas || !pdfDocument || !visible) return;
 
       let page: PdfPageProxy | null = null;
@@ -165,6 +165,13 @@ const DeletePageThumbnail = memo(function DeletePageThumbnail({
         renderTask?.cancel();
       } catch {
         // Thumbnails are optional; ignore cleanup failures.
+      }
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        context?.resetTransform();
+        context?.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
       }
     };
   }, [pdfDocument, pageNumber, visible]);

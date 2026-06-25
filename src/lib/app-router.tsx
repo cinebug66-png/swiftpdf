@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState, type MouseEvent } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+} from "react";
 
 type NavigateOptions = {
   replace?: boolean;
@@ -47,6 +55,9 @@ function navigateToPath(to: string, options?: NavigateOptions) {
 
 export function RouterProvider({ children }: { children: React.ReactNode }) {
   const [pathname, setPathname] = useState(getCurrentPathname);
+  const navigate = useCallback((to: string, options?: NavigateOptions) => {
+    navigateToPath(to, options);
+  }, []);
 
   useEffect(() => {
     const onPopState = () => setPathname(getCurrentPathname());
@@ -57,9 +68,9 @@ export function RouterProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<RouterContextValue>(
     () => ({
       pathname,
-      navigate: (to, options) => navigateToPath(to, options),
+      navigate,
     }),
-    [pathname],
+    [navigate, pathname],
   );
 
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>;

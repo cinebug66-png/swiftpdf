@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -75,7 +75,7 @@ function formatPagesForInput(pages: number[]) {
   return pages.join(",");
 }
 
-function DeletePageThumbnail({
+const DeletePageThumbnail = memo(function DeletePageThumbnail({
   pdfDocument,
   pageNumber,
 }: {
@@ -97,9 +97,14 @@ function DeletePageThumbnail({
       return;
     }
 
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
-      rootMargin: "600px 0px",
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setVisible(true);
+        observer.disconnect();
+      },
+      { rootMargin: "600px 0px" },
+    );
     observer.observe(frame);
     return () => observer.disconnect();
   }, []);
@@ -112,9 +117,10 @@ function DeletePageThumbnail({
       const canvas = canvasRef.current;
       if (!canvas || !pdfDocument || !visible) return;
 
+      let page: PdfPageProxy | null = null;
       try {
         setLoading(true);
-        const page = await pdfDocument.getPage(pageNumber);
+        page = await pdfDocument.getPage(pageNumber);
         if (cancelled) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
@@ -135,8 +141,6 @@ function DeletePageThumbnail({
 
         renderTask = page.render({ canvasContext: context, viewport });
         await renderTask.promise;
-        page.cleanup?.();
-
         if (!cancelled) {
           setFailed(false);
           setLoading(false);
@@ -146,18 +150,13 @@ function DeletePageThumbnail({
           setFailed(true);
           setLoading(false);
         }
+      } finally {
+        page?.cleanup?.();
       }
     };
 
     if (visible) {
       void renderThumbnail();
-    } else {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-      setLoading(false);
     }
 
     return () => {
@@ -194,7 +193,7 @@ function DeletePageThumbnail({
       />
     </div>
   );
-}
+});
 
 function DeletePageGrid({
   file,

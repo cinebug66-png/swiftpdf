@@ -106,6 +106,44 @@ export const tools: Tool[] = [
     ],
   },
   {
+    slug: "pdf-to-png",
+    icon: FileImage,
+    name: "PDF to PNG",
+    desc: "Export pages as PNG",
+    color: "from-blue-500 to-violet-500",
+    long: "Convert every PDF page into a high-quality PNG image directly in your browser.",
+    cta: "Convert to PNG",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Lossless PNG output",
+        desc: "Render every page as a crisp PNG image with clear text and graphics.",
+      },
+      {
+        title: "Private browser processing",
+        desc: "Your PDF stays on your device with no API, upload, or backend conversion.",
+      },
+      {
+        title: "Flexible downloads",
+        desc: "Download individual PNG pages or bundle every image into one ZIP file.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does SwiftPDF upload my PDF?",
+        a: "No. PDF.js renders each page locally in your browser, so your document stays on your device.",
+      },
+      {
+        q: "Can I download all PNG pages at once?",
+        a: "Yes. Download pages individually or create a ZIP containing every generated PNG.",
+      },
+      {
+        q: "What quality are the PNG images?",
+        a: "Pages are rendered at high resolution and exported as lossless PNG images.",
+      },
+    ],
+  },
+  {
     slug: "jpg-to-pdf",
     icon: Images,
     name: "JPG to PDF",

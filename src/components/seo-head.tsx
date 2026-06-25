@@ -1,5 +1,11 @@
-import { useEffect } from "react";
-import { getCanonicalUrl, getSeoMetadata, getStructuredData, SITE_NAME } from "@/lib/seo";
+import { useLayoutEffect } from "react";
+import {
+  getCanonicalUrl,
+  getSeoMetadata,
+  getStructuredData,
+  OG_IMAGE_URL,
+  SITE_NAME,
+} from "@/lib/seo";
 
 type SeoHeadProps = {
   pathname: string;
@@ -29,22 +35,38 @@ function setCanonical(href: string) {
   element.setAttribute("href", href);
 }
 
-function setStructuredData(data: object) {
+function setStructuredData(pathname: string, data: object) {
   const id = "swiftpdf-structured-data";
-  let element = document.head.querySelector<HTMLScriptElement>(`script#${id}`);
+  const existingElements = Array.from(
+    document.head.querySelectorAll<HTMLScriptElement>(
+      `script#${id}, script[data-swiftpdf-structured-data="true"]`,
+    ),
+  );
+  let element = existingElements.shift() ?? null;
+
+  existingElements.forEach((duplicate) => duplicate.remove());
 
   if (!element) {
     element = document.createElement("script");
     element.id = id;
     element.type = "application/ld+json";
+    element.dataset.swiftpdfStructuredData = "true";
     document.head.appendChild(element);
   }
 
-  element.textContent = JSON.stringify(data);
+  element.id = id;
+  element.type = "application/ld+json";
+  element.dataset.swiftpdfStructuredData = "true";
+  element.dataset.route = pathname;
+
+  const serializedData = JSON.stringify(data);
+  if (element.textContent !== serializedData) {
+    element.textContent = serializedData;
+  }
 }
 
 export function SeoHead({ pathname }: SeoHeadProps) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const metadata = getSeoMetadata(pathname);
     const canonicalUrl = getCanonicalUrl(metadata.path);
     const robots = metadata.noIndex ? "noindex, nofollow" : "index, follow";
@@ -66,17 +88,37 @@ export function SeoHead({ pathname }: SeoHeadProps) {
     setMeta('meta[property="og:url"]', { property: "og:url" }, canonicalUrl);
     setMeta('meta[property="og:site_name"]', { property: "og:site_name" }, SITE_NAME);
     setMeta('meta[property="og:locale"]', { property: "og:locale" }, "en_US");
+    setMeta('meta[property="og:image"]', { property: "og:image" }, OG_IMAGE_URL);
+    setMeta(
+      'meta[property="og:image:secure_url"]',
+      { property: "og:image:secure_url" },
+      OG_IMAGE_URL,
+    );
+    setMeta('meta[property="og:image:type"]', { property: "og:image:type" }, "image/png");
+    setMeta('meta[property="og:image:width"]', { property: "og:image:width" }, "1200");
+    setMeta('meta[property="og:image:height"]', { property: "og:image:height" }, "630");
+    setMeta(
+      'meta[property="og:image:alt"]',
+      { property: "og:image:alt" },
+      "SwiftPDF - Free online PDF tools",
+    );
 
-    setMeta('meta[name="twitter:card"]', { name: "twitter:card" }, "summary");
+    setMeta('meta[name="twitter:card"]', { name: "twitter:card" }, "summary_large_image");
     setMeta('meta[name="twitter:title"]', { name: "twitter:title" }, metadata.title);
     setMeta(
       'meta[name="twitter:description"]',
       { name: "twitter:description" },
       metadata.description,
     );
+    setMeta('meta[name="twitter:image"]', { name: "twitter:image" }, OG_IMAGE_URL);
+    setMeta(
+      'meta[name="twitter:image:alt"]',
+      { name: "twitter:image:alt" },
+      "SwiftPDF - Free online PDF tools",
+    );
 
     setCanonical(canonicalUrl);
-    setStructuredData(getStructuredData(metadata));
+    setStructuredData(metadata.path, getStructuredData(metadata));
   }, [pathname]);
 
   return null;

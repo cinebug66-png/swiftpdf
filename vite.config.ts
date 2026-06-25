@@ -7,6 +7,8 @@ import { loadEnv, type Connect, defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { proxyCloudConvertRequest } from "./src/lib/cloudconvert-proxy";
 import { routeMetadata, toolFeatureNames } from "./src/lib/seo-routes";
+import { getToolSeoContentByPath } from "./src/lib/tool-seo-content";
+import { getTool } from "./src/lib/tools";
 
 const DEFAULT_SITE_URL = "https://swiftpdftools.in";
 
@@ -28,6 +30,15 @@ function replaceMetaContent(html: string, selector: string, content: string) {
 
 function createStructuredData(siteUrl: string, pathName: string, description: string) {
   const canonicalUrl = pathName === "/" ? `${siteUrl}/` : `${siteUrl}${pathName}`;
+  const toolSeo = getToolSeoContentByPath(pathName);
+  const tool = getTool(pathName.replace(/^\//, ""));
+  const organization = {
+    "@type": "Organization",
+    "@id": `${siteUrl}/#organization`,
+    name: "SwiftPDF",
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+  };
 
   return {
     "@context": "https://schema.org",
@@ -39,24 +50,62 @@ function createStructuredData(siteUrl: string, pathName: string, description: st
         name: "SwiftPDF",
         description: routeMetadata["/"].description,
         inLanguage: "en",
+        publisher: {
+          "@id": `${siteUrl}/#organization`,
+        },
       },
+      ...(pathName === "/" ? [organization] : []),
       {
         "@type": "SoftwareApplication",
-        "@id": `${siteUrl}/#softwareapplication`,
-        name: "SwiftPDF",
+        "@id": `${canonicalUrl}#softwareapplication`,
+        name: tool ? `${tool.name} by SwiftPDF` : "SwiftPDF",
         url: canonicalUrl,
         description,
         applicationCategory: "BusinessApplication",
         applicationSubCategory: "PDF tools",
         operatingSystem: "Any",
         browserRequirements: "Requires a modern web browser with JavaScript enabled.",
-        featureList: toolFeatureNames,
+        featureList: toolSeo ? toolSeo.steps.map((step) => step.title) : toolFeatureNames,
         offers: {
           "@type": "Offer",
           price: "0",
           priceCurrency: "USD",
         },
       },
+      ...(toolSeo && tool
+        ? [
+            {
+              "@type": "FAQPage",
+              "@id": `${canonicalUrl}#faq`,
+              mainEntity: toolSeo.faqs.map((faq) => ({
+                "@type": "Question",
+                name: faq.q,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.a,
+                },
+              })),
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": `${canonicalUrl}#breadcrumb`,
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "SwiftPDF",
+                  item: `${siteUrl}/`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: tool.name,
+                  item: canonicalUrl,
+                },
+              ],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -88,8 +137,15 @@ function createSeoPagesPlugin(siteUrl: string) {
           html = replaceMetaContent(html, 'property="og:title"', metadata.title);
           html = replaceMetaContent(html, 'property="og:description"', metadata.description);
           html = replaceMetaContent(html, 'property="og:url"', canonicalUrl);
+          html = replaceMetaContent(html, 'property="og:image"', `${siteUrl}/og-image.png`);
+          html = replaceMetaContent(
+            html,
+            'property="og:image:secure_url"',
+            `${siteUrl}/og-image.png`,
+          );
           html = replaceMetaContent(html, 'name="twitter:title"', metadata.title);
           html = replaceMetaContent(html, 'name="twitter:description"', metadata.description);
+          html = replaceMetaContent(html, 'name="twitter:image"', `${siteUrl}/og-image.png`);
 
           if (metadata.path === "/") {
             await writeFile(path.join(distDirectory, "index.html"), html);

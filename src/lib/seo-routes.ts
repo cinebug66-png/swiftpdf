@@ -8,9 +8,8 @@ export type RouteSeoMetadata = {
 export const routeMetadata: Record<string, RouteSeoMetadata> = {
   "/": {
     path: "/",
-    title: "SwiftPDF | Free Online PDF Tools",
-    description:
-      "Convert, compress, merge, split, sign and edit PDF files online with SwiftPDF. Fast, secure and free PDF tools with no signup required.",
+    title: "SwiftPDF - Free Online PDF Tools",
+    description: "Merge, Split, Compress, Convert and Edit PDFs online for free.",
     type: "website",
   },
   "/pdf-to-word": {
@@ -25,6 +24,13 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
     title: "PDF to JPG Converter - Convert PDF Pages to JPG Online Free | SwiftPDF",
     description:
       "Convert PDF pages into high-quality JPG images online for free. Fast, secure, and works directly in your browser.",
+    type: "website",
+  },
+  "/pdf-to-png": {
+    path: "/pdf-to-png",
+    title: "PDF to PNG Converter Online Free | SwiftPDF",
+    description:
+      "Convert PDF pages to high-quality PNG images online for free. Fast, secure, and works directly in your browser.",
     type: "website",
   },
   "/compress-pdf": {
@@ -160,6 +166,7 @@ export const publicRoutes = Object.keys(routeMetadata);
 export const toolFeatureNames = [
   "PDF to Word",
   "PDF to JPG",
+  "PDF to PNG",
   "Compress PDF",
   "Merge PDF",
   "Split PDF",

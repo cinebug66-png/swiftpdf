@@ -7,6 +7,7 @@ const columns = [
     links: [
       { label: "PDF to Word", to: "/pdf-to-word" },
       { label: "PDF to JPG", to: "/pdf-to-jpg" },
+      { label: "PDF to PNG", to: "/pdf-to-png" },
       { label: "Compress PDF", to: "/compress-pdf" },
       { label: "Merge PDF", to: "/merge-pdf" },
       { label: "Split PDF", to: "/split-pdf" },

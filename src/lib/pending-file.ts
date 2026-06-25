@@ -62,6 +62,7 @@ export function suggestToolsFor(file: File): Tool[] {
         "reorder-pdf",
         "add-page-numbers",
         "pdf-to-jpg",
+        "pdf-to-png",
         "pdf-to-word",
         "merge-pdf",
         "split-pdf",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Moon, Sun, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
@@ -16,18 +16,34 @@ export function Navbar() {
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const scrollFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const updateScrolledState = () => {
+      scrollFrameRef.current = null;
+      const nextScrolled = window.scrollY > 12;
+      setScrolled((current) => (current === nextScrolled ? current : nextScrolled));
+    };
+    const onScroll = () => {
+      if (scrollFrameRef.current != null) return;
+      scrollFrameRef.current = window.requestAnimationFrame(updateScrolledState);
+    };
+
+    updateScrolledState();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollFrameRef.current != null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
+    };
   }, []);
 
   return (
     <header
       className={cn(
-        "fixed top-0 inset-x-0 z-50 transition-all duration-300",
+        "site-navbar fixed top-0 inset-x-0 z-50 transition-all duration-300",
         scrolled ? "py-2" : "py-4",
       )}
     >

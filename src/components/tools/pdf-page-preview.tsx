@@ -31,6 +31,7 @@ type PdfPageProxy = {
     canvasContext: CanvasRenderingContext2D;
     viewport: { width: number; height: number };
   }) => PdfRenderTask;
+  cleanup?: () => void;
 };
 
 type PdfDocumentProxy = {
@@ -187,6 +188,8 @@ function PdfPagePreviewInner({
   }, [onPageCountChange]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+
     return () => {
       renderSequenceRef.current += 1;
       if (previewTimeoutRef.current) {
@@ -199,6 +202,13 @@ function PdfPagePreviewInner({
       }
       void pdfLoadingTaskRef.current?.destroy().catch(() => undefined);
       void pdfDocumentRef.current?.destroy().catch(() => undefined);
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        context?.resetTransform();
+        context?.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
+      }
     };
   }, []);
 
@@ -359,8 +369,9 @@ function PdfPagePreviewInner({
     }, 10000);
 
     const renderPage = async () => {
+      let page: PdfPageProxy | null = null;
       try {
-        const page = await pdfDocument.getPage(safePageNumber);
+        page = await pdfDocument.getPage(safePageNumber);
         if (cancelled || renderSequenceRef.current !== renderId) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
@@ -413,6 +424,8 @@ function PdfPagePreviewInner({
 
         setLoading(false);
         setError(getPreviewErrorMessage(err));
+      } finally {
+        page?.cleanup?.();
       }
     };
 
@@ -467,7 +480,7 @@ function PdfPagePreviewInner({
           }}
         >
           {loading && (
-            <div className="absolute inset-0 z-20 grid place-items-center rounded-xl bg-background/70 text-sm text-muted-foreground backdrop-blur-sm">
+            <div className="absolute inset-0 z-20 grid place-items-center rounded-xl bg-background/70 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 Rendering preview

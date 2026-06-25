@@ -10,6 +10,10 @@
       "destination": "/pdf-to-jpg/index.html"
     },
     {
+      "source": "/pdf-to-png",
+      "destination": "/pdf-to-png/index.html"
+    },
+    {
       "source": "/compress-pdf",
       "destination": "/compress-pdf/index.html"
     },

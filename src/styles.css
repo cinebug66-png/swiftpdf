@@ -314,7 +314,6 @@ body.pdf-reorder-dragging {
     opacity 220ms ease,
     transform 80ms linear,
     height 180ms ease;
-  will-change: transform, height, opacity;
 }
 
 .tool-picker-modal:hover .tool-picker-scroll-thumb {
@@ -405,6 +404,20 @@ body.pdf-reorder-dragging {
 }
 
 @media (max-width: 767px) {
+  .glass,
+  .tool-picker-overlay.tool-picker-overlay,
+  .tool-picker-modal.tool-picker-modal,
+  .tool-picker-badge,
+  .tool-picker-file,
+  .tool-picker-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .animate-blob {
+    animation: none;
+  }
+
   .tool-picker-modal.tool-picker-modal {
     width: 95vw;
     max-width: 95vw;
@@ -464,4 +477,70 @@ body.pdf-reorder-dragging {
 }
 @utility shadow-glow {
   box-shadow: var(--shadow-glow);
+}
+
+@media (max-width: 767px) {
+  .tool-page-root,
+  .tool-page-root .animate-fade-up,
+  .tool-page-root .animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .tool-page-hero-blob {
+    display: none;
+  }
+
+  .site-navbar,
+  .site-navbar > div,
+  .site-navbar nav,
+  .tool-shared-section,
+  .tool-seo-section,
+  .tool-static-card {
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  .site-navbar .glass,
+  .tool-page-root .glass,
+  .tool-seo-section {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+  }
+
+  .tool-seo-section *,
+  .tool-shared-section * {
+    will-change: auto !important;
+  }
+
+  .tool-faq-content,
+  .tool-seo-section [data-state] {
+    animation: none !important;
+  }
+
+  .tool-seo-section svg,
+  .tool-shared-section svg {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .related-tools-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tool-shared-section,
+.tool-seo-section,
+.tool-static-card {
+  position: static;
+  max-width: 100%;
+  filter: none;
+  mix-blend-mode: normal;
+  transform: none;
+  will-change: auto;
 }

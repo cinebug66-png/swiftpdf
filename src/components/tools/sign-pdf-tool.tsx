@@ -66,6 +66,7 @@ type PdfPageProxy = {
     canvasContext: CanvasRenderingContext2D;
     viewport: { width: number; height: number };
   }) => PdfRenderTask;
+  cleanup?: () => void;
 };
 
 type PdfDocumentProxy = {
@@ -432,8 +433,9 @@ export function SignPdfTool() {
     }, 10000);
 
     const renderSelectedPage = async () => {
+      let page: Awaited<ReturnType<PdfDocumentProxy["getPage"]>> | null = null;
       try {
-        const page = await pdfDocument.getPage(pageNumber);
+        page = await pdfDocument.getPage(pageNumber);
         if (cancelled || renderSequenceRef.current !== renderId) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
@@ -489,6 +491,8 @@ export function SignPdfTool() {
         setRenderError(
           err instanceof Error ? err.message : "Preview failed to render. You can still export.",
         );
+      } finally {
+        page?.cleanup?.();
       }
     };
 
@@ -997,7 +1001,7 @@ export function SignPdfTool() {
               className="sign-pdf-preview-frame relative grid min-h-[420px] w-full max-w-full place-items-start overflow-auto rounded-2xl border border-border bg-muted/50 p-4 shadow-soft sm:min-h-[560px]"
             >
               {(previewLoading || (status === "loading" && !renderSize)) && !renderError && (
-                <div className="absolute inset-0 z-20 grid place-items-center bg-card/70 text-sm text-muted-foreground backdrop-blur-sm">
+                <div className="absolute inset-0 z-20 grid place-items-center bg-card/70 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Rendering preview

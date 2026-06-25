@@ -9,6 +9,7 @@ import { getToolPath } from "@/lib/tool-routes";
 import HomePage from "@/pages/home-page";
 import PdfToWordPage from "@/pages/pdf-to-word-page";
 import PdfToJpgPage from "@/pages/pdf-to-jpg-page";
+import PdfToPngPage from "@/pages/pdf-to-png-page";
 import CompressPdfPage from "@/pages/compress-pdf-page";
 import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
@@ -77,6 +78,8 @@ function renderRoute(pathname: string) {
       return <PdfToWordPage />;
     case "/pdf-to-jpg":
       return <PdfToJpgPage />;
+    case "/pdf-to-png":
+      return <PdfToPngPage />;
     case "/compress-pdf":
       return <CompressPdfPage />;
     case "/merge-pdf":

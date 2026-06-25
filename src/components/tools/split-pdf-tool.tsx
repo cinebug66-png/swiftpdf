@@ -36,6 +36,7 @@ type PdfPageProxy = {
     canvasContext: CanvasRenderingContext2D;
     viewport: { width: number; height: number };
   }) => PdfRenderTask;
+  cleanup?: () => void;
 };
 
 type PdfDocumentProxy = {
@@ -69,12 +70,13 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
     let cancelled = false;
     let loadingTask: PdfLoadingTask | null = null;
     let renderTask: PdfRenderTask | null = null;
+    let page: PdfPageProxy | null = null;
 
     const renderThumbnail = async () => {
-      const canvas = canvasRef.current;
       if (!canvas) return;
 
       try {
@@ -88,7 +90,7 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
           return;
         }
 
-        const page = await pdfDoc.getPage(pageNumber);
+        page = await pdfDoc.getPage(pageNumber);
         if (cancelled) {
           await pdfDoc.destroy().catch(() => undefined);
           return;
@@ -112,6 +114,8 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
 
         renderTask = page.render({ canvasContext: context, viewport });
         await renderTask.promise;
+        page.cleanup?.();
+        page = null;
         await pdfDoc.destroy().catch(() => undefined);
 
         if (!cancelled) setFailed(false);
@@ -128,6 +132,11 @@ function SplitPageThumbnail({ file, pageNumber }: { file: File; pageNumber: numb
         renderTask?.cancel();
       } catch {
         // Thumbnails are optional; ignore cleanup failures.
+      }
+      page?.cleanup?.();
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
       }
       void loadingTask?.destroy().catch(() => undefined);
     };

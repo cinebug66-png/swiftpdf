@@ -86,6 +86,7 @@ function renderRoute(pathname: string) {
       return <MergePdfPage />;
     case "/split-pdf":
       return <SplitPdfPage />;
+    case "/extract-pdf-pages":
     case "/extract-pages":
       return <ExtractPagesPage />;
     case "/jpg-to-pdf":

@@ -19,24 +19,24 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
   return (
     <div className="tool-page-root min-h-screen bg-background text-foreground">
       <Navbar />
-      <main>
+      <main className="tool-page-main">
         <section className="tool-page-hero relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-24">
-          <div className="absolute inset-0 -z-10 bg-gradient-mesh" />
-          <div className="absolute inset-0 -z-10 [background:var(--gradient-hero)]" />
-          <div className="tool-page-hero-blob pointer-events-none absolute -top-40 -left-32 h-[480px] w-[480px] rounded-full bg-primary/20 blur-3xl animate-blob" />
-          <div className="tool-page-hero-blob pointer-events-none absolute top-20 -right-32 h-[520px] w-[520px] rounded-full bg-primary-glow/25 blur-3xl animate-blob [animation-delay:-6s]" />
+          <div className="tool-page-hero-bg absolute inset-0 -z-10 bg-gradient-mesh" />
+          <div className="tool-page-hero-bg absolute inset-0 -z-10 [background:var(--gradient-hero)]" />
 
           <div className="mx-auto max-w-5xl px-4">
             <div className="text-center animate-fade-up">
-              <Link
-                to="/"
-                className="mb-6 mr-5 inline-flex items-center gap-1.5 rounded-full glass px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back to all tools
-              </Link>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Free · No signup · No watermark
+              <div className="tool-feature-pills mb-6 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-1.5 rounded-full glass px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Back to all tools
+                </Link>
+                <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  Free / No signup / No watermark
+                </div>
               </div>
               <div
                 className={`mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${tool.color} text-white shadow-glow`}

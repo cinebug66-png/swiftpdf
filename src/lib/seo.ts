@@ -5,6 +5,7 @@ import {
   type RouteSeoMetadata,
 } from "@/lib/seo-routes";
 import { getToolSeoContentByPath } from "@/lib/tool-seo-content";
+import { getSafeToolSeoContent } from "@/lib/safe-tool-seo-content";
 import { getTool } from "@/lib/tools";
 
 export { publicRoutes, routeMetadata };
@@ -39,7 +40,9 @@ export function getCanonicalUrl(path: string) {
 export function getStructuredData(metadata: SeoMetadata) {
   const canonicalUrl = getCanonicalUrl(metadata.path);
   const toolSeo = getToolSeoContentByPath(metadata.path);
-  const tool = getTool(metadata.path.replace(/^\//, ""));
+  const toolSlug = metadata.path.replace(/^\//, "");
+  const tool = getTool(toolSlug === "extract-pdf-pages" ? "extract-pages" : toolSlug);
+  const visibleFaqs = tool ? getSafeToolSeoContent(tool).faqs.slice(0, 4) : [];
   const organization = {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
@@ -85,12 +88,12 @@ export function getStructuredData(metadata: SeoMetadata) {
             {
               "@type": "FAQPage",
               "@id": `${canonicalUrl}#faq`,
-              mainEntity: toolSeo.faqs.map((faq) => ({
+              mainEntity: visibleFaqs.map((faq) => ({
                 "@type": "Question",
-                name: faq.q,
+                name: faq.question,
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: faq.a,
+                  text: faq.answer,
                 },
               })),
             },

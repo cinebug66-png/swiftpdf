@@ -61,6 +61,13 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Extract selected pages from a PDF online for free. Choose pages, preview them, and download a new PDF instantly in your browser.",
     type: "website",
   },
+  "/extract-pdf-pages": {
+    path: "/extract-pdf-pages",
+    title: "Extract PDF Pages Online Free | SwiftPDF",
+    description:
+      "Extract selected pages from a PDF online for free. Choose pages, preview them, and download a new PDF instantly in your browser.",
+    type: "website",
+  },
   "/jpg-to-pdf": {
     path: "/jpg-to-pdf",
     title: "JPG to PDF Online Free | SwiftPDF",

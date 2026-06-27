@@ -781,5 +781,6 @@ export function getToolSeoContent(slug: string) {
 }
 
 export function getToolSeoContentByPath(path: string) {
-  return toolSeoContent[path.replace(/^\//, "")];
+  const slug = path.replace(/^\//, "");
+  return toolSeoContent[slug === "extract-pdf-pages" ? "extract-pages" : slug];
 }

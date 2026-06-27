@@ -128,12 +128,6 @@
   --shadow-soft: 0 4px 20px -6px oklch(0.5 0.22 264 / 0.12);
   --shadow-glow: 0 20px 60px -20px oklch(0.5 0.22 264 / 0.4);
   --shadow-card: 0 1px 2px oklch(0.18 0.04 260 / 0.04), 0 8px 32px -12px oklch(0.5 0.22 264 / 0.12);
-  --safe-seo-surface: oklch(1 0 0);
-  --safe-seo-surface-soft: oklch(0.985 0.008 255);
-  --safe-seo-border: oklch(0.9 0.018 255);
-  --safe-seo-accent-soft: oklch(0.96 0.035 255);
-  --safe-seo-shadow: 0 1px 2px oklch(0.18 0.04 260 / 0.04), 0 14px 36px -26px oklch(0.5 0.22 264 / 0.28);
-  --safe-seo-page-bg: var(--background);
 }
 
 html:not(.dark) {
@@ -177,12 +171,6 @@ html:not(.dark) {
 
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 32px -12px oklch(0.5 0.22 264 / 0.3);
   --shadow-glow: 0 20px 60px -20px oklch(0.68 0.2 250 / 0.5);
-  --safe-seo-surface: oklch(0.18 0.03 264);
-  --safe-seo-surface-soft: oklch(0.205 0.035 264);
-  --safe-seo-border: oklch(1 0 0 / 0.1);
-  --safe-seo-accent-soft: oklch(0.27 0.055 260);
-  --safe-seo-shadow: none;
-  --safe-seo-page-bg: var(--background);
 }
 
 html.dark {
@@ -415,268 +403,6 @@ body.pdf-reorder-dragging {
   max-width: 100%;
 }
 
-.safe-tool-seo {
-  background: var(--safe-seo-page-bg);
-  color: var(--foreground);
-}
-
-.safe-seo-section {
-  padding-block: 3rem;
-}
-
-.safe-seo-band {
-  border-block: 1px solid var(--safe-seo-border);
-  background: var(--safe-seo-page-bg);
-}
-
-.safe-seo-container {
-  width: min(100% - 2rem, 72rem);
-  margin-inline: auto;
-}
-
-.safe-seo-heading {
-  max-width: 42rem;
-  margin-bottom: 1.5rem;
-}
-
-.safe-seo-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--safe-seo-border));
-  border-radius: 999px;
-  background: var(--safe-seo-accent-soft);
-  padding: 0.25rem 0.7rem;
-  color: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.safe-seo-trust {
-  background: var(--safe-seo-surface);
-}
-
-.safe-seo-trust-card,
-.safe-seo-card,
-.safe-seo-guide-card,
-.faq-static-item,
-.safe-seo-related-card {
-  border: 1px solid var(--safe-seo-border);
-  background: var(--safe-seo-surface);
-  box-shadow: var(--safe-seo-shadow);
-}
-
-.safe-seo-trust-card {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.7rem;
-  border-radius: 1rem;
-  padding: 0.8rem;
-}
-
-.safe-seo-icon {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--safe-seo-border));
-  border-radius: 0.8rem;
-  background: var(--safe-seo-accent-soft);
-  color: var(--primary);
-}
-
-.safe-seo-icon-large {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 0.95rem;
-}
-
-.safe-seo-steps-grid,
-.safe-seo-benefits-grid,
-.safe-seo-related-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.safe-seo-steps-grid,
-.safe-seo-benefits-grid {
-  grid-template-columns: 1fr;
-}
-
-.safe-seo-card {
-  min-width: 0;
-  border-radius: 1.15rem;
-  padding: 1rem;
-}
-
-.safe-seo-step-number {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.safe-seo-guide-card {
-  border-radius: 1.5rem;
-  padding: 1.25rem;
-}
-
-.safe-seo-tip-list {
-  min-width: 0;
-  border: 1px solid var(--safe-seo-border);
-  border-radius: 1.15rem;
-  background: var(--safe-seo-surface-soft);
-  padding: 1rem;
-}
-
-.safe-seo-tip {
-  display: flex;
-  gap: 0.65rem;
-  border-radius: 0.9rem;
-  background: var(--safe-seo-surface);
-  padding: 0.85rem;
-  color: var(--muted-foreground);
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.safe-faq-section {
-  position: relative;
-  overflow: visible;
-}
-
-.faq-static-list {
-  display: grid;
-  gap: 0.75rem;
-  overflow: visible;
-}
-
-.faq-static-item {
-  position: relative;
-  overflow: visible;
-  border-radius: 1rem;
-  padding: 1rem;
-}
-
-.faq-static-item h3 {
-  margin: 0 0 0.45rem;
-  font-size: 1rem;
-  font-weight: 650;
-  line-height: 1.4;
-}
-
-.faq-static-item p {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 0.94rem;
-  line-height: 1.6;
-}
-
-.safe-seo-related-grid {
-  grid-template-columns: 1fr;
-}
-
-.safe-seo-related-card {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 0.85rem;
-  border-radius: 1.15rem;
-  padding: 1rem;
-  color: inherit;
-  text-decoration: none;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
-
-.safe-seo-related-card:hover {
-  border-color: color-mix(in oklab, var(--primary) 42%, var(--safe-seo-border));
-  background: var(--safe-seo-surface-soft);
-}
-
-.safe-seo-related-arrow {
-  margin-top: 0.45rem;
-  color: var(--muted-foreground);
-}
-
-html.dark,
-html.dark body,
-html.dark #root,
-html.dark .tool-page-root,
-html.dark .tool-page-main,
-html.dark .safe-tool-seo {
-  background-color: var(--background);
-}
-
-html.dark .safe-tool-seo,
-html.dark .safe-seo-trust,
-html.dark .safe-seo-section,
-html.dark .safe-seo-band,
-html.dark .related-tools,
-html.dark .site-footer {
-  background: var(--background);
-  border-color: var(--safe-seo-border);
-}
-
-html.dark .safe-seo-trust-card,
-html.dark .safe-seo-card,
-html.dark .faq-static-item,
-html.dark .safe-seo-related-card {
-  background: var(--safe-seo-surface);
-  border-color: var(--safe-seo-border);
-  box-shadow: none;
-}
-
-html.dark .safe-seo-icon,
-html.dark .safe-seo-eyebrow {
-  background: var(--safe-seo-accent-soft);
-  border-color: color-mix(in oklab, var(--primary) 24%, var(--safe-seo-border));
-}
-
-@media (min-width: 640px) {
-  .safe-seo-guide-card {
-    padding: 1.5rem;
-  }
-
-  .safe-seo-benefits-grid,
-  .safe-seo-related-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .safe-seo-section {
-    padding-block: 3.75rem;
-  }
-
-  .safe-seo-steps-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .safe-seo-benefits-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .safe-seo-related-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .safe-seo-guide-card {
-    padding: 2rem;
-  }
-}
-
 @media (max-width: 767px) {
   .glass,
   .tool-picker-overlay.tool-picker-overlay,
@@ -763,116 +489,29 @@ html.dark .safe-seo-eyebrow {
   }
 
   .tool-page-root,
-  .tool-page-main,
-  .tool-page-main *,
-  .tool-page-hero,
-  .tool-page-hero *,
-  .tool-page-hero > .mx-auto,
-  .tool-feature-pills,
-  .tool-feature-pills *,
-  .safe-tool-seo,
-  .safe-tool-seo *,
-  .related-tools,
-  .related-tools *,
-  .site-footer,
-  .site-footer *,
-  .site-navbar,
-  .site-navbar *,
-  .site-mobile-menu,
-  .site-mobile-menu *,
   .tool-page-root .animate-fade-up,
   .tool-page-root .animate-fade-in {
     animation: none !important;
     opacity: 1 !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
     transform: none !important;
-    filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    will-change: auto !important;
-    perspective: none !important;
-    contain: none !important;
-    content-visibility: visible !important;
-    mix-blend-mode: normal !important;
-  }
-
-  .tool-page-main *::before,
-  .tool-page-main *::after,
-  .tool-feature-pills *::before,
-  .tool-feature-pills *::after,
-  .safe-tool-seo *::before,
-  .safe-tool-seo *::after,
-  .related-tools *::before,
-  .related-tools *::after,
-  .site-footer *::before,
-  .site-footer *::after {
-    animation: none !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
-    transform: none !important;
-    filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    will-change: auto !important;
-    perspective: none !important;
-    contain: none !important;
-    content-visibility: visible !important;
-    mix-blend-mode: normal !important;
   }
 
   .tool-page-root {
-    position: relative;
-    z-index: 0;
-    isolation: isolate;
     overflow-x: hidden;
   }
 
-  .tool-page-main,
-  .tool-page-hero,
-  .tool-feature-pills,
-  .safe-tool-seo,
-  .safe-seo-trust,
-  .safe-seo-section,
-  .related-tools,
-  .site-footer {
-    position: relative;
-    z-index: 1;
-    overflow: visible;
+  html.dark,
+  html.dark body,
+  html.dark #root,
+  html.dark .tool-page-root {
+    background-color: var(--background);
   }
 
-  .tool-page-hero {
-    overflow-x: hidden;
-  }
-
-  .tool-page-hero-bg {
-    position: absolute;
-    z-index: -1;
-  }
-
-  .tool-page-root .transition-all,
-  .safe-tool-seo .transition-all {
-    transition-property: color, background-color, border-color, box-shadow, opacity !important;
-  }
-
-  .safe-seo-section {
-    padding-block: 3.25rem;
-  }
-
-  .safe-seo-container {
-    width: min(100% - 1.5rem, 72rem);
-  }
-
-  .safe-seo-heading {
-    margin-bottom: 1.5rem;
-  }
-
-  .safe-seo-card,
-  .safe-seo-guide-card,
-  .faq-static-item,
-  .safe-seo-related-card,
-  .safe-seo-trust-card {
-    box-shadow: 0 1px 2px oklch(0 0 0 / 0.08);
+  .tool-page-root .glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
   }
 
   .site-navbar-panel,
@@ -889,69 +528,5 @@ html.dark .safe-seo-eyebrow {
     transition: none !important;
     transform: none !important;
     will-change: auto !important;
-  }
-
-  html.dark,
-  html.dark body,
-  html.dark #root,
-  html.dark .tool-page-root,
-  html.dark .tool-page-main,
-  html.dark .tool-page-hero,
-  html.dark .safe-tool-seo,
-  html.dark .safe-seo-trust,
-  html.dark .safe-seo-section,
-  html.dark .safe-seo-band,
-  html.dark .safe-faq-section,
-  html.dark .related-tools,
-  html.dark .site-footer {
-    background: var(--background) !important;
-    background-color: var(--background) !important;
-  }
-
-  html.dark .safe-tool-seo,
-  html.dark .safe-tool-seo *,
-  html.dark .safe-tool-seo *::before,
-  html.dark .safe-tool-seo *::after,
-  html.dark .safe-faq-section,
-  html.dark .safe-faq-section *,
-  html.dark .safe-faq-section *::before,
-  html.dark .safe-faq-section *::after,
-  html.dark .faq-static-list,
-  html.dark .faq-static-item,
-  html.dark .related-tools,
-  html.dark .related-tools *,
-  html.dark .related-tools *::before,
-  html.dark .related-tools *::after {
-    animation: none !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
-    transform: none !important;
-    filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    will-change: auto !important;
-    perspective: none !important;
-    contain: none !important;
-    content-visibility: visible !important;
-    mix-blend-mode: normal !important;
-    transition: none !important;
-  }
-
-  html.dark .safe-seo-trust-card,
-  html.dark .safe-seo-card,
-  html.dark .faq-static-item,
-  html.dark .safe-seo-related-card {
-    position: relative !important;
-    z-index: auto !important;
-    overflow: visible !important;
-    border-color: var(--safe-seo-border) !important;
-    background: var(--safe-seo-surface) !important;
-    box-shadow: none !important;
-  }
-
-  html.dark .faq-static-list,
-  html.dark .safe-seo-related-grid {
-    overflow: visible !important;
-    background: transparent !important;
   }
 }

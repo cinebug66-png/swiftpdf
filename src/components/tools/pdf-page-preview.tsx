@@ -375,9 +375,10 @@ function PdfPagePreviewInner({
         if (cancelled || renderSequenceRef.current !== renderId) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
+        const displayWidthForCap = isQuarterTurn ? baseViewport.height : baseViewport.width;
         const displayHeightForCap = isQuarterTurn ? baseViewport.width : baseViewport.height;
         const scale =
-          Math.min(frameWidth / baseViewport.width, maxPreviewHeight / displayHeightForCap, 1.5) ||
+          Math.min(frameWidth / displayWidthForCap, maxPreviewHeight / displayHeightForCap, 1.5) ||
           1;
         const viewport = page.getViewport({ scale });
         const pixelRatio = window.devicePixelRatio || 1;

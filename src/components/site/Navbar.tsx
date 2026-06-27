@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Moon, Sun, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
@@ -16,41 +16,25 @@ export function Navbar() {
   const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const scrollFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const updateScrolledState = () => {
-      scrollFrameRef.current = null;
-      const nextScrolled = window.scrollY > 12;
-      setScrolled((current) => (current === nextScrolled ? current : nextScrolled));
-    };
-    const onScroll = () => {
-      if (scrollFrameRef.current != null) return;
-      scrollFrameRef.current = window.requestAnimationFrame(updateScrolledState);
-    };
-
-    updateScrolledState();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (scrollFrameRef.current != null) {
-        window.cancelAnimationFrame(scrollFrameRef.current);
-        scrollFrameRef.current = null;
-      }
-    };
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <header
       className={cn(
-        "site-navbar fixed top-0 inset-x-0 z-50 transition-[padding] duration-300 motion-reduce:transition-none",
+        "fixed top-0 inset-x-0 z-50 transition-all duration-300",
         scrolled ? "py-2" : "py-4",
       )}
     >
       <div className="mx-auto max-w-7xl px-4">
         <nav
           className={cn(
-            "site-navbar-panel flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none",
+            "flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all duration-300",
             scrolled ? "glass shadow-soft" : "bg-transparent",
           )}
         >
@@ -84,7 +68,10 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              onClick={() => setOpen(!open)}
+              onClick={(event) => {
+                event.currentTarget.blur();
+                setOpen(!open);
+              }}
               aria-label="Menu"
             >
               {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -93,7 +80,7 @@ export function Navbar() {
         </nav>
 
         {open && (
-          <div className="site-mobile-menu md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3 animate-fade-in">
+          <div className="site-mobile-menu md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3">
             {links.map((l) => (
               <Link
                 key={l.href}

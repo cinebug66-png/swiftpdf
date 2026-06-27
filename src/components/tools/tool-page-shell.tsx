@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/app-router";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import type { Tool } from "@/lib/tools";
-import { SafeToolSeoSection } from "@/components/tools/safe-tool-seo-section";
-import { getSafeToolSeoContent } from "@/lib/safe-tool-seo-content";
 
 type ToolPageShellProps = {
   tool: Tool;
@@ -14,7 +12,6 @@ type ToolPageShellProps = {
 
 export function ToolPageShell({ tool, children }: ToolPageShellProps) {
   const Icon = tool.icon;
-  const safeSeoContent = getSafeToolSeoContent(tool);
 
   return (
     <div className="tool-page-root min-h-screen bg-background text-foreground">
@@ -52,7 +49,6 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
             <div className="mt-12 animate-fade-up [animation-delay:120ms]">{children}</div>
           </div>
         </section>
-        <SafeToolSeoSection tool={tool} content={safeSeoContent} />
       </main>
       <Footer />
     </div>

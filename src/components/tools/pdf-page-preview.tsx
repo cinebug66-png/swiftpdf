@@ -31,7 +31,6 @@ type PdfPageProxy = {
     canvasContext: CanvasRenderingContext2D;
     viewport: { width: number; height: number };
   }) => PdfRenderTask;
-  cleanup?: () => void;
 };
 
 type PdfDocumentProxy = {
@@ -188,8 +187,6 @@ function PdfPagePreviewInner({
   }, [onPageCountChange]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-
     return () => {
       renderSequenceRef.current += 1;
       if (previewTimeoutRef.current) {
@@ -202,13 +199,6 @@ function PdfPagePreviewInner({
       }
       void pdfLoadingTaskRef.current?.destroy().catch(() => undefined);
       void pdfDocumentRef.current?.destroy().catch(() => undefined);
-      if (canvas) {
-        const context = canvas.getContext("2d");
-        context?.resetTransform();
-        context?.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.width = 0;
-        canvas.height = 0;
-      }
     };
   }, []);
 
@@ -369,16 +359,14 @@ function PdfPagePreviewInner({
     }, 10000);
 
     const renderPage = async () => {
-      let page: PdfPageProxy | null = null;
       try {
-        page = await pdfDocument.getPage(safePageNumber);
+        const page = await pdfDocument.getPage(safePageNumber);
         if (cancelled || renderSequenceRef.current !== renderId) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
-        const displayWidthForCap = isQuarterTurn ? baseViewport.height : baseViewport.width;
         const displayHeightForCap = isQuarterTurn ? baseViewport.width : baseViewport.height;
         const scale =
-          Math.min(frameWidth / displayWidthForCap, maxPreviewHeight / displayHeightForCap, 1.5) ||
+          Math.min(frameWidth / baseViewport.width, maxPreviewHeight / displayHeightForCap, 1.5) ||
           1;
         const viewport = page.getViewport({ scale });
         const pixelRatio = window.devicePixelRatio || 1;
@@ -425,8 +413,6 @@ function PdfPagePreviewInner({
 
         setLoading(false);
         setError(getPreviewErrorMessage(err));
-      } finally {
-        page?.cleanup?.();
       }
     };
 

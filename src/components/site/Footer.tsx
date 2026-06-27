@@ -7,7 +7,6 @@ const columns = [
     links: [
       { label: "PDF to Word", to: "/pdf-to-word" },
       { label: "PDF to JPG", to: "/pdf-to-jpg" },
-      { label: "PDF to PNG", to: "/pdf-to-png" },
       { label: "Compress PDF", to: "/compress-pdf" },
       { label: "Merge PDF", to: "/merge-pdf" },
       { label: "Split PDF", to: "/split-pdf" },
@@ -37,7 +36,7 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="site-footer border-t border-border py-14">
+    <footer className="border-t border-border py-14">
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">

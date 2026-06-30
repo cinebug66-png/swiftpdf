@@ -117,7 +117,7 @@ export function RotatePdfTool() {
           selectFile(event.dataTransfer.files?.[0] ?? null);
         }}
         className={cn(
-          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-all duration-300 sm:p-16",
+          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-16",
           "glass shadow-card hover:shadow-glow",
           drag && "scale-[1.01] ring-2 ring-primary",
         )}
@@ -178,7 +178,7 @@ export function RotatePdfTool() {
                 onClick={() => setRotation(option)}
                 disabled={status === "processing"}
                 className={cn(
-                  "rounded-xl border px-4 py-3 text-sm font-medium shadow-soft transition-all",
+                  "rounded-xl border px-4 py-3 text-sm font-medium shadow-soft transition-[background-color,border-color,box-shadow,color] duration-200",
                   rotation === option
                     ? "border-primary bg-primary text-primary-foreground shadow-glow"
                     : "border-border bg-card/70 text-foreground hover:border-primary/60",

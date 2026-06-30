@@ -10,10 +10,10 @@ const items = [
 
 export function WhyUs() {
   return (
-    <section id="why" className="py-24 sm:py-32 relative">
+    <section id="why" className="relative py-16 sm:py-24">
       <div className="absolute inset-0 -z-10 bg-gradient-mesh opacity-50" />
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
             Why SwiftPDF
           </div>
@@ -21,11 +21,11 @@ export function WhyUs() {
             Built for speed, designed for trust
           </h2>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it, i) => (
             <div
               key={it.title}
-              className={`glass rounded-2xl p-7 shadow-card hover:shadow-glow transition-all duration-300 ${
+              className={`rounded-2xl glass p-5 shadow-card transition-[box-shadow,border-color] duration-200 hover:shadow-glow sm:p-7 ${
                 i === 4 ? "lg:col-start-2" : ""
               }`}
             >

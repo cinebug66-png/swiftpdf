@@ -288,7 +288,7 @@ function ExtractPageGrid({
                 onClick={() => onTogglePage(page)}
                 disabled={disabled}
                 className={cn(
-                  "group relative isolate min-w-0 overflow-hidden rounded-2xl border bg-card text-left shadow-soft outline-none transition-all duration-300",
+                  "group relative isolate min-w-0 overflow-hidden rounded-2xl border bg-card text-left shadow-soft outline-none transition-[background-color,border-color,box-shadow,transform,opacity] duration-200",
                   "hover:-translate-y-0.5 hover:shadow-card focus-visible:border-primary focus-visible:shadow-glow",
                   "disabled:pointer-events-none disabled:opacity-70",
                   selected
@@ -321,7 +321,7 @@ function ExtractPageGrid({
                   <span className="text-sm font-semibold">Page {page}</span>
                   <span
                     className={cn(
-                      "grid h-6 w-6 place-items-center rounded-full border transition-all",
+                      "grid h-6 w-6 place-items-center rounded-full border transition-[background-color,border-color,color] duration-200",
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border text-muted-foreground group-hover:border-primary/60 group-hover:text-primary",
@@ -524,7 +524,7 @@ export function ExtractPagesTool() {
           void selectFile(event.dataTransfer.files?.[0] ?? null);
         }}
         className={cn(
-          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-all duration-300 sm:p-16",
+          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-16",
           "glass shadow-card hover:shadow-glow",
           drag && "scale-[1.01] ring-2 ring-primary",
         )}

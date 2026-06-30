@@ -15,13 +15,13 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-24 sm:py-32">
+    <section id="faq" className="py-16 sm:py-24">
       <div className="mx-auto max-w-3xl px-4">
-        <div className="text-center mb-14">
+        <div className="mb-10 text-center sm:mb-12">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">FAQ</div>
           <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight">Questions, answered</h2>
         </div>
-        <Accordion type="single" collapsible className="glass rounded-2xl px-6 shadow-card">
+        <Accordion type="single" collapsible className="rounded-2xl glass px-4 shadow-card sm:px-6">
           {faqs.map((f, i) => (
             <AccordionItem key={i} value={`i-${i}`} className="border-b last:border-0">
               <AccordionTrigger className="text-left text-base font-medium py-5">{f.q}</AccordionTrigger>

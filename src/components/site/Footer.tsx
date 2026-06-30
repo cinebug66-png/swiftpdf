@@ -36,9 +36,9 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-14">
+    <footer className="border-t border-border py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
@@ -71,7 +71,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:mt-12 sm:pt-6">
           <div>© 2026 SwiftPDF. All rights reserved.</div>
           <div>Made for students, freelancers and teams.</div>
         </div>

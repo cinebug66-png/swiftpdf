@@ -20,7 +20,7 @@ export function Hero() {
   };
 
   return (
-    <section id="upload" className="relative pt-32 pb-24 sm:pt-40 sm:pb-32 overflow-hidden">
+    <section id="upload" className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
       {/* Animated background */}
       <div className="absolute inset-0 -z-10 bg-gradient-mesh" />
       <div className="absolute inset-0 -z-10 [background:var(--gradient-hero)]" />
@@ -28,8 +28,8 @@ export function Hero() {
       <div className="pointer-events-none absolute top-20 -right-32 w-[520px] h-[520px] rounded-full bg-primary-glow/25 blur-3xl animate-blob [animation-delay:-6s]" />
 
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-3xl mx-auto animate-fade-up">
-          <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs font-medium text-foreground/80 mb-6">
+        <div className="mx-auto max-w-3xl text-center animate-fade-up">
+          <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             Trusted by 2M+ users worldwide
           </div>
@@ -37,11 +37,11 @@ export function Hero() {
             Convert & Manage PDFs <br className="hidden sm:block" />
             <span className="text-gradient">Instantly.</span>
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground sm:text-xl">
             Fast, secure PDF tools — all in your browser.
           </p>
 
-          <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button variant="hero" size="xl" onClick={() => inputRef.current?.click()}>
               <Upload className="w-5 h-5" /> Upload PDF
             </Button>
@@ -54,7 +54,7 @@ export function Hero() {
         </div>
 
         {/* Dropzone */}
-        <div className="mt-14 max-w-3xl mx-auto animate-fade-up [animation-delay:120ms]">
+        <div className="mx-auto mt-10 max-w-3xl animate-fade-up [animation-delay:120ms] sm:mt-12">
           <label
             onDragOver={(e) => {
               e.preventDefault();
@@ -67,7 +67,7 @@ export function Hero() {
               if (e.dataTransfer.files?.[0]) onFile(e.dataTransfer.files[0]);
             }}
             className={cn(
-              "group relative block rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-300",
+              "group relative block cursor-pointer rounded-3xl p-8 text-center transition-[background-color,border-color,box-shadow,transform] duration-200 sm:p-12",
               "glass shadow-card hover:shadow-glow",
               drag && "ring-2 ring-primary scale-[1.01]",
             )}

@@ -258,7 +258,7 @@ export function PdfToPngTool() {
           void selectFile(event.dataTransfer.files[0]);
         }}
         className={cn(
-          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-all duration-300 sm:p-16",
+          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-16",
           "glass shadow-card hover:shadow-glow",
           drag && "scale-[1.01] ring-2 ring-primary",
         )}
@@ -362,7 +362,7 @@ export function PdfToPngTool() {
             {pages.map((page) => (
               <article
                 key={page.pageNumber}
-                className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-glow"
+                className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 hover:-translate-y-0.5 hover:shadow-glow"
               >
                 <div className="flex h-40 items-center justify-center bg-muted/40 p-2 sm:h-44">
                   <img

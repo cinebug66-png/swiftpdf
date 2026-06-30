@@ -8,9 +8,9 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how" className="py-24 sm:py-32">
+    <section id="how" className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-2xl mx-auto mb-20">
+        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-16">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
             How it works
           </div>
@@ -19,7 +19,7 @@ export function HowItWorks() {
           </h2>
         </div>
 
-        <div className="relative grid md:grid-cols-3 gap-8">
+        <div className="relative grid gap-8 md:grid-cols-3">
           <div className="hidden md:block absolute top-7 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-border to-transparent" />
           {steps.map((s, i) => (
             <div key={s.title} className="relative text-center">

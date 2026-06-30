@@ -930,7 +930,7 @@ export function SignPdfTool() {
           event.preventDefault();
           void selectFile(event.dataTransfer.files?.[0]);
         }}
-        className="sign-pdf-card group block w-full max-w-full cursor-pointer rounded-3xl glass p-8 text-center shadow-card transition-all duration-300 hover:shadow-glow sm:p-10"
+        className="sign-pdf-card group block w-full max-w-full cursor-pointer rounded-3xl glass p-8 text-center shadow-card transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 hover:shadow-glow sm:p-10"
       >
         <input
           ref={pdfInputRef}
@@ -1109,7 +1109,7 @@ export function SignPdfTool() {
                       setError(null);
                     }}
                     className={cn(
-                      "flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-medium transition-all",
+                      "flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-xs font-medium transition-[background-color,color,box-shadow] duration-200",
                       method === item.id
                         ? "bg-primary text-primary-foreground shadow-soft"
                         : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -1167,7 +1167,7 @@ export function SignPdfTool() {
                   <button
                     type="button"
                     onClick={() => imageInputRef.current?.click()}
-                    className="grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-primary/30 bg-card/70 px-4 text-center text-sm font-medium transition-all hover:border-primary/70"
+                    className="grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-primary/30 bg-card/70 px-4 text-center text-sm font-medium transition-[background-color,border-color,color] duration-200 hover:border-primary/70"
                   >
                     <span>
                       <ImagePlus className="mx-auto mb-2 h-5 w-5 text-primary" />

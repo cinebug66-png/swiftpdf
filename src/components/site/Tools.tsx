@@ -5,9 +5,9 @@ import { tools } from "@/lib/tools";
 
 export function Tools() {
   return (
-    <section id="tools" className="py-24 sm:py-32 scroll-mt-24">
+    <section id="tools" className="scroll-mt-24 py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
             Popular Tools
           </div>
@@ -19,21 +19,21 @@ export function Tools() {
           </p>
         </div>
 
-        <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))] [grid-auto-rows:1fr] gap-4 sm:gap-6">
+        <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))] [grid-auto-rows:1fr] gap-3 sm:gap-5">
           {tools.map((t) => (
             <Link
               key={t.slug}
               to={getToolPath(t.slug)}
-              className="group relative h-full rounded-2xl p-6 bg-card border border-border shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
+              className="group relative flex h-full min-w-0 flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-glow sm:p-6"
             >
               <div
                 className={`w-11 h-11 rounded-xl bg-gradient-to-br ${t.color} grid place-items-center text-white shadow-soft mb-4`}
               >
                 <t.icon className="w-5 h-5" />
               </div>
-              <div className="font-semibold tracking-tight">{t.name}</div>
-              <div className="text-sm text-muted-foreground mt-1">{t.desc}</div>
-              <ArrowRight className="absolute top-6 right-6 w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+              <div className="min-w-0 font-semibold tracking-tight">{t.name}</div>
+              <div className="mt-1 min-w-0 text-sm leading-relaxed text-muted-foreground">{t.desc}</div>
+              <ArrowRight className="absolute right-5 top-5 h-4 w-4 text-muted-foreground opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-1 group-hover:opacity-100 sm:right-6 sm:top-6" />
             </Link>
           ))}
         </div>

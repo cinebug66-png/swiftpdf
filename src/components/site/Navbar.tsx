@@ -27,19 +27,19 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 inset-x-0 z-50 transition-all duration-300",
+        "fixed top-0 inset-x-0 z-50 transition-[padding] duration-200",
         scrolled ? "py-2" : "py-4",
       )}
     >
       <div className="mx-auto max-w-7xl px-4">
         <nav
           className={cn(
-            "flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all duration-300",
+            "flex min-w-0 items-center justify-between rounded-2xl px-4 py-3 transition-[background-color,border-color,box-shadow] duration-200 sm:px-6",
             scrolled ? "glass shadow-soft" : "bg-transparent",
           )}
         >
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
+          <Link to="/" className="flex min-w-0 items-center gap-2 font-semibold tracking-tight">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
               <FileText className="w-4 h-4" />
             </span>
             <span className="text-lg">SwiftPDF</span>
@@ -57,7 +57,7 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -86,13 +86,13 @@ export function Navbar() {
         </nav>
 
         {open && (
-          <div className="site-mobile-menu md:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-3">
+          <div className="site-mobile-menu md:hidden mt-2 rounded-2xl p-3 flex flex-col gap-1">
             {links.map((l) => (
               <Link
                 key={l.href}
                 to={l.href}
                 onClick={() => setOpen(false)}
-                className="text-sm text-foreground/80 hover:text-foreground"
+                className="rounded-xl px-3 py-2.5 text-sm text-foreground/80 hover:bg-accent hover:text-foreground"
               >
                 {l.label}
               </Link>

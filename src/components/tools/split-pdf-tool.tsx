@@ -283,7 +283,7 @@ export function SplitPdfTool() {
           void selectFile(event.dataTransfer.files?.[0] ?? null);
         }}
         className={cn(
-          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-all duration-300 sm:p-16",
+          "group relative block cursor-pointer rounded-3xl p-10 text-center transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-16",
           "glass shadow-card hover:shadow-glow",
           drag && "scale-[1.01] ring-2 ring-primary",
         )}
@@ -373,7 +373,7 @@ export function SplitPdfTool() {
                   onClick={() => togglePage(page)}
                   disabled={status === "processing"}
                   className={cn(
-                    "relative grid place-items-center border text-xs font-medium transition-all disabled:pointer-events-none disabled:opacity-70",
+                    "relative grid place-items-center border text-xs font-medium transition-[background-color,border-color,color,box-shadow] duration-200 disabled:pointer-events-none disabled:opacity-70",
                     showThumbnails
                       ? "min-h-24 w-16 rounded-lg p-1.5"
                       : "h-7 min-w-7 rounded-md px-1.5",

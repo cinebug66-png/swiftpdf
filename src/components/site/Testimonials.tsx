@@ -20,17 +20,17 @@ const items = [
 
 export function Testimonials() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-12">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">Loved by teams</div>
           <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight">From students to small businesses</h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid gap-4 md:grid-cols-3">
           {items.map((t) => (
             <figure
               key={t.name}
-              className="glass rounded-2xl p-7 shadow-card hover:shadow-glow transition-all duration-300"
+              className="rounded-2xl glass p-5 shadow-card transition-[box-shadow,border-color] duration-200 hover:shadow-glow sm:p-7"
             >
               <div className="flex gap-0.5 text-primary mb-4">
                 {Array.from({ length: 5 }).map((_, i) => (

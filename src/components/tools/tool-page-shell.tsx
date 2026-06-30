@@ -17,13 +17,13 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
     <div className="tool-page-root min-h-screen bg-background text-foreground">
       <Navbar />
       <main className="tool-page-main">
-        <section className="tool-page-hero relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-24">
+        <section className="tool-page-hero relative overflow-hidden pt-28 pb-14 sm:pt-36 sm:pb-20">
           <div className="tool-page-hero-bg absolute inset-0 -z-10 bg-gradient-mesh" />
           <div className="tool-page-hero-bg absolute inset-0 -z-10 [background:var(--gradient-hero)]" />
 
           <div className="mx-auto max-w-5xl px-4">
             <div className="text-center animate-fade-up">
-              <div className="tool-feature-pills mb-6 flex flex-wrap items-center justify-center gap-3">
+              <div className="tool-feature-pills mb-5 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <Link
                   to="/"
                   className="inline-flex items-center gap-1.5 rounded-full glass px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -46,7 +46,7 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
               <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">{tool.long}</p>
             </div>
 
-            <div className="mt-12 animate-fade-up [animation-delay:120ms]">{children}</div>
+            <div className="mt-9 animate-fade-up [animation-delay:120ms] sm:mt-11">{children}</div>
           </div>
         </section>
       </main>

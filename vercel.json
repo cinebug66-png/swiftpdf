@@ -50,8 +50,16 @@
       "destination": "/delete-pages/index.html"
     },
     {
+      "source": "/delete-pdf-pages",
+      "destination": "/delete-pdf-pages/index.html"
+    },
+    {
       "source": "/reorder-pdf",
       "destination": "/reorder-pdf/index.html"
+    },
+    {
+      "source": "/reorder-pdf-pages",
+      "destination": "/reorder-pdf-pages/index.html"
     },
     {
       "source": "/add-page-numbers",

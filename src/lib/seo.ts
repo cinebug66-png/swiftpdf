@@ -16,9 +16,7 @@ export const SITE_URL = (
 ).replace(/\/+$/, "");
 export const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
 
-export type SeoMetadata = RouteSeoMetadata & {
-  noIndex?: boolean;
-};
+export type SeoMetadata = RouteSeoMetadata;
 
 export function getSeoMetadata(pathname: string): SeoMetadata {
   return (
@@ -27,7 +25,6 @@ export function getSeoMetadata(pathname: string): SeoMetadata {
       title: `Page Not Found | ${SITE_NAME}`,
       description: "The requested SwiftPDF page could not be found.",
       type: "website",
-      noIndex: true,
     }
   );
 }
@@ -36,11 +33,20 @@ export function getCanonicalUrl(path: string) {
   return path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path}`;
 }
 
+function getToolSlugFromPath(path: string) {
+  const slug = path.replace(/^\//, "");
+
+  if (slug === "extract-pdf-pages") return "extract-pages";
+  if (slug === "delete-pdf-pages") return "delete-pages";
+  if (slug === "reorder-pdf-pages") return "reorder-pdf";
+
+  return slug;
+}
+
 export function getStructuredData(metadata: SeoMetadata) {
   const canonicalUrl = getCanonicalUrl(metadata.path);
   const toolSeo = getToolSeoContentByPath(metadata.path);
-  const toolSlug = metadata.path.replace(/^\//, "");
-  const tool = getTool(toolSlug === "extract-pdf-pages" ? "extract-pages" : toolSlug);
+  const tool = getTool(getToolSlugFromPath(metadata.path));
   const visibleFaqs = tool ? compactNeedToKnowItems : [];
   const isHomepage = metadata.path === "/";
 

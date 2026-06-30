@@ -104,8 +104,22 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Delete selected pages from a PDF online. Remove single pages or page ranges quickly and securely with SwiftPDF.",
     type: "website",
   },
+  "/delete-pdf-pages": {
+    path: "/delete-pdf-pages",
+    title: "Delete PDF Pages Online Free | SwiftPDF",
+    description:
+      "Delete selected pages from a PDF online. Remove single pages or page ranges quickly and securely with SwiftPDF.",
+    type: "website",
+  },
   "/reorder-pdf": {
     path: "/reorder-pdf",
+    title: "Reorder PDF Pages Online Free | SwiftPDF",
+    description:
+      "Reorder PDF pages online for free. Drag and arrange pages in your browser and download the updated PDF instantly.",
+    type: "website",
+  },
+  "/reorder-pdf-pages": {
+    path: "/reorder-pdf-pages",
     title: "Reorder PDF Pages Online Free | SwiftPDF",
     description:
       "Reorder PDF pages online for free. Drag and arrange pages in your browser and download the updated PDF instantly.",

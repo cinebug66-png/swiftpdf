@@ -97,8 +97,10 @@ function renderRoute(pathname: string) {
       return <WatermarkPdfPage />;
     case "/rotate-pdf":
       return <RotatePdfPage />;
+    case "/delete-pdf-pages":
     case "/delete-pages":
       return <DeletePagesPage />;
+    case "/reorder-pdf-pages":
     case "/reorder-pdf":
       return <ReorderPdfPage />;
     case "/add-page-numbers":

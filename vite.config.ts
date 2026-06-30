@@ -28,10 +28,20 @@ function replaceMetaContent(html: string, selector: string, content: string) {
   return html.replace(pattern, `$1${escapedContent}$2`);
 }
 
+function getToolSlugFromPath(pathName: string) {
+  const slug = pathName.replace(/^\//, "");
+
+  if (slug === "extract-pdf-pages") return "extract-pages";
+  if (slug === "delete-pdf-pages") return "delete-pages";
+  if (slug === "reorder-pdf-pages") return "reorder-pdf";
+
+  return slug;
+}
+
 function createStructuredData(siteUrl: string, pathName: string, description: string) {
   const canonicalUrl = pathName === "/" ? `${siteUrl}/` : `${siteUrl}${pathName}`;
   const toolSeo = getToolSeoContentByPath(pathName);
-  const tool = getTool(pathName.replace(/^\//, ""));
+  const tool = getTool(getToolSlugFromPath(pathName));
   const isHomepage = pathName === "/";
 
   return {

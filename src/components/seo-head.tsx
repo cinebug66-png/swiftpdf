@@ -12,14 +12,17 @@ type SeoHeadProps = {
 };
 
 function setMeta(selector: string, attributes: Record<string, string>, content: string) {
-  let element = document.head.querySelector<HTMLMetaElement>(selector);
+  const elements = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
+  let element = elements.shift() ?? null;
+
+  elements.forEach((duplicate) => duplicate.remove());
 
   if (!element) {
     element = document.createElement("meta");
-    Object.entries(attributes).forEach(([name, value]) => element?.setAttribute(name, value));
     document.head.appendChild(element);
   }
 
+  Object.entries(attributes).forEach(([name, value]) => element?.setAttribute(name, value));
   element.setAttribute("content", content);
 }
 
@@ -69,7 +72,7 @@ export function SeoHead({ pathname }: SeoHeadProps) {
   useLayoutEffect(() => {
     const metadata = getSeoMetadata(pathname);
     const canonicalUrl = getCanonicalUrl(metadata.path);
-    const robots = metadata.noIndex ? "noindex, nofollow" : "index, follow";
+    const robots = "index,follow";
 
     document.title = metadata.title;
     document.documentElement.lang = "en";

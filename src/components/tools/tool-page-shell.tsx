@@ -2,7 +2,15 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/app-router";
+import {
+  trackChooseFileClick,
+  trackConversionError,
+  trackDownloadClick,
+  trackFileUploaded,
+  trackToolPageView,
+} from "@/lib/analytics";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { useEffect, useRef } from "react";
 import type { Tool } from "@/lib/tools";
 
 type ToolPageShellProps = {
@@ -12,11 +20,87 @@ type ToolPageShellProps = {
 
 export function ToolPageShell({ tool, children }: ToolPageShellProps) {
   const Icon = tool.icon;
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const toolInfo = { tool_name: tool.name, tool_slug: tool.slug };
+    trackToolPageView(toolInfo);
+  }, [tool.name, tool.slug]);
+
+  useEffect(() => {
+    const root = mainRef.current;
+    if (!root) return;
+
+    const toolInfo = { tool_name: tool.name, tool_slug: tool.slug };
+    let lastActionAt = 0;
+    let lastErrorAt = 0;
+    let lastChooseFileAt = 0;
+
+    const trackChooseFileOnce = () => {
+      const now = Date.now();
+      if (now - lastChooseFileAt < 500) return;
+      lastChooseFileAt = now;
+      trackChooseFileClick(toolInfo);
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const fileInput = target.closest('input[type="file"]');
+      if (fileInput instanceof HTMLInputElement) {
+        trackChooseFileOnce();
+        return;
+      }
+
+      const fileLabel = target.closest("label");
+      if (fileLabel?.querySelector('input[type="file"]')) {
+        trackChooseFileOnce();
+        return;
+      }
+
+      const downloadLink = target.closest("a[download]");
+      if (downloadLink instanceof HTMLAnchorElement) {
+        trackDownloadClick(toolInfo, getOutputType(tool.slug));
+        return;
+      }
+
+      const action = target.closest("button, a");
+      const text = action?.textContent?.toLowerCase() ?? "";
+      if (isProcessingAction(text)) {
+        lastActionAt = Date.now();
+      }
+    };
+
+    const handleChange = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== "file" || !target.files) return;
+      trackFileUploaded(toolInfo, target.files);
+    };
+
+    const observer = new MutationObserver(() => {
+      if (Date.now() - lastActionAt > 30_000 || Date.now() - lastErrorAt < 1_500) return;
+      if (!root.querySelector('[class*="destructive"]')) return;
+
+      lastErrorAt = Date.now();
+      trackConversionError(toolInfo, "tool_error", "Tool action failed");
+    });
+
+    root.addEventListener("click", handleClick, true);
+    root.addEventListener("change", handleChange, true);
+    observer.observe(root, { childList: true, subtree: true });
+
+    return () => {
+      root.removeEventListener("click", handleClick, true);
+      root.removeEventListener("change", handleChange, true);
+      observer.disconnect();
+    };
+  }, [tool.name, tool.slug]);
 
   return (
     <div className="tool-page-root min-h-screen bg-background text-foreground">
       <Navbar />
-      <main className="tool-page-main">
+      <main ref={mainRef} className="tool-page-main">
         <section className="tool-page-hero relative overflow-hidden pt-28 pb-14 sm:pt-36 sm:pb-20">
           <div className="tool-page-hero-bg absolute inset-0 -z-10 bg-gradient-mesh" />
           <div className="tool-page-hero-bg absolute inset-0 -z-10 [background:var(--gradient-hero)]" />
@@ -52,6 +136,20 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
       </main>
       <Footer />
     </div>
+  );
+}
+
+function getOutputType(slug: string) {
+  if (slug.includes("jpg")) return slug === "jpg-to-pdf" ? "pdf" : "jpg";
+  if (slug.includes("png")) return "png";
+  if (slug.includes("word")) return slug === "word-to-pdf" ? "pdf" : "docx";
+  return "pdf";
+}
+
+function isProcessingAction(text: string) {
+  if (!text || text.includes("download") || text.includes("choose")) return false;
+  return /\b(convert|compress|merge|split|extract|delete|rotate|protect|unlock|watermark|reorder|number|sign|apply|create)\b/u.test(
+    text,
   );
 }
 

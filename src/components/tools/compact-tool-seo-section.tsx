@@ -1,4 +1,12 @@
-import { CheckCircle2, Clock3, CloudOff, ShieldCheck, UserRoundCheck } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  CloudOff,
+  HelpCircle,
+  ShieldCheck,
+  UserRoundCheck,
+} from "lucide-react";
 import { Link } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import {
@@ -23,13 +31,25 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
   const relatedTools = getRelatedTools(content, tool.slug);
 
   return (
-    <section className="compact-tool-seo border-t border-border bg-background py-10 sm:py-14">
+    <section className="compact-tool-seo border-t border-border bg-background py-8 sm:py-11">
       <div className="mx-auto max-w-5xl px-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-5 flex min-w-0 flex-col gap-2 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Quick guide
+            </div>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
+              Everything you need for {tool.name}
+            </h2>
+          </div>
+          <div className="text-xs text-muted-foreground">Short answers, no extra reading.</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {trustItems.map((item) => (
             <div
               key={item.label}
-              className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm text-foreground shadow-soft"
+              className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground"
             >
               <item.icon className="h-4 w-4 shrink-0 text-primary" />
               <span className="min-w-0 truncate">{item.label}</span>
@@ -37,26 +57,23 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Quick guide
-            </div>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
               {content.title}
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
               {content.shortNote}
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="grid gap-2.5 sm:grid-cols-3 lg:grid-cols-1">
             {content.steps.map((step, index) => (
               <div
                 key={step}
-                className="flex min-w-0 gap-3 rounded-xl border border-border bg-card p-4 shadow-soft"
+                className="flex min-w-0 gap-3 rounded-xl border border-border bg-card p-3"
               >
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+                <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
                   {index + 1}
                 </div>
                 <div className="min-w-0">
@@ -70,23 +87,28 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
           </div>
         </div>
 
-        <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-          <div className="grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+          <div className="grid gap-2.5 sm:grid-cols-3">
             {content.faqs.slice(0, 3).map((faq) => (
-              <details
+              <article
                 key={faq.question}
-                className="rounded-xl border border-border bg-card p-4 text-sm shadow-soft"
+                className="min-w-0 rounded-xl border border-border bg-card p-3 text-sm"
               >
-                <summary className="cursor-pointer list-none font-semibold text-foreground">
-                  {faq.question}
-                </summary>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">{faq.answer}</p>
-              </details>
+                <div className="flex items-start gap-2">
+                  <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-semibold leading-5 text-foreground">{faq.question}</h4>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {toShortAnswer(faq.answer)}
+                    </p>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="mb-2.5 flex items-center gap-2 text-sm font-semibold">
               <ShieldCheck className="h-4 w-4 text-primary" />
               Related tools
             </div>
@@ -95,10 +117,18 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
                 <Link
                   key={related.slug}
                   to={getToolPath(related.slug)}
-                  className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-sm transition-colors hover:border-primary/40 hover:bg-accent"
+                  className="group flex min-w-0 items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-sm transition-colors hover:border-primary/40 hover:bg-accent"
                 >
-                  <span className="min-w-0 truncate font-medium">{related.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">Open</span>
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <related.icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{related.name}</span>
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      {related.desc}
+                    </span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                 </Link>
               ))}
             </div>
@@ -113,6 +143,11 @@ function getStepDescription(toolName: string, index: number) {
   if (index === 0) return `Choose the file you want to use with ${toolName}.`;
   if (index === 1) return "Review the available options before processing.";
   return "Save the finished file to your device.";
+}
+
+function toShortAnswer(answer: string) {
+  const sentences = answer.match(/[^.!?]+[.!?]+/gu);
+  return (sentences ? sentences.slice(0, 2).join(" ") : answer).trim();
 }
 
 function getRelatedTools(content: CompactToolSeoContent, currentSlug: string) {

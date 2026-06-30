@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
+import { CompactToolSeoSection } from "@/components/tools/compact-tool-seo-section";
 import { Link } from "@/lib/app-router";
 import {
   trackChooseFileClick,
@@ -133,6 +134,7 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
             <div className="mt-9 animate-fade-up [animation-delay:120ms] sm:mt-11">{children}</div>
           </div>
         </section>
+        <CompactToolSeoSection tool={tool} />
       </main>
       <Footer />
     </div>

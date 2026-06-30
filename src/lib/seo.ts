@@ -5,7 +5,7 @@ import {
   type RouteSeoMetadata,
 } from "@/lib/seo-routes";
 import { getToolSeoContentByPath } from "@/lib/tool-seo-content";
-import { getSafeToolSeoContent } from "@/lib/safe-tool-seo-content";
+import { getCompactToolSeoContentOrFallback } from "@/lib/compact-tool-seo-content";
 import { getTool } from "@/lib/tools";
 
 export { publicRoutes, routeMetadata };
@@ -42,7 +42,9 @@ export function getStructuredData(metadata: SeoMetadata) {
   const toolSeo = getToolSeoContentByPath(metadata.path);
   const toolSlug = metadata.path.replace(/^\//, "");
   const tool = getTool(toolSlug === "extract-pdf-pages" ? "extract-pages" : toolSlug);
-  const visibleFaqs = tool ? getSafeToolSeoContent(tool).faqs.slice(0, 4) : [];
+  const visibleFaqs = tool
+    ? getCompactToolSeoContentOrFallback(tool.slug, tool.name).faqs.slice(0, 3)
+    : [];
   const organization = {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,

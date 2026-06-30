@@ -1,7 +1,15 @@
-import { ArrowRight, CheckCircle2, Clock3, CloudOff, UserRoundCheck } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Download,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Link } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import {
+  compactNeedToKnowItems,
   getCompactToolSeoContentOrFallback,
   type CompactToolSeoContent,
 } from "@/lib/compact-tool-seo-content";
@@ -11,10 +19,10 @@ type CompactToolSeoSectionProps = {
   tool: Tool;
 };
 
-const trustItems = [
+const needToKnowIcons = [Sparkles, Download, ShieldCheck];
+
+const guideMeta = [
   { label: "Free to use", icon: CheckCircle2 },
-  { label: "Browser-based", icon: CloudOff },
-  { label: "No signup", icon: UserRoundCheck },
   { label: "Fast processing", icon: Clock3 },
 ];
 
@@ -23,88 +31,99 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
   const relatedTools = getRelatedTools(content, tool.slug);
 
   return (
-    <section className="compact-tool-seo border-t border-border bg-background py-8 sm:py-10">
-      <div className="mx-auto max-w-5xl px-4">
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 lg:max-w-2xl">
+    <section className="compact-tool-seo border-t border-border bg-muted/20 pt-12 pb-16 sm:pt-14 sm:pb-20 lg:pt-16 lg:pb-24">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
+        <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 lg:p-8">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start">
+            <div className="min-w-0">
               <div className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Quick guide
               </div>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
-                Everything you need for {tool.name}
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+                {content.title}
               </h2>
-              <h3 className="mt-3 text-base font-semibold tracking-tight">{content.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{content.shortNote}</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {content.shortNote}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {guideMeta.map((item) => (
+                  <div
+                    key={item.label}
+                    className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground"
+                  >
+                    <item.icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[360px] lg:grid-cols-2">
-              {trustItems.map((item) => (
+            <div className="grid gap-3">
+              {content.steps.map((step, index) => (
                 <div
-                  key={item.label}
-                  className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  key={step}
+                  className="flex min-w-0 gap-3 rounded-xl border border-border/80 bg-background p-3.5"
                 >
-                  <item.icon className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="min-w-0 truncate">{item.label}</span>
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+                    {index + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold">{step}</div>
+                    <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {getStepDescription(tool.name, index)}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
-            {content.steps.map((step, index) => (
+        <div className="mt-10 sm:mt-12">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+            Need to know
+          </div>
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+            Helpful details before you convert
+          </h3>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            {compactNeedToKnowItems.map((item, index) => {
+              const Icon = needToKnowIcons[index] ?? Sparkles;
+
+              return (
               <div
-                key={step}
-                className="flex min-w-0 gap-3 rounded-xl border border-border bg-background p-3"
+                key={item.title}
+                className="min-w-0 rounded-2xl border border-border/80 bg-card p-4"
               >
-                <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
-                  {index + 1}
+                <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">{step}</div>
-                  <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {getStepDescription(tool.name, index)}
-                  </div>
-                </div>
+                <h4 className="mt-4 text-sm font-semibold leading-5 text-foreground">
+                  {item.title}
+                </h4>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">{item.text}</p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mx-auto mt-14 max-w-5xl text-center sm:mt-16">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Quick answers
+            Related tools
           </div>
-          <h3 className="mt-1 text-lg font-semibold tracking-tight">Short answers, no extra reading</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {content.faqs.slice(0, 3).map((faq) => (
-              <div
-                key={faq.question}
-                className="min-w-0 border-l-2 border-primary/35 bg-card/40 py-1.5 pl-3 sm:border-l-0 sm:border-t-2 sm:pb-0 sm:pl-0 sm:pt-3"
-              >
-                <h4 className="text-sm font-semibold leading-5 text-foreground">{faq.question}</h4>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground sm:text-xs">
-                  {toShortAnswer(faq.answer)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mx-auto mt-6 max-w-4xl text-center">
-          <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Keep working
-          </div>
-          <h3 className="mt-1 text-lg font-semibold tracking-tight">Related tools</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+            Continue with another PDF tool
+          </h3>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {relatedTools.map((related) => (
               <Link
                 key={related.slug}
                 to={getToolPath(related.slug)}
-                className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 hover:bg-accent"
+                className="group flex min-w-0 items-center gap-4 rounded-2xl border border-border/80 bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-accent/70"
               >
                 <span
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${related.color} text-white shadow-soft`}
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${related.color} text-white shadow-soft`}
                 >
                   <related.icon className="h-5 w-5" />
                 </span>
@@ -130,11 +149,6 @@ function getStepDescription(toolName: string, index: number) {
   if (index === 0) return `Choose the file you want to use with ${toolName}.`;
   if (index === 1) return "Review the available options before processing.";
   return "Save the finished file to your device.";
-}
-
-function toShortAnswer(answer: string) {
-  const sentences = answer.match(/[^.!?]+[.!?]+/gu);
-  return (sentences ? sentences.slice(0, 1).join(" ") : answer).trim();
 }
 
 function getRelatedTools(content: CompactToolSeoContent, currentSlug: string) {

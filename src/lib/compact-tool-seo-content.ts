@@ -6,6 +6,21 @@ export type CompactToolSeoContent = {
   relatedTools: string[];
 };
 
+export const compactNeedToKnowItems = [
+  {
+    title: "Quality",
+    text: "Choose higher quality when you need sharper output.",
+  },
+  {
+    title: "Download",
+    text: "Save one file or download the full result after processing.",
+  },
+  {
+    title: "Privacy",
+    text: "Files are handled securely and are not used for training.",
+  },
+];
+
 const defaultRelated = ["compress-pdf", "merge-pdf", "split-pdf"];
 
 export const compactToolSeoContent: Record<string, CompactToolSeoContent> = {

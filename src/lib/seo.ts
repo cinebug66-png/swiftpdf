@@ -5,7 +5,7 @@ import {
   type RouteSeoMetadata,
 } from "@/lib/seo-routes";
 import { getToolSeoContentByPath } from "@/lib/tool-seo-content";
-import { getCompactToolSeoContentOrFallback } from "@/lib/compact-tool-seo-content";
+import { compactNeedToKnowItems } from "@/lib/compact-tool-seo-content";
 import { getTool } from "@/lib/tools";
 
 export { publicRoutes, routeMetadata };
@@ -42,9 +42,7 @@ export function getStructuredData(metadata: SeoMetadata) {
   const toolSeo = getToolSeoContentByPath(metadata.path);
   const toolSlug = metadata.path.replace(/^\//, "");
   const tool = getTool(toolSlug === "extract-pdf-pages" ? "extract-pages" : toolSlug);
-  const visibleFaqs = tool
-    ? getCompactToolSeoContentOrFallback(tool.slug, tool.name).faqs.slice(0, 3)
-    : [];
+  const visibleFaqs = tool ? compactNeedToKnowItems : [];
   const organization = {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
@@ -92,10 +90,10 @@ export function getStructuredData(metadata: SeoMetadata) {
               "@id": `${canonicalUrl}#faq`,
               mainEntity: visibleFaqs.map((faq) => ({
                 "@type": "Question",
-                name: faq.question,
+                name: faq.title,
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: toShortAnswer(faq.answer),
+                  text: faq.text,
                 },
               })),
             },
@@ -121,9 +119,4 @@ export function getStructuredData(metadata: SeoMetadata) {
         : []),
     ],
   };
-}
-
-function toShortAnswer(answer: string) {
-  const sentences = answer.match(/[^.!?]+[.!?]+/gu);
-  return (sentences ? sentences.slice(0, 1).join(" ") : answer).trim();
 }

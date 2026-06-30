@@ -95,7 +95,7 @@ export function getStructuredData(metadata: SeoMetadata) {
                 name: faq.question,
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: faq.answer,
+                  text: toShortAnswer(faq.answer),
                 },
               })),
             },
@@ -121,4 +121,9 @@ export function getStructuredData(metadata: SeoMetadata) {
         : []),
     ],
   };
+}
+
+function toShortAnswer(answer: string) {
+  const sentences = answer.match(/[^.!?]+[.!?]+/gu);
+  return (sentences ? sentences.slice(0, 1).join(" ") : answer).trim();
 }

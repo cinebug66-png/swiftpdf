@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Clock3, CloudOff, HelpCircle, UserRoundCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock3, CloudOff, UserRoundCheck } from "lucide-react";
 import { Link } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import {
@@ -71,19 +71,19 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <HelpCircle className="h-4 w-4 text-primary" />
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-primary">FAQ</div>
-              <h3 className="text-lg font-semibold tracking-tight">Common questions</h3>
-            </div>
+        <div className="mt-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+            Quick answers
           </div>
-          <div className="divide-y divide-border">
+          <h3 className="mt-1 text-lg font-semibold tracking-tight">Short answers, no extra reading</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {content.faqs.slice(0, 3).map((faq) => (
-              <div key={faq.question} className="min-w-0 py-3 first:pt-0 last:pb-0">
+              <div
+                key={faq.question}
+                className="min-w-0 border-l-2 border-primary/35 bg-card/40 py-1.5 pl-3 sm:border-l-0 sm:border-t-2 sm:pb-0 sm:pl-0 sm:pt-3"
+              >
                 <h4 className="text-sm font-semibold leading-5 text-foreground">{faq.question}</h4>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                <p className="mt-1 text-sm leading-5 text-muted-foreground sm:text-xs">
                   {toShortAnswer(faq.answer)}
                 </p>
               </div>
@@ -93,9 +93,9 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
 
         <div className="mx-auto mt-6 max-w-4xl text-center">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Related tools
+            Keep working
           </div>
-          <h3 className="mt-1 text-lg font-semibold tracking-tight">Try another PDF tool</h3>
+          <h3 className="mt-1 text-lg font-semibold tracking-tight">Related tools</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {relatedTools.map((related) => (
               <Link

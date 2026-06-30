@@ -1,30 +1,70 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useLayoutEffect, useState } from "react";
 
 type Theme = "light" | "dark";
-const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
+type ThemeContextValue = {
+  theme: Theme;
+  selectedTheme: Theme;
+  isMobile: boolean;
+  toggle: () => void;
+};
+
+const MOBILE_THEME_QUERY = "(max-width: 767px)";
+
+const ThemeCtx = createContext<ThemeContextValue>({
   theme: "light",
+  selectedTheme: "light",
+  isMobile: false,
   toggle: () => {},
 });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+function getPreferredTheme(): Theme {
+  const stored = localStorage.getItem("theme");
+  if (stored === "light" || stored === "dark") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem("theme") as Theme | null;
-    const sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    const t = stored ?? sys;
-    setTheme(t);
-    document.documentElement.classList.toggle("dark", t === "dark");
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [selectedTheme, setSelectedTheme] = useState<Theme>("light");
+  const [isMobile, setIsMobile] = useState(false);
+  const effectiveTheme: Theme = isMobile ? "light" : selectedTheme;
+
+  useLayoutEffect(() => {
+    const mobileQuery = window.matchMedia(MOBILE_THEME_QUERY);
+
+    const syncTheme = () => {
+      const nextIsMobile = mobileQuery.matches;
+      const preferredTheme = getPreferredTheme();
+
+      setIsMobile(nextIsMobile);
+      setSelectedTheme(preferredTheme);
+    };
+
+    syncTheme();
+    mobileQuery.addEventListener?.("change", syncTheme);
+    return () => mobileQuery.removeEventListener?.("change", syncTheme);
   }, []);
 
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle("dark", effectiveTheme === "dark");
+    document.documentElement.style.colorScheme = effectiveTheme;
+
+    if (isMobile) {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "light";
+    }
+  }, [effectiveTheme, isMobile]);
+
   const toggle = () => {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
+    const next: Theme = selectedTheme === "dark" ? "light" : "dark";
+    setSelectedTheme(next);
     localStorage.setItem("theme", next);
   };
 
-  return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
+  return (
+    <ThemeCtx.Provider value={{ theme: effectiveTheme, selectedTheme, isMobile, toggle }}>
+      {children}
+    </ThemeCtx.Provider>
+  );
 }
 
 export const useTheme = () => useContext(ThemeCtx);

@@ -14,7 +14,6 @@ export const SITE_NAME = "SwiftPDF";
 export const SITE_URL = (
   import.meta.env.VITE_SITE_URL?.trim() || "https://swiftpdftools.in"
 ).replace(/\/+$/, "");
-export const BRAND_LOGO_URL = `${SITE_URL}/logo.png`;
 export const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
 
 export type SeoMetadata = RouteSeoMetadata & {
@@ -43,13 +42,7 @@ export function getStructuredData(metadata: SeoMetadata) {
   const toolSlug = metadata.path.replace(/^\//, "");
   const tool = getTool(toolSlug === "extract-pdf-pages" ? "extract-pages" : toolSlug);
   const visibleFaqs = tool ? compactNeedToKnowItems : [];
-  const organization = {
-    "@type": "Organization",
-    "@id": `${SITE_URL}/#organization`,
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: BRAND_LOGO_URL,
-  };
+  const isHomepage = metadata.path === "/";
 
   return {
     "@context": "https://schema.org",
@@ -61,20 +54,16 @@ export function getStructuredData(metadata: SeoMetadata) {
         name: SITE_NAME,
         description: routeMetadata["/"].description,
         inLanguage: "en",
-        publisher: {
-          "@id": `${SITE_URL}/#organization`,
-        },
       },
-      ...(metadata.path === "/" ? [organization] : []),
       {
         "@type": "SoftwareApplication",
         "@id": `${canonicalUrl}#softwareapplication`,
         name: tool ? `${tool.name} by ${SITE_NAME}` : SITE_NAME,
         url: canonicalUrl,
         description: metadata.description,
-        applicationCategory: "BusinessApplication",
-        applicationSubCategory: "PDF tools",
-        operatingSystem: "Any",
+        applicationCategory: isHomepage ? "ProductivityApplication" : "BusinessApplication",
+        ...(!isHomepage ? { applicationSubCategory: "PDF tools" } : {}),
+        operatingSystem: isHomepage ? "Web" : "Any",
         browserRequirements: "Requires a modern web browser with JavaScript enabled.",
         featureList: toolSeo ? toolSeo.steps.map((step) => step.title) : toolFeatureNames,
         offers: {

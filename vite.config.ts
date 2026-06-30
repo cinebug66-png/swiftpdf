@@ -32,13 +32,7 @@ function createStructuredData(siteUrl: string, pathName: string, description: st
   const canonicalUrl = pathName === "/" ? `${siteUrl}/` : `${siteUrl}${pathName}`;
   const toolSeo = getToolSeoContentByPath(pathName);
   const tool = getTool(pathName.replace(/^\//, ""));
-  const organization = {
-    "@type": "Organization",
-    "@id": `${siteUrl}/#organization`,
-    name: "SwiftPDF",
-    url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
-  };
+  const isHomepage = pathName === "/";
 
   return {
     "@context": "https://schema.org",
@@ -50,20 +44,16 @@ function createStructuredData(siteUrl: string, pathName: string, description: st
         name: "SwiftPDF",
         description: routeMetadata["/"].description,
         inLanguage: "en",
-        publisher: {
-          "@id": `${siteUrl}/#organization`,
-        },
       },
-      ...(pathName === "/" ? [organization] : []),
       {
         "@type": "SoftwareApplication",
         "@id": `${canonicalUrl}#softwareapplication`,
         name: tool ? `${tool.name} by SwiftPDF` : "SwiftPDF",
         url: canonicalUrl,
         description,
-        applicationCategory: "BusinessApplication",
-        applicationSubCategory: "PDF tools",
-        operatingSystem: "Any",
+        applicationCategory: isHomepage ? "ProductivityApplication" : "BusinessApplication",
+        ...(!isHomepage ? { applicationSubCategory: "PDF tools" } : {}),
+        operatingSystem: isHomepage ? "Web" : "Any",
         browserRequirements: "Requires a modern web browser with JavaScript enabled.",
         featureList: toolSeo ? toolSeo.steps.map((step) => step.title) : toolFeatureNames,
         offers: {

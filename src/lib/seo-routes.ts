@@ -8,8 +8,9 @@ export type RouteSeoMetadata = {
 export const routeMetadata: Record<string, RouteSeoMetadata> = {
   "/": {
     path: "/",
-    title: "SwiftPDF - Free Online PDF Tools",
-    description: "Merge, Split, Compress, Convert and Edit PDFs online for free.",
+    title: "SwiftPDF – Free PDF Tools Online | Convert, Merge & Compress PDFs",
+    description:
+      "Convert, compress, merge, split, sign, protect and edit PDFs online with SwiftPDF. Fast browser-based PDF tools with no signup required.",
     type: "website",
   },
   "/pdf-to-word": {

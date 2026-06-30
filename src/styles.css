@@ -558,24 +558,24 @@ body.pdf-reorder-dragging {
   }
 
   .mobile-tools-overlay {
-    align-items: stretch;
-    justify-content: stretch;
-    padding: 0;
-    background: rgba(15, 23, 42, 0.42);
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(2, 8, 23, 0.72);
   }
 
   .mobile-tools-panel {
-    width: 100%;
+    width: calc(100vw - 24px);
     max-width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
-    border-width: 0;
-    border-radius: 0;
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    border-width: 1px;
+    border-radius: 22px;
   }
 
   .mobile-tools-header {
     gap: 12px;
-    padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+    padding: 18px 16px 14px;
   }
 
   .mobile-tools-title {
@@ -587,7 +587,7 @@ body.pdf-reorder-dragging {
   }
 
   .mobile-tools-body {
-    padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+    padding: 14px 16px 18px;
     scrollbar-width: none;
   }
 
@@ -643,20 +643,10 @@ body.pdf-reorder-dragging {
     overflow-x: hidden;
   }
 
-  [class*="blur-3xl"] {
-    display: none;
-  }
-
   .tool-feature-pills > * {
     max-width: 100%;
     min-width: 0;
     overflow-wrap: anywhere;
-  }
-
-  .tool-page-main label[class*="rounded-3xl"],
-  #upload label[class*="rounded-3xl"] {
-    border-radius: 22px;
-    padding: 20px;
   }
 
   .tool-page-main label[class*="rounded-3xl"] p,
@@ -697,41 +687,8 @@ body.pdf-reorder-dragging {
     max-width: 100%;
   }
 
-  .tool-page-main .rounded-2xl.glass,
-  .tool-page-main .rounded-3xl.glass {
-    padding-inline: 16px;
-  }
-
   .tool-page-main [class*="gap-6"] {
     gap: 12px;
-  }
-
-  .tool-page-main [class*="mt-8"] {
-    margin-top: 24px;
-  }
-
-  .tool-page-main [class*="mt-7"] {
-    margin-top: 22px;
-  }
-
-  .tool-page-main [class*="mt-6"] {
-    margin-top: 20px;
-  }
-
-  .tool-page-main [class*="mt-5"] {
-    margin-top: 16px;
-  }
-
-  .tool-page-main [class*="p-6"] {
-    padding: 18px;
-  }
-
-  .tool-page-main [class*="p-5"] {
-    padding: 16px;
-  }
-
-  .tool-page-main [class*="px-4"][class*="py-3"] {
-    padding: 12px;
   }
 
   .tool-page-main [class*="min-h-[420px]"] {

@@ -2,10 +2,10 @@ import { Combine, Download, FileText, FileType2, Minimize2, Scissors } from "luc
 
 export function Preview() {
   return (
-    <section className="relative overflow-hidden py-16 sm:py-24">
+    <section className="py-24 sm:py-32 relative overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-mesh opacity-60" />
       <div className="mx-auto max-w-7xl px-4">
-        <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-12">
+        <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="text-xs font-medium text-primary uppercase tracking-wider mb-3">
             Tool preview
           </div>
@@ -15,8 +15,8 @@ export function Preview() {
         </div>
 
         <div className="relative max-w-5xl mx-auto">
-          <div className="absolute -inset-6 rounded-[40px] bg-gradient-primary opacity-20 blur-3xl" />
-          <div className="relative overflow-hidden rounded-3xl border glass shadow-glow">
+          <div className="absolute -inset-6 bg-gradient-primary opacity-20 blur-3xl rounded-[40px]" />
+          <div className="relative glass rounded-3xl shadow-glow border overflow-hidden">
             {/* window chrome */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <span className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
@@ -39,7 +39,7 @@ export function Preview() {
                 ))}
               </div>
               {/* canvas */}
-              <div className="col-span-12 bg-muted/40 p-4 sm:col-span-7 sm:p-6">
+              <div className="col-span-12 sm:col-span-7 p-6 bg-muted/40">
                 <div className="aspect-[3/4] mx-auto max-w-[280px] bg-card rounded-lg shadow-card p-5 text-[10px] leading-relaxed">
                   <div className="h-2 w-1/3 bg-foreground/80 rounded mb-3" />
                   <div className="h-1.5 w-full bg-muted-foreground/30 rounded mb-1.5" />
@@ -53,7 +53,7 @@ export function Preview() {
                 </div>
               </div>
               {/* right panel */}
-              <div className="col-span-12 border-t border-border p-4 sm:col-span-3 sm:border-l sm:border-t-0">
+              <div className="col-span-12 sm:col-span-3 border-t sm:border-t-0 sm:border-l border-border p-4">
                 <div className="text-xs font-semibold mb-3">Document</div>
                 <div className="space-y-2 text-xs text-muted-foreground">
                   <div className="flex justify-between"><span>Pages</span><span className="text-foreground">12</span></div>

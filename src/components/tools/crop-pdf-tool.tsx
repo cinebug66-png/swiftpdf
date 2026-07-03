@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,37 +15,64 @@ import {
   Download,
   FileText,
   Loader2,
-  RotateCcw,
   Shield,
   Upload,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { PdfPagePreview } from "@/components/tools/pdf-page-preview";
-import { trackConversionCompleted, trackConversionStarted } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { consumePendingFiles } from "@/lib/pending-file";
 import {
   createPdfDownloadUrl,
+  cropMarginsToRect,
   cropPdf,
+  cropRectToMargins,
   getPdfPageCount,
-  normalizeCropMargins,
+  normalizeCropRect,
   revokeObjectUrl,
-  validateCropMargins,
-  type CropMargins,
+  validateCropRect,
+  type CropRect,
   type CropScope,
 } from "@/lib/pdf-crop";
 import { cn } from "@/lib/utils";
 
 type ToolStatus = "idle" | "processing" | "done" | "error";
+type CropMode = "custom" | "full-page" | "remove-margins" | "square" | "a4" | "letter" | "16-9" | "4-3";
+type DragKind = "move" | "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
 
-const defaultMargins: CropMargins = { top: 0, bottom: 0, left: 0, right: 0 };
-const presets: { label: string; margins: CropMargins }[] = [
-  { label: "Remove margins", margins: { top: 8, bottom: 8, left: 8, right: 8 } },
-  { label: "Center crop", margins: { top: 12, bottom: 12, left: 12, right: 12 } },
-  { label: "A4 safe area", margins: { top: 5, bottom: 5, left: 6, right: 6 } },
-  { label: "Reset", margins: defaultMargins },
+type PointerState = {
+  kind: DragKind;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startRect: CropRect;
+  previewWidth: number;
+  previewHeight: number;
+};
+
+const defaultRect: CropRect = { x: 0, y: 0, width: 100, height: 100 };
+const removeMarginsRect: CropRect = { x: 8, y: 8, width: 84, height: 84 };
+const minCropPercent = 5;
+
+const cropModes: { id: CropMode; label: string; ratio?: number; rect?: CropRect }[] = [
+  { id: "custom", label: "Custom" },
+  { id: "full-page", label: "Full page", rect: defaultRect },
+  { id: "remove-margins", label: "Remove margins", rect: removeMarginsRect },
+  { id: "square", label: "Square", ratio: 1 },
+  { id: "a4", label: "A4", ratio: 210 / 297 },
+  { id: "letter", label: "Letter", ratio: 8.5 / 11 },
+  { id: "16-9", label: "16:9", ratio: 16 / 9 },
+  { id: "4-3", label: "4:3", ratio: 4 / 3 },
 ];
+
+const analyticsBase = {
+  tool_name: "Crop PDF",
+  tool_slug: "crop-pdf",
+  input_type: "pdf",
+  output_type: "pdf",
+};
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -50,7 +85,146 @@ function getDownloadName(file: File | null) {
   return `${file.name.replace(/\.pdf$/i, "")}-cropped.pdf`;
 }
 
-function MarginControl({
+function roundPercent(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(Math.max(value, min), max);
+}
+
+function getModeRatio(mode: CropMode) {
+  return cropModes.find((item) => item.id === mode)?.ratio;
+}
+
+function fitRatioRect(ratio: number, pageAspect: number, current: CropRect = removeMarginsRect): CropRect {
+  const percentRatio = ratio / pageAspect;
+  const centerX = current.x + current.width / 2;
+  const centerY = current.y + current.height / 2;
+  let width = Math.min(current.width, 86);
+  let height = width / percentRatio;
+
+  if (height > 86) {
+    height = 86;
+    width = height * percentRatio;
+  }
+
+  return normalizeCropRect({
+    x: centerX - width / 2,
+    y: centerY - height / 2,
+    width,
+    height,
+  });
+}
+
+function resizeWithRatio(
+  rect: CropRect,
+  ratio: number,
+  pageAspect: number,
+  anchorX: number,
+  anchorY: number,
+) {
+  const percentRatio = ratio / pageAspect;
+  let width = Math.max(rect.width, minCropPercent);
+  let height = width / percentRatio;
+
+  if (height < minCropPercent) {
+    height = minCropPercent;
+    width = height * percentRatio;
+  }
+
+  if (width > 100) {
+    width = 100;
+    height = width / percentRatio;
+  }
+
+  if (height > 100) {
+    height = 100;
+    width = height * percentRatio;
+  }
+
+  return normalizeCropRect({
+    x: anchorX - width / 2,
+    y: anchorY - height / 2,
+    width,
+    height,
+  });
+}
+
+function updateRectFromDrag(
+  state: PointerState,
+  clientX: number,
+  clientY: number,
+  ratio?: number,
+  pageAspect = 1,
+) {
+  const dx = ((clientX - state.startX) / state.previewWidth) * 100;
+  const dy = ((clientY - state.startY) / state.previewHeight) * 100;
+  const start = state.startRect;
+
+  if (state.kind === "move") {
+    return normalizeCropRect({ ...start, x: start.x + dx, y: start.y + dy });
+  }
+
+  let left = start.x;
+  let right = start.x + start.width;
+  let top = start.y;
+  let bottom = start.y + start.height;
+
+  if (state.kind.includes("w")) left += dx;
+  if (state.kind.includes("e")) right += dx;
+  if (state.kind.includes("n")) top += dy;
+  if (state.kind.includes("s")) bottom += dy;
+
+  left = clamp(left, 0, right - minCropPercent);
+  right = clamp(right, left + minCropPercent, 100);
+  top = clamp(top, 0, bottom - minCropPercent);
+  bottom = clamp(bottom, top + minCropPercent, 100);
+
+  const next = normalizeCropRect({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  });
+
+  if (!ratio) return next;
+
+  const anchorX = start.x + start.width / 2;
+  const anchorY = start.y + start.height / 2;
+  return resizeWithRatio(next, ratio, pageAspect, anchorX, anchorY);
+}
+
+function getDragKindFromPoint(clientX: number, clientY: number, root: HTMLElement, rect: CropRect) {
+  const bounds = root.getBoundingClientRect();
+  const left = bounds.left + (bounds.width * rect.x) / 100;
+  const top = bounds.top + (bounds.height * rect.y) / 100;
+  const right = left + (bounds.width * rect.width) / 100;
+  const bottom = top + (bounds.height * rect.height) / 100;
+  const handle = 18;
+  const nearLeft = Math.abs(clientX - left) <= handle;
+  const nearRight = Math.abs(clientX - right) <= handle;
+  const nearTop = Math.abs(clientY - top) <= handle;
+  const nearBottom = Math.abs(clientY - bottom) <= handle;
+  const insideX = clientX >= left && clientX <= right;
+  const insideY = clientY >= top && clientY <= bottom;
+  const inHandleX = clientX >= left - handle && clientX <= right + handle;
+  const inHandleY = clientY >= top - handle && clientY <= bottom + handle;
+
+  if (nearLeft && nearTop) return "nw";
+  if (nearRight && nearTop) return "ne";
+  if (nearLeft && nearBottom) return "sw";
+  if (nearRight && nearBottom) return "se";
+  if (nearLeft && inHandleY) return "w";
+  if (nearRight && inHandleY) return "e";
+  if (nearTop && inHandleX) return "n";
+  if (nearBottom && inHandleX) return "s";
+  if (insideX && insideY) return "move";
+  return null;
+}
+
+function NumberControl({
   label,
   value,
   disabled,
@@ -62,24 +236,337 @@ function MarginControl({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="block rounded-2xl border border-border/80 bg-card/70 p-3 shadow-soft">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-          {value}%
-        </span>
-      </div>
-      <Slider
-        value={[value]}
+    <label className="block min-w-0">
+      <span className="mb-1 block text-xs font-medium text-muted-foreground">{label}</span>
+      <Input
+        type="number"
         min={0}
-        max={45}
-        step={1}
+        max={95}
+        step={0.5}
+        value={Number(value.toFixed(1))}
         disabled={disabled}
-        onValueChange={([nextValue]) => onChange(nextValue ?? 0)}
-        aria-label={`${label} crop margin`}
-        className="py-2"
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-10 rounded-xl bg-card/70 text-sm"
       />
     </label>
+  );
+}
+
+function CropOverlay({
+  rect,
+  mode,
+  disabled,
+  onRectChange,
+  onUserEdit,
+  pageAspect,
+  onPageAspectChange,
+}: {
+  rect: CropRect;
+  mode: CropMode;
+  disabled: boolean;
+  onRectChange: (rect: CropRect) => void;
+  onUserEdit: () => void;
+  pageAspect: number;
+  onPageAspectChange: (pageAspect: number) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onPageAspectChange(pageAspect);
+  }, [onPageAspectChange, pageAspect]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || disabled) return;
+
+    const beginDrag = (
+      kind: DragKind,
+      clientX: number,
+      clientY: number,
+      id: number,
+      source: "mouse" | "pointer" | "touch",
+    ) => {
+      const state: PointerState = {
+        kind,
+        pointerId: id,
+        startX: clientX,
+        startY: clientY,
+        startRect: rect,
+        previewWidth: root.clientWidth,
+        previewHeight: root.clientHeight,
+      };
+
+      const move = (nextX: number, nextY: number) => {
+        const ratio = getModeRatio(mode);
+        onRectChange(updateRectFromDrag(state, nextX, nextY, ratio, pageAspect));
+      };
+
+      const mouseMove = (event: MouseEvent) => {
+        event.preventDefault();
+        move(event.clientX, event.clientY);
+      };
+      const mouseUp = () => {
+        window.removeEventListener("mousemove", mouseMove);
+        window.removeEventListener("mouseup", mouseUp);
+        onUserEdit();
+      };
+      const pointerMove = (event: PointerEvent) => {
+        if (event.pointerId !== id) return;
+        event.preventDefault();
+        move(event.clientX, event.clientY);
+      };
+      const pointerUp = (event: PointerEvent) => {
+        if (event.pointerId !== id) return;
+        window.removeEventListener("pointermove", pointerMove);
+        window.removeEventListener("pointerup", pointerUp);
+        window.removeEventListener("pointercancel", pointerUp);
+        onUserEdit();
+      };
+      const touchMove = (event: TouchEvent) => {
+        const touch = Array.from(event.touches).find((item) => item.identifier === id);
+        if (!touch) return;
+        event.preventDefault();
+        move(touch.clientX, touch.clientY);
+      };
+      const touchEnd = () => {
+        window.removeEventListener("touchmove", touchMove);
+        window.removeEventListener("touchend", touchEnd);
+        window.removeEventListener("touchcancel", touchEnd);
+        onUserEdit();
+      };
+
+      if (source === "mouse") {
+        window.addEventListener("mousemove", mouseMove, { passive: false });
+        window.addEventListener("mouseup", mouseUp);
+      } else if (source === "pointer") {
+        window.addEventListener("pointermove", pointerMove, { passive: false });
+        window.addEventListener("pointerup", pointerUp);
+        window.addEventListener("pointercancel", pointerUp);
+      } else {
+        window.addEventListener("touchmove", touchMove, { passive: false });
+        window.addEventListener("touchend", touchEnd);
+        window.addEventListener("touchcancel", touchEnd);
+      }
+    };
+
+    const onMouseDown = (event: MouseEvent) => {
+      const kind = getDragKindFromPoint(event.clientX, event.clientY, root, rect);
+      if (!kind) return;
+      event.preventDefault();
+      beginDrag(kind, event.clientX, event.clientY, -1, "mouse");
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const kind = getDragKindFromPoint(event.clientX, event.clientY, root, rect);
+      if (!kind) return;
+      event.preventDefault();
+      beginDrag(kind, event.clientX, event.clientY, event.pointerId, "pointer");
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      const kind = getDragKindFromPoint(touch.clientX, touch.clientY, root, rect);
+      if (!kind) return;
+      event.preventDefault();
+      beginDrag(kind, touch.clientX, touch.clientY, touch.identifier, "touch");
+    };
+
+    root.addEventListener("mousedown", onMouseDown);
+    root.addEventListener("pointerdown", onPointerDown);
+    root.addEventListener("touchstart", onTouchStart, { passive: false });
+
+    return () => {
+      root.removeEventListener("mousedown", onMouseDown);
+      root.removeEventListener("pointerdown", onPointerDown);
+      root.removeEventListener("touchstart", onTouchStart);
+    };
+  }, [disabled, mode, onRectChange, onUserEdit, pageAspect, rect]);
+
+  const startMouseInteraction = (
+    event: ReactMouseEvent<HTMLElement>,
+    kind: DragKind,
+    previewWidth: number,
+    previewHeight: number,
+  ) => {
+    if (disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const state: PointerState = {
+      kind,
+      pointerId: -1,
+      startX: event.clientX,
+      startY: event.clientY,
+      startRect: rect,
+      previewWidth,
+      previewHeight,
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      const ratio = getModeRatio(mode);
+      onRectChange(updateRectFromDrag(state, moveEvent.clientX, moveEvent.clientY, ratio, pageAspect));
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      onUserEdit();
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: false });
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const startMouseFromOverlay = (event: ReactMouseEvent<HTMLElement>) => {
+    const kind = getDragKindFromPoint(event.clientX, event.clientY, event.currentTarget, rect);
+    if (!kind) return;
+    startMouseInteraction(event, kind, event.currentTarget.clientWidth, event.currentTarget.clientHeight);
+  };
+
+  const startPointerFromOverlay = (event: ReactPointerEvent<HTMLElement>) => {
+    const kind = getDragKindFromPoint(event.clientX, event.clientY, event.currentTarget, rect);
+    if (!kind || disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const state: PointerState = {
+      kind,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startRect: rect,
+      previewWidth: event.currentTarget.clientWidth,
+      previewHeight: event.currentTarget.clientHeight,
+    };
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (moveEvent.pointerId !== state.pointerId) return;
+      moveEvent.preventDefault();
+      const ratio = getModeRatio(mode);
+      onRectChange(updateRectFromDrag(state, moveEvent.clientX, moveEvent.clientY, ratio, pageAspect));
+    };
+
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      if (upEvent.pointerId !== state.pointerId) return;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      onUserEdit();
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: false });
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  };
+
+  const startTouchInteraction = (
+    event: ReactTouchEvent<HTMLElement>,
+    kind: DragKind,
+    previewWidth: number,
+    previewHeight: number,
+  ) => {
+    if (disabled) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const state: PointerState = {
+      kind,
+      pointerId: touch.identifier,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startRect: rect,
+      previewWidth,
+      previewHeight,
+    };
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const nextTouch = Array.from(moveEvent.touches).find((item) => item.identifier === state.pointerId);
+      if (!nextTouch) return;
+      moveEvent.preventDefault();
+      const ratio = getModeRatio(mode);
+      onRectChange(
+        updateRectFromDrag(state, nextTouch.clientX, nextTouch.clientY, ratio, pageAspect),
+      );
+    };
+
+    const handleTouchEnd = () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
+      onUserEdit();
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
+  };
+
+  const startTouchFromOverlay = (event: ReactTouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    const kind = getDragKindFromPoint(touch.clientX, touch.clientY, event.currentTarget, rect);
+    if (!kind) return;
+    startTouchInteraction(event, kind, event.currentTarget.clientWidth, event.currentTarget.clientHeight);
+  };
+
+  const handleClass =
+    "absolute z-20 grid h-5 w-5 touch-none place-items-center rounded-full border-2 border-white bg-cyan-500 shadow-sm";
+  const edgeClass = "absolute z-20 touch-none rounded-full border border-white bg-cyan-500 shadow-sm";
+
+  return (
+    <div
+      ref={rootRef}
+      className="absolute inset-0 touch-none rounded-xl"
+      onPointerDownCapture={startPointerFromOverlay}
+      onMouseDownCapture={startMouseFromOverlay}
+      onTouchStartCapture={startTouchFromOverlay}
+    >
+      <div className="absolute inset-0 rounded-xl bg-slate-950/45" />
+      <div
+        className="absolute rounded-lg border-2 border-cyan-400 bg-transparent"
+        style={{
+          left: `${rect.x}%`,
+          top: `${rect.y}%`,
+          width: `${rect.width}%`,
+          height: `${rect.height}%`,
+          boxShadow: "0 0 0 9999px rgba(2, 6, 23, 0.18)",
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Move crop area"
+          className="absolute inset-0 z-10 cursor-move touch-none bg-transparent"
+        />
+        {[
+          ["nw", "-left-2.5 -top-2.5 cursor-nwse-resize"],
+          ["ne", "-right-2.5 -top-2.5 cursor-nesw-resize"],
+          ["sw", "-bottom-2.5 -left-2.5 cursor-nesw-resize"],
+          ["se", "-bottom-2.5 -right-2.5 cursor-nwse-resize"],
+        ].map(([kind, className]) => (
+          <button
+            key={kind}
+            type="button"
+            aria-label={`Resize crop ${kind}`}
+            className={cn(handleClass, className)}
+          />
+        ))}
+        {[
+          ["n", "left-1/2 top-0 h-3 w-8 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize"],
+          ["s", "bottom-0 left-1/2 h-3 w-8 -translate-x-1/2 translate-y-1/2 cursor-ns-resize"],
+          ["w", "left-0 top-1/2 h-8 w-3 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize"],
+          ["e", "right-0 top-1/2 h-8 w-3 translate-x-1/2 -translate-y-1/2 cursor-ew-resize"],
+        ].map(([kind, className]) => (
+          <button
+            key={kind}
+            type="button"
+            aria-label={`Resize crop ${kind}`}
+            className={cn(edgeClass, className)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -95,7 +582,9 @@ export function CropPdfTool() {
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [scope, setScope] = useState<CropScope>("all");
-  const [margins, setMargins] = useState<CropMargins>(defaultMargins);
+  const [mode, setMode] = useState<CropMode>("custom");
+  const [cropRect, setCropRect] = useState<CropRect>(defaultRect);
+  const [pageAspect, setPageAspect] = useState(1);
 
   useEffect(() => {
     const pending = consumePendingFiles(".pdf,application/pdf", false);
@@ -111,12 +600,8 @@ export function CropPdfTool() {
   }, [downloadUrl]);
 
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
-  const normalizedMargins = useMemo(() => normalizeCropMargins(margins), [margins]);
-  const cropArea = useMemo(() => {
-    const width = 100 - normalizedMargins.left - normalizedMargins.right;
-    const height = 100 - normalizedMargins.top - normalizedMargins.bottom;
-    return { width, height };
-  }, [normalizedMargins]);
+  const normalizedRect = useMemo(() => normalizeCropRect(cropRect), [cropRect]);
+  const margins = useMemo(() => cropRectToMargins(normalizedRect), [normalizedRect]);
 
   const resetResultState = (nextFile: File | null) => {
     revokeObjectUrl(downloadUrl);
@@ -126,10 +611,21 @@ export function CropPdfTool() {
     setError(null);
   };
 
+  const trackCropEvent = (eventName: string, extra: Record<string, string | number | boolean> = {}) => {
+    trackEvent(eventName, {
+      ...analyticsBase,
+      crop_mode: mode,
+      page_scope: scope === "all" ? "all-pages" : "current-page",
+      ...extra,
+    });
+  };
+
   const selectFile = async (nextFile: File | null) => {
     resetResultState(nextFile);
     setPageCount(null);
     setCurrentPage(1);
+    setMode("custom");
+    setCropRect(defaultRect);
     setProgressNote("Waiting for file");
     setFile(nextFile);
 
@@ -147,17 +643,30 @@ export function CropPdfTool() {
     }
   };
 
-  const updateMargin = (key: keyof CropMargins, value: number) => {
+  const setRectFromUser = (nextRect: CropRect) => {
     resetResultState(file);
-    setMargins((current) => normalizeCropMargins({ ...current, [key]: value }));
+    setCropRect(normalizeCropRect(nextRect));
   };
 
-  const applyPreset = (nextMargins: CropMargins) => {
+  const applyMode = (nextMode: CropMode) => {
     resetResultState(file);
-    setMargins(nextMargins);
+    setMode(nextMode);
+
+    const preset = cropModes.find((item) => item.id === nextMode);
+    if (preset?.rect) {
+      setCropRect(preset.rect);
+      return;
+    }
+
+    if (preset?.ratio) {
+      setCropRect((current) => fitRatioRect(preset.ratio, pageAspect, current));
+    }
   };
 
-  const resetCrop = () => applyPreset(defaultMargins);
+  const updateMargin = (key: keyof typeof margins, value: number) => {
+    setMode("custom");
+    setRectFromUser(cropMarginsToRect({ ...margins, [key]: clamp(value, 0, 95) }));
+  };
 
   const handleSubmit = async () => {
     if (!file) {
@@ -166,33 +675,42 @@ export function CropPdfTool() {
     }
 
     try {
-      validateCropMargins(margins);
+      validateCropRect(normalizedRect);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Crop area is invalid.");
       setProgressNote("Adjust the crop area");
+      trackCropEvent("conversion_error", {
+        error_type: "invalid_crop_area",
+        error_message_short: "Crop area is invalid",
+      });
       return;
     }
 
     try {
-      trackConversionStarted("crop_pdf");
+      trackCropEvent("conversion_started");
       setStatus("processing");
       setError(null);
       setProgressNote(scope === "all" ? "Cropping every page..." : `Cropping page ${currentPage}...`);
 
-      const bytes = await cropPdf(file, { margins, scope, currentPage });
+      const bytes = await cropPdf(file, { cropRect: normalizedRect, scope, currentPage });
       const nextDownloadUrl = createPdfDownloadUrl(bytes);
 
       revokeObjectUrl(downloadUrl);
       setDownloadUrl(nextDownloadUrl);
       setDownloadName(getDownloadName(file));
       setProgressNote("Your cropped PDF is ready.");
-      trackConversionCompleted("crop_pdf");
+      trackCropEvent("conversion_success");
       setStatus("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Crop PDF failed. Please try again.");
+      const message = err instanceof Error ? err.message : "Crop PDF failed. Please try again.";
+      setError(message);
       setStatus("error");
       setProgressNote("Crop failed.");
+      trackCropEvent("conversion_error", {
+        error_type: "processing_failure",
+        error_message_short: message.slice(0, 96),
+      });
     }
   };
 
@@ -213,9 +731,8 @@ export function CropPdfTool() {
           void selectFile(event.dataTransfer.files?.[0] ?? null);
         }}
         className={cn(
-          "group relative block cursor-pointer rounded-3xl p-8 text-center transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-12",
-          "glass shadow-card hover:shadow-glow",
-          drag && "scale-[1.01] ring-2 ring-primary",
+          "group relative block cursor-pointer rounded-3xl border border-border bg-card p-8 text-center shadow-card transition-[background-color,border-color,box-shadow,transform,opacity] duration-200 sm:p-12",
+          drag && "scale-[1.01] border-primary",
         )}
       >
         <input
@@ -227,19 +744,19 @@ export function CropPdfTool() {
             void selectFile(event.target.files?.[0] ?? null);
           }}
         />
-        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow transition-transform group-hover:scale-110">
+        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-soft transition-transform group-hover:scale-105">
           <Upload className="h-7 w-7" />
         </div>
         <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload one PDF, preview the crop area, and download a trimmed copy.
+          Upload one PDF, adjust the crop box directly, and download a trimmed copy.
         </p>
       </label>
 
       {file && (
-        <div className="mt-5 rounded-2xl glass px-4 py-3 shadow-soft">
+        <div className="mt-5 rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
@@ -270,12 +787,12 @@ export function CropPdfTool() {
 
       {file && (
         <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
-          <div className="min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
+          <div className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <div className="text-base font-semibold">Crop preview</div>
+                <div className="text-base font-semibold">Crop editor</div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  The bright area is kept in the output PDF.
+                  Drag the box to move it, or pull a handle to resize.
                 </div>
               </div>
               {pageCount != null && pageCount > 1 && (
@@ -310,37 +827,32 @@ export function CropPdfTool() {
               file={file}
               pageNumber={currentPage}
               title="Page preview"
-              note={`${Math.max(cropArea.width, 0)}% width x ${Math.max(cropArea.height, 0)}% height kept`}
-              className="mt-0 border border-border/70 bg-card/50 shadow-none"
+              note={`${roundPercent(normalizedRect.width)}% width x ${roundPercent(normalizedRect.height)}% height kept`}
+              className="mt-0 border border-border/70 bg-background shadow-none"
               onPageCountChange={setPageCount}
-              overlay={() => (
-                <div className="pointer-events-none absolute inset-0 rounded-xl">
-                  <div className="absolute inset-0 rounded-xl bg-slate-950/45" />
-                  <div
-                    className="absolute rounded-lg border-2 border-cyan-300 bg-white/5 shadow-[0_0_0_9999px_rgba(2,6,23,0.18)]"
-                    style={{
-                      left: `${normalizedMargins.left}%`,
-                      right: `${normalizedMargins.right}%`,
-                      top: `${normalizedMargins.top}%`,
-                      bottom: `${normalizedMargins.bottom}%`,
-                    }}
-                  >
-                    <div className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full border border-white bg-cyan-400 shadow-soft" />
-                    <div className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full border border-white bg-cyan-400 shadow-soft" />
-                    <div className="absolute -bottom-1.5 -left-1.5 h-3 w-3 rounded-full border border-white bg-cyan-400 shadow-soft" />
-                    <div className="absolute -bottom-1.5 -right-1.5 h-3 w-3 rounded-full border border-white bg-cyan-400 shadow-soft" />
-                  </div>
-                </div>
+              overlay={(renderSize) => (
+                <CropOverlay
+                  rect={normalizedRect}
+                  mode={mode}
+                  disabled={status === "processing"}
+                  onRectChange={setRectFromUser}
+                  onUserEdit={() => {
+                    resetResultState(file);
+                    if (!getModeRatio(mode) && mode !== "custom") setMode("custom");
+                  }}
+                  pageAspect={renderSize.width / renderSize.height}
+                  onPageAspectChange={setPageAspect}
+                />
               )}
             />
           </div>
 
-          <aside className="min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
+          <aside className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <div className="text-base font-semibold">Crop settings</div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  Use margins to shape the visible page area.
+                  Presets lock ratios; Custom resizes freely.
                 </div>
               </div>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
@@ -353,13 +865,16 @@ export function CropPdfTool() {
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setScope(option)}
+                  onClick={() => {
+                    resetResultState(file);
+                    setScope(option);
+                  }}
                   disabled={status === "processing"}
                   className={cn(
-                    "rounded-xl border px-3 py-2.5 text-sm font-medium shadow-soft transition-[background-color,border-color,box-shadow,color] duration-200",
+                    "rounded-xl border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color] duration-200",
                     scope === option
-                      ? "border-primary bg-primary text-primary-foreground shadow-glow"
-                      : "border-border bg-card/70 text-foreground hover:border-primary/60",
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-foreground hover:border-primary/60",
                   )}
                 >
                   {option === "current" ? "Current page" : "All pages"}
@@ -368,64 +883,67 @@ export function CropPdfTool() {
             </div>
 
             <div className="mb-4 flex flex-wrap gap-2">
-              {presets.map((preset) => (
+              {cropModes.map((item) => (
                 <button
-                  key={preset.label}
+                  key={item.id}
                   type="button"
-                  onClick={() => applyPreset(preset.margins)}
+                  onClick={() => applyMode(item.id)}
                   disabled={status === "processing"}
-                  className="rounded-full border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-soft transition-colors hover:border-primary/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-60"
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,color] duration-200 disabled:pointer-events-none disabled:opacity-60",
+                    mode === item.id
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/60 hover:text-foreground",
+                  )}
                 >
-                  {preset.label}
+                  {item.label}
                 </button>
               ))}
             </div>
 
-            <div className="grid gap-3">
-              <MarginControl
-                label="Top"
-                value={normalizedMargins.top}
-                disabled={status === "processing"}
-                onChange={(value) => updateMargin("top", value)}
-              />
-              <MarginControl
-                label="Bottom"
-                value={normalizedMargins.bottom}
-                disabled={status === "processing"}
-                onChange={(value) => updateMargin("bottom", value)}
-              />
-              <MarginControl
+            <div className="grid grid-cols-2 gap-3">
+              <NumberControl
                 label="Left"
-                value={normalizedMargins.left}
+                value={margins.left}
                 disabled={status === "processing"}
                 onChange={(value) => updateMargin("left", value)}
               />
-              <MarginControl
+              <NumberControl
+                label="Top"
+                value={margins.top}
+                disabled={status === "processing"}
+                onChange={(value) => updateMargin("top", value)}
+              />
+              <NumberControl
                 label="Right"
-                value={normalizedMargins.right}
+                value={margins.right}
                 disabled={status === "processing"}
                 onChange={(value) => updateMargin("right", value)}
               />
+              <NumberControl
+                label="Bottom"
+                value={margins.bottom}
+                disabled={status === "processing"}
+                onChange={(value) => updateMargin("bottom", value)}
+              />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-card/60 p-3 text-sm">
+            <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-background p-3 text-sm">
               <div>
                 <div className="text-xs text-muted-foreground">Width kept</div>
-                <div className="font-semibold">{Math.max(cropArea.width, 0)}%</div>
+                <div className="font-semibold">{roundPercent(normalizedRect.width)}%</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Height kept</div>
-                <div className="font-semibold">{Math.max(cropArea.height, 0)}%</div>
+                <div className="font-semibold">{roundPercent(normalizedRect.height)}%</div>
               </div>
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-[auto_1fr] lg:grid-cols-1">
-              <Button variant="glass" size="lg" onClick={resetCrop} disabled={status === "processing"}>
-                <RotateCcw className="h-4 w-4" /> Reset crop
-              </Button>
+            <div className="mt-5">
               <Button
                 variant="hero"
                 size="lg"
+                className="w-full"
                 onClick={handleSubmit}
                 disabled={status === "processing"}
               >
@@ -445,7 +963,7 @@ export function CropPdfTool() {
       )}
 
       {status === "processing" && (
-        <div className="mt-6 rounded-2xl glass p-5 shadow-card">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
             {progressNote}
@@ -463,15 +981,15 @@ export function CropPdfTool() {
       )}
 
       {status === "done" && downloadUrl && (
-        <div className="mt-6 rounded-2xl glass p-6 text-center shadow-glow">
-          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-soft">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="font-semibold">Crop complete</div>
           <p className="mt-1 text-sm text-muted-foreground">
             Your cropped PDF is ready to download.
           </p>
-          <div className="mx-auto mt-4 grid max-w-md gap-2 rounded-2xl bg-card/70 p-4 text-left text-sm text-muted-foreground">
+          <div className="mx-auto mt-4 grid max-w-md gap-2 rounded-2xl bg-background p-4 text-left text-sm text-muted-foreground">
             <div className="flex items-center justify-between gap-4">
               <span>Scope</span>
               <span className="font-medium text-foreground">
@@ -479,10 +997,9 @@ export function CropPdfTool() {
               </span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span>Margins</span>
+              <span>Mode</span>
               <span className="font-medium text-foreground">
-                {normalizedMargins.top}/{normalizedMargins.right}/{normalizedMargins.bottom}/
-                {normalizedMargins.left}%
+                {cropModes.find((item) => item.id === mode)?.label ?? "Custom"}
               </span>
             </div>
           </div>
@@ -512,7 +1029,7 @@ export function CropPdfTool() {
           <Shield className="h-3.5 w-3.5 text-primary" /> Client-side only
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Crop className="h-3.5 w-3.5 text-primary" /> Visual crop overlay
+          <Crop className="h-3.5 w-3.5 text-primary" /> Drag and resize
         </span>
         <span className="inline-flex items-center gap-1.5">
           <Zap className="h-3.5 w-3.5 text-primary" /> Fast PDF crop

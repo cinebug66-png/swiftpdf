@@ -1,46 +1,79 @@
 import { PDFDocument } from "pdf-lib";
 
-export type CropMargins = {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
+export type CropRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 export type CropScope = "current" | "all";
 
 export type CropPdfOptions = {
-  margins: CropMargins;
+  cropRect: CropRect;
   scope: CropScope;
   currentPage: number;
 };
 
-const MIN_CROP_RATIO = 0.08;
+const MIN_CROP_RATIO = 0.04;
 
-function normalizeMargin(value: number) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(Math.max(value, 0), 45);
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(Math.max(value, min), max);
 }
 
-export function normalizeCropMargins(margins: CropMargins): CropMargins {
+export function normalizeCropRect(rect: CropRect): CropRect {
+  const width = clamp(rect.width, MIN_CROP_RATIO * 100, 100);
+  const height = clamp(rect.height, MIN_CROP_RATIO * 100, 100);
   return {
-    top: normalizeMargin(margins.top),
-    bottom: normalizeMargin(margins.bottom),
-    left: normalizeMargin(margins.left),
-    right: normalizeMargin(margins.right),
+    x: clamp(rect.x, 0, 100 - width),
+    y: clamp(rect.y, 0, 100 - height),
+    width,
+    height,
   };
 }
 
-export function validateCropMargins(margins: CropMargins) {
-  const normalized = normalizeCropMargins(margins);
-  const widthRatio = 1 - (normalized.left + normalized.right) / 100;
-  const heightRatio = 1 - (normalized.top + normalized.bottom) / 100;
+export function validateCropRect(rect: CropRect) {
+  const normalized = normalizeCropRect(rect);
 
-  if (widthRatio < MIN_CROP_RATIO || heightRatio < MIN_CROP_RATIO) {
-    throw new Error("Crop area is too small. Reduce one or more margins and try again.");
+  if (normalized.width < MIN_CROP_RATIO * 100 || normalized.height < MIN_CROP_RATIO * 100) {
+    throw new Error("Crop area is too small. Resize the crop box and try again.");
+  }
+
+  if (
+    normalized.x < 0 ||
+    normalized.y < 0 ||
+    normalized.x + normalized.width > 100 ||
+    normalized.y + normalized.height > 100
+  ) {
+    throw new Error("Crop box is outside the page. Move it inside the preview and try again.");
   }
 
   return normalized;
+}
+
+export function cropRectToMargins(rect: CropRect) {
+  const normalized = normalizeCropRect(rect);
+  return {
+    left: normalized.x,
+    top: normalized.y,
+    right: 100 - normalized.x - normalized.width,
+    bottom: 100 - normalized.y - normalized.height,
+  };
+}
+
+export function cropMarginsToRect(margins: {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}): CropRect {
+  return normalizeCropRect({
+    x: clamp(margins.left, 0, 96),
+    y: clamp(margins.top, 0, 96),
+    width: 100 - clamp(margins.left, 0, 96) - clamp(margins.right, 0, 96),
+    height: 100 - clamp(margins.top, 0, 96) - clamp(margins.bottom, 0, 96),
+  });
 }
 
 export async function getPdfPageCount(file: File): Promise<number> {
@@ -63,7 +96,7 @@ export async function cropPdf(file: File, options: CropPdfOptions): Promise<Uint
     throw new Error(`"${file.name}" is not a valid PDF, is encrypted, or may be corrupted.`);
   }
 
-  const margins = validateCropMargins(options.margins);
+  const rect = validateCropRect(options.cropRect);
   const pages = pdf.getPages();
   const pageIndexes =
     options.scope === "all"
@@ -73,18 +106,16 @@ export async function cropPdf(file: File, options: CropPdfOptions): Promise<Uint
   for (const pageIndex of pageIndexes) {
     const page = pages[pageIndex];
     const cropBox = page.getCropBox();
-    const left = (cropBox.width * margins.left) / 100;
-    const right = (cropBox.width * margins.right) / 100;
-    const top = (cropBox.height * margins.top) / 100;
-    const bottom = (cropBox.height * margins.bottom) / 100;
-    const width = cropBox.width - left - right;
-    const height = cropBox.height - top - bottom;
+    const x = cropBox.x + (cropBox.width * rect.x) / 100;
+    const y = cropBox.y + (cropBox.height * (100 - rect.y - rect.height)) / 100;
+    const width = (cropBox.width * rect.width) / 100;
+    const height = (cropBox.height * rect.height) / 100;
 
     if (width <= 0 || height <= 0) {
-      throw new Error("Crop values are outside the page bounds.");
+      throw new Error("Crop box is outside the page bounds.");
     }
 
-    page.setCropBox(cropBox.x + left, cropBox.y + bottom, width, height);
+    page.setCropBox(x, y, width, height);
   }
 
   return pdf.save();

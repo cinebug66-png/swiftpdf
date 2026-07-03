@@ -130,7 +130,7 @@ export const compactToolSeoContent: Record<string, CompactToolSeoContent> = {
       { question: "Does it upload my PDF?", answer: "No. The crop is created in your browser." },
       { question: "Can I crop all pages?", answer: "Yes. Choose All pages before creating the cropped PDF." },
     ],
-    relatedTools: ["compress-pdf", "rotate-pdf", "delete-pages"],
+    relatedTools: ["rotate-pdf", "compress-pdf", "delete-pages"],
   },
   "compress-pdf": {
     title: "Reduce PDF file size",

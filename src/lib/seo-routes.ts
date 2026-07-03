@@ -73,7 +73,7 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
     path: "/crop-pdf",
     title: "Crop PDF Online Free | Trim PDF Pages with SwiftPDF",
     description:
-      "Crop PDF pages online with SwiftPDF. Trim margins, adjust page area, and download a cropped PDF for free in your browser.",
+      "Crop PDF pages online with SwiftPDF. Trim margins, adjust the page area, and download a cropped PDF for free in your browser.",
     type: "website",
   },
   "/jpg-to-pdf": {

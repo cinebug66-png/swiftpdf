@@ -8,6 +8,7 @@ export type ToolPath =
   | "/merge-pdf"
   | "/split-pdf"
   | "/extract-pages"
+  | "/crop-pdf"
   | "/jpg-to-pdf"
   | "/word-to-pdf"
   | "/watermark-pdf"
@@ -35,6 +36,8 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
       return "/split-pdf";
     case "extract-pages":
       return "/extract-pages";
+    case "crop-pdf":
+      return "/crop-pdf";
     case "jpg-to-pdf":
       return "/jpg-to-pdf";
     case "word-to-pdf":

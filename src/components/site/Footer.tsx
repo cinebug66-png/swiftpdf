@@ -11,6 +11,7 @@ const columns = [
       { label: "Merge PDF", to: "/merge-pdf" },
       { label: "Split PDF", to: "/split-pdf" },
       { label: "Extract PDF Pages", to: "/extract-pages" },
+      { label: "Crop PDF", to: "/crop-pdf" },
       { label: "Sign PDF", to: "/sign-pdf" },
       { label: "Watermark PDF", to: "/watermark-pdf" },
       { label: "Delete PDF Pages", to: "/delete-pages" },

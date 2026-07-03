@@ -120,6 +120,18 @@ export const compactToolSeoContent: Record<string, CompactToolSeoContent> = {
     ],
     relatedTools: ["split-pdf", "delete-pages", "merge-pdf"],
   },
+  "crop-pdf": {
+    title: "Crop PDF pages visually",
+    shortNote:
+      "Crop PDF helps trim page margins or keep only the area you need. Upload a PDF, adjust the crop margins while watching the overlay, and download a new cropped copy. Use current page mode for a single-page fix or all pages when a scanned document has consistent margins.",
+    steps: ["Upload your PDF", "Adjust the crop area", "Download cropped PDF"],
+    faqs: [
+      { question: "Is Crop PDF free?", answer: "Yes. You can crop PDF pages without signing up." },
+      { question: "Does it upload my PDF?", answer: "No. The crop is created in your browser." },
+      { question: "Can I crop all pages?", answer: "Yes. Choose All pages before creating the cropped PDF." },
+    ],
+    relatedTools: ["compress-pdf", "rotate-pdf", "delete-pages"],
+  },
   "compress-pdf": {
     title: "Reduce PDF file size",
     shortNote:

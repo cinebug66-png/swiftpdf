@@ -15,6 +15,7 @@ import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
 import SplitPdfPage from "@/pages/split-pdf-page";
 import ExtractPagesPage from "@/pages/extract-pages-page";
+import CropPdfPage from "@/pages/crop-pdf-page";
 import JpgToPdfPage from "@/pages/jpg-to-pdf-page";
 import WatermarkPdfPage from "@/pages/watermark-pdf-page";
 import RotatePdfPage from "@/pages/rotate-pdf-page";
@@ -89,6 +90,8 @@ function renderRoute(pathname: string) {
     case "/extract-pdf-pages":
     case "/extract-pages":
       return <ExtractPagesPage />;
+    case "/crop-pdf":
+      return <CropPdfPage />;
     case "/jpg-to-pdf":
       return <JpgToPdfPage />;
     case "/word-to-pdf":

@@ -3,6 +3,7 @@ import {
   FileImage,
   FileType2,
   Combine,
+  Crop,
   Images,
   Lock,
   LockOpen,
@@ -340,6 +341,44 @@ export const tools: Tool[] = [
       {
         q: "Will the PDF still look good?",
         a: "SwiftPDF balances file-size reduction with clear, readable document quality.",
+      },
+    ],
+  },
+  {
+    slug: "crop-pdf",
+    icon: Crop,
+    name: "Crop PDF",
+    desc: "Trim PDF page area",
+    color: "from-cyan-500 to-blue-500",
+    long: "Crop page margins or keep only the area you need.",
+    cta: "Crop PDF",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Visual crop preview",
+        desc: "Adjust margins while the preview shows exactly which page area will be kept.",
+      },
+      {
+        title: "Current page or all pages",
+        desc: "Crop one page for a targeted fix or apply the same crop to the whole document.",
+      },
+      {
+        title: "Private browser editing",
+        desc: "Your PDF is cropped locally in your browser without uploading it to a server.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does Crop PDF upload my document?",
+        a: "No. Crop PDF runs in your browser and creates a new cropped copy locally.",
+      },
+      {
+        q: "Can I crop every page at once?",
+        a: "Yes. Choose All pages to apply the selected crop margins across the PDF.",
+      },
+      {
+        q: "Can I reset the crop area?",
+        a: "Yes. Use Reset crop or the Reset preset to return to the original page area.",
       },
     ],
   },

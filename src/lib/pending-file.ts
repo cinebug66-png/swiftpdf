@@ -59,6 +59,7 @@ export function suggestToolsFor(file: File): Tool[] {
   const order: string[] = isPdf
     ? [
         "compress-pdf",
+        "crop-pdf",
         "reorder-pdf",
         "add-page-numbers",
         "pdf-to-jpg",

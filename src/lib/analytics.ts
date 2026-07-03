@@ -8,6 +8,7 @@ export type PdfToolEventName =
   | "compress_pdf"
   | "merge_pdf"
   | "split_pdf"
+  | "crop_pdf"
   | "jpg_to_pdf"
   | "rotate_pdf"
   | "watermark_pdf"
@@ -46,6 +47,7 @@ const TOOL_INFO: Record<PdfToolEventName, ToolAnalyticsInfo> = {
   compress_pdf: tool("Compress PDF", "compress-pdf", "pdf", "pdf"),
   merge_pdf: tool("Merge PDF", "merge-pdf", "pdf", "pdf"),
   split_pdf: tool("Split PDF", "split-pdf", "pdf", "pdf"),
+  crop_pdf: tool("Crop PDF", "crop-pdf", "pdf", "pdf"),
   jpg_to_pdf: tool("JPG to PDF", "jpg-to-pdf", "image", "pdf"),
   rotate_pdf: tool("Rotate PDF", "rotate-pdf", "pdf", "pdf"),
   watermark_pdf: tool("Watermark PDF", "watermark-pdf", "pdf", "pdf"),

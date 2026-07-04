@@ -4,6 +4,7 @@ export type PdfToolEventName =
   | "pdf_to_word"
   | "pdf_to_jpg"
   | "pdf_to_png"
+  | "pdf_to_excel"
   | "word_to_pdf"
   | "compress_pdf"
   | "merge_pdf"
@@ -43,6 +44,7 @@ const TOOL_INFO: Record<PdfToolEventName, ToolAnalyticsInfo> = {
   pdf_to_word: tool("PDF to Word", "pdf-to-word", "pdf", "docx"),
   pdf_to_jpg: tool("PDF to JPG", "pdf-to-jpg", "pdf", "jpg"),
   pdf_to_png: tool("PDF to PNG", "pdf-to-png", "pdf", "png"),
+  pdf_to_excel: tool("PDF to Excel", "pdf-to-excel", "pdf", "xlsx"),
   word_to_pdf: tool("Word to PDF", "word-to-pdf", "docx", "pdf"),
   compress_pdf: tool("Compress PDF", "compress-pdf", "pdf", "pdf"),
   merge_pdf: tool("Merge PDF", "merge-pdf", "pdf", "pdf"),

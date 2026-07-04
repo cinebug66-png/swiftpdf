@@ -144,6 +144,7 @@ export function ToolPageShell({ tool, children }: ToolPageShellProps) {
 function getOutputType(slug: string) {
   if (slug.includes("jpg")) return slug === "jpg-to-pdf" ? "pdf" : "jpg";
   if (slug.includes("png")) return "png";
+  if (slug.includes("excel")) return "xlsx";
   if (slug.includes("word")) return slug === "word-to-pdf" ? "pdf" : "docx";
   return "pdf";
 }

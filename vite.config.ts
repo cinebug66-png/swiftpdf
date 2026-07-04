@@ -38,8 +38,17 @@ function getToolSlugFromPath(pathName: string) {
   return slug;
 }
 
-function createStructuredData(siteUrl: string, pathName: string, description: string) {
-  const canonicalUrl = pathName === "/" ? `${siteUrl}/` : `${siteUrl}${pathName}`;
+function getCanonicalPath(metadata: { path: string; canonicalPath?: string }) {
+  return metadata.canonicalPath ?? metadata.path;
+}
+
+function createStructuredData(
+  siteUrl: string,
+  pathName: string,
+  canonicalPath: string,
+  description: string,
+) {
+  const canonicalUrl = canonicalPath === "/" ? `${siteUrl}/` : `${siteUrl}${canonicalPath}`;
   const toolSeo = getToolSeoContentByPath(pathName);
   const tool = getTool(getToolSlugFromPath(pathName));
   const isHomepage = pathName === "/";
@@ -119,7 +128,8 @@ function createSeoPagesPlugin(siteUrl: string) {
 
       await Promise.all(
         Object.values(routeMetadata).map(async (metadata) => {
-          const canonicalUrl = metadata.path === "/" ? `${siteUrl}/` : `${siteUrl}${metadata.path}`;
+          const canonicalPath = getCanonicalPath(metadata);
+          const canonicalUrl = canonicalPath === "/" ? `${siteUrl}/` : `${siteUrl}${canonicalPath}`;
           let html = baseHtml
             .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(metadata.title)}</title>`)
             .replace(
@@ -129,7 +139,7 @@ function createSeoPagesPlugin(siteUrl: string) {
             .replace(
               /(<script id="swiftpdf-structured-data" type="application\/ld\+json">)[\s\S]*?(<\/script>)/,
               `$1${JSON.stringify(
-                createStructuredData(siteUrl, metadata.path, metadata.description),
+                createStructuredData(siteUrl, metadata.path, canonicalPath, metadata.description),
               )}$2`,
             );
 

@@ -12,6 +12,7 @@ import {
   ListOrdered,
   Hash,
   Layers,
+  Table2,
   RotateCw,
   Scissors,
   Trash2,
@@ -141,6 +142,44 @@ export const tools: Tool[] = [
       {
         q: "What quality are the PNG images?",
         a: "Pages are rendered at high resolution and exported as lossless PNG images.",
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-excel",
+    icon: Table2,
+    name: "PDF to Excel",
+    desc: "Extract tables to .xlsx",
+    color: "from-emerald-500 to-cyan-500",
+    long: "Extract tables from PDF into Excel.",
+    cta: "Convert to Excel",
+    accept: ".pdf,application/pdf",
+    benefits: [
+      {
+        title: "Text-based PDF extraction",
+        desc: "Pull readable rows and table-like text from digital PDFs into a spreadsheet.",
+      },
+      {
+        title: "XLSX output",
+        desc: "Download an Excel file that can be opened in Excel, Google Sheets, or similar tools.",
+      },
+      {
+        title: "Preview before export",
+        desc: "Review extracted rows before creating the final workbook.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does PDF to Excel support scanned PDFs?",
+        a: "This MVP works best with text-based PDFs. Scanned PDFs need OCR, which is not supported yet.",
+      },
+      {
+        q: "Will complex tables convert perfectly?",
+        a: "Not always. Review the preview and downloaded XLSX, especially for complex layouts.",
+      },
+      {
+        q: "Is my PDF uploaded?",
+        a: "No. Text extraction and Excel generation run in your browser.",
       },
     ],
   },

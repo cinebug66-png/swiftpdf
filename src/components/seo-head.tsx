@@ -1,5 +1,6 @@
 import { useLayoutEffect } from "react";
 import {
+  getCanonicalPath,
   getCanonicalUrl,
   getSeoMetadata,
   getStructuredData,
@@ -71,7 +72,7 @@ function setStructuredData(pathname: string, data: object) {
 export function SeoHead({ pathname }: SeoHeadProps) {
   useLayoutEffect(() => {
     const metadata = getSeoMetadata(pathname);
-    const canonicalUrl = getCanonicalUrl(metadata.path);
+    const canonicalUrl = getCanonicalUrl(getCanonicalPath(metadata));
     const robots = "index,follow";
 
     document.title = metadata.title;

@@ -21,6 +21,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://swiftpdftools.in/pdf-to-excel</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://swiftpdftools.in/compress-pdf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
@@ -36,7 +41,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdftools.in/extract-pages</loc>
+    <loc>https://swiftpdftools.in/extract-pdf-pages</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -66,12 +71,12 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdftools.in/delete-pages</loc>
+    <loc>https://swiftpdftools.in/delete-pdf-pages</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://swiftpdftools.in/reorder-pdf</loc>
+    <loc>https://swiftpdftools.in/reorder-pdf-pages</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>

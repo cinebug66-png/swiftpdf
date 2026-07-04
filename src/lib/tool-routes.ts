@@ -4,6 +4,7 @@ export type ToolPath =
   | "/pdf-to-word"
   | "/pdf-to-jpg"
   | "/pdf-to-png"
+  | "/pdf-to-excel"
   | "/compress-pdf"
   | "/merge-pdf"
   | "/split-pdf"
@@ -28,6 +29,8 @@ export function getToolPath(slug: Tool["slug"]): ToolPath {
       return "/pdf-to-jpg";
     case "pdf-to-png":
       return "/pdf-to-png";
+    case "pdf-to-excel":
+      return "/pdf-to-excel";
     case "compress-pdf":
       return "/compress-pdf";
     case "merge-pdf":

@@ -33,6 +33,10 @@ export function getCanonicalUrl(path: string) {
   return path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path}`;
 }
 
+export function getCanonicalPath(metadata: SeoMetadata) {
+  return metadata.canonicalPath ?? metadata.path;
+}
+
 function getToolSlugFromPath(path: string) {
   const slug = path.replace(/^\//, "");
 
@@ -44,7 +48,7 @@ function getToolSlugFromPath(path: string) {
 }
 
 export function getStructuredData(metadata: SeoMetadata) {
-  const canonicalUrl = getCanonicalUrl(metadata.path);
+  const canonicalUrl = getCanonicalUrl(getCanonicalPath(metadata));
   const toolSeo = getToolSeoContentByPath(metadata.path);
   const tool = getTool(getToolSlugFromPath(metadata.path));
   const visibleFaqs = tool ? compactNeedToKnowItems : [];

@@ -1,5 +1,6 @@
 export type RouteSeoMetadata = {
   path: string;
+  canonicalPath?: string;
   title: string;
   description: string;
   type: "website";
@@ -34,6 +35,13 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Convert PDF pages to high-quality PNG images online for free. Fast, secure, and works directly in your browser.",
     type: "website",
   },
+  "/pdf-to-excel": {
+    path: "/pdf-to-excel",
+    title: "PDF to Excel Online Free | Convert PDF Tables to XLSX",
+    description:
+      "Convert PDF tables to Excel online with SwiftPDF. Extract readable table data from text-based PDFs and download an XLSX file for free.",
+    type: "website",
+  },
   "/compress-pdf": {
     path: "/compress-pdf",
     title: "Compress PDF Online Free | SwiftPDF",
@@ -57,6 +65,7 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
   },
   "/extract-pages": {
     path: "/extract-pages",
+    canonicalPath: "/extract-pdf-pages",
     title: "Extract PDF Pages Online Free | SwiftPDF",
     description:
       "Extract selected pages from a PDF online for free. Choose pages, preview them, and download a new PDF instantly in your browser.",
@@ -106,6 +115,7 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
   },
   "/delete-pages": {
     path: "/delete-pages",
+    canonicalPath: "/delete-pdf-pages",
     title: "Delete PDF Pages Online Free | SwiftPDF",
     description:
       "Delete selected pages from a PDF online. Remove single pages or page ranges quickly and securely with SwiftPDF.",
@@ -120,6 +130,7 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
   },
   "/reorder-pdf": {
     path: "/reorder-pdf",
+    canonicalPath: "/reorder-pdf-pages",
     title: "Reorder PDF Pages Online Free | SwiftPDF",
     description:
       "Reorder PDF pages online for free. Drag and arrange pages in your browser and download the updated PDF instantly.",
@@ -196,6 +207,7 @@ export const toolFeatureNames = [
   "PDF to Word",
   "PDF to JPG",
   "PDF to PNG",
+  "PDF to Excel",
   "Compress PDF",
   "Merge PDF",
   "Split PDF",

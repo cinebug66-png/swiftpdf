@@ -3,6 +3,7 @@ export type RouteSeoMetadata = {
   canonicalPath?: string;
   title: string;
   description: string;
+  socialDescription?: string;
   type: "website";
 };
 
@@ -189,7 +190,9 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
     path: "/privacy-policy",
     title: "Privacy Policy | SwiftPDF",
     description:
-      "Read the SwiftPDF Privacy Policy to understand how files and related information are handled when you use our online PDF tools.",
+      "Read SwiftPDF's Privacy Policy to understand how files, usage data, analytics, browser storage, and third-party processing are handled.",
+    socialDescription:
+      "Read how SwiftPDF handles files, usage data, analytics, browser storage, and privacy.",
     type: "website",
   },
   "/terms": {

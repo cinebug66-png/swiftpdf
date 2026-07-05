@@ -53,6 +53,53 @@ export function getStructuredData(metadata: SeoMetadata) {
   const tool = getTool(getToolSlugFromPath(metadata.path));
   const visibleFaqs = tool ? compactNeedToKnowItems : [];
   const isHomepage = metadata.path === "/";
+  const isPrivacyPolicy = metadata.path === "/privacy-policy";
+
+  if (isPrivacyPolicy) {
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": `${SITE_URL}/#website`,
+          url: `${SITE_URL}/`,
+          name: SITE_NAME,
+          description: routeMetadata["/"].description,
+          inLanguage: "en",
+        },
+        {
+          "@type": "WebPage",
+          "@id": `${canonicalUrl}#webpage`,
+          url: canonicalUrl,
+          name: metadata.title,
+          description: metadata.description,
+          isPartOf: {
+            "@id": `${SITE_URL}/#website`,
+          },
+          inLanguage: "en",
+          dateModified: "2026-07-06",
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": `${canonicalUrl}#breadcrumb`,
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "SwiftPDF",
+              item: `${SITE_URL}/`,
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Privacy Policy",
+              item: canonicalUrl,
+            },
+          ],
+        },
+      ],
+    };
+  }
 
   return {
     "@context": "https://schema.org",

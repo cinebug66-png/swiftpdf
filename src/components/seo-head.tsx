@@ -73,6 +73,7 @@ export function SeoHead({ pathname }: SeoHeadProps) {
   useLayoutEffect(() => {
     const metadata = getSeoMetadata(pathname);
     const canonicalUrl = getCanonicalUrl(getCanonicalPath(metadata));
+    const socialDescription = metadata.socialDescription ?? metadata.description;
     const robots = "index,follow";
 
     document.title = metadata.title;
@@ -86,7 +87,7 @@ export function SeoHead({ pathname }: SeoHeadProps) {
     setMeta(
       'meta[property="og:description"]',
       { property: "og:description" },
-      metadata.description,
+      socialDescription,
     );
     setMeta('meta[property="og:type"]', { property: "og:type" }, metadata.type ?? "website");
     setMeta('meta[property="og:url"]', { property: "og:url" }, canonicalUrl);
@@ -112,7 +113,7 @@ export function SeoHead({ pathname }: SeoHeadProps) {
     setMeta(
       'meta[name="twitter:description"]',
       { name: "twitter:description" },
-      metadata.description,
+      socialDescription,
     );
     setMeta('meta[name="twitter:image"]', { name: "twitter:image" }, OG_IMAGE_URL);
     setMeta(

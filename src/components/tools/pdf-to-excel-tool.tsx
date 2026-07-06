@@ -61,6 +61,7 @@ function getPreviewRows(
   extraction: PdfExcelExtraction | null,
   tableMode: PdfExcelTableMode,
   manualSeparators: number[],
+  manualSeparatorPageWidth?: number,
 ) {
   if (!extraction) return [];
 
@@ -68,11 +69,32 @@ function getPreviewRows(
     .flatMap((page) => {
       const rows =
         tableMode === "manual"
-          ? buildRowsWithManualSeparators(page, manualSeparators)
+          ? buildRowsWithManualSeparators(page, manualSeparators, manualSeparatorPageWidth)
           : getRowsForPage(page, { tableMode });
       return rows.map((row) => ({ page: page.pageNumber, row }));
     })
     .slice(0, 20);
+}
+
+function getActiveTableStats(
+  extraction: PdfExcelExtraction | null,
+  tableMode: PdfExcelTableMode,
+  manualSeparators: number[],
+  manualSeparatorPageWidth?: number,
+) {
+  if (!extraction) return { rowCount: 0, columnCount: 0, cellCount: 0 };
+
+  const rows = extraction.pages.flatMap((page) =>
+    tableMode === "manual"
+      ? buildRowsWithManualSeparators(page, manualSeparators, manualSeparatorPageWidth)
+      : getRowsForPage(page, { tableMode }),
+  );
+
+  return {
+    rowCount: rows.length,
+    columnCount: rows.reduce((max, row) => Math.max(max, row.length), 0),
+    cellCount: rows.reduce((sum, row) => sum + row.length, 0),
+  };
 }
 
 function getFirstPreviewPage(extraction: PdfExcelExtraction | null): ExtractedPdfPage | null {
@@ -113,16 +135,17 @@ export function PdfToExcelTool() {
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
   const previewPage = useMemo(() => getFirstPreviewPage(extraction), [extraction]);
   const previewRows = useMemo(
-    () => getPreviewRows(extraction, tableMode, manualSeparators),
-    [extraction, manualSeparators, tableMode],
+    () => getPreviewRows(extraction, tableMode, manualSeparators, previewPage?.width),
+    [extraction, manualSeparators, previewPage?.width, tableMode],
   );
-  const detectedColumnCount = useMemo(
-    () => getColumnCount(previewRows, previewPage?.columnCount ?? 0),
-    [previewPage?.columnCount, previewRows],
+  const activeStats = useMemo(
+    () => getActiveTableStats(extraction, tableMode, manualSeparators, previewPage?.width),
+    [extraction, manualSeparators, previewPage?.width, tableMode],
   );
+  const detectedColumnCount = getColumnCount(previewRows, activeStats.columnCount || previewPage?.columnCount || 0);
   const canTryAnyway = Boolean(extraction?.hasAnyText && !extraction.hasUsefulText);
   const canExport = Boolean(extraction?.hasUsefulText || (extraction?.hasAnyText && allowLowTextExport));
-  const hasManyRows = Boolean(extraction && extraction.totalRows > previewRows.length);
+  const hasManyRows = activeStats.rowCount > previewRows.length;
 
   const trackConversionEvent = (
     eventName: string,
@@ -194,9 +217,10 @@ export function PdfToExcelTool() {
 
   const setSeparator = (index: number, value: number) => {
     resetResult();
+    const clampedValue = previewPage ? Math.round(Math.min(previewPage.width - 8, Math.max(8, value))) : value;
     setManualSeparators((separators) =>
       separators
-        .map((separator, separatorIndex) => (separatorIndex === index ? value : separator))
+        .map((separator, separatorIndex) => (separatorIndex === index ? clampedValue : separator))
         .sort((left, right) => left - right),
     );
   };
@@ -207,10 +231,16 @@ export function PdfToExcelTool() {
     setTableMode("manual");
     setManualSeparators((separators) => {
       const sorted = [...separators].sort((left, right) => left - right);
-      const next =
-        sorted.length === 0
-          ? Math.round(previewPage.width / 2)
-          : Math.round((sorted[sorted.length - 1] + previewPage.width) / 2);
+      const bounds = [8, ...sorted, Math.round(previewPage.width - 8)];
+      const widestGap = bounds.slice(1).reduce(
+        (best, right, index) => {
+          const left = bounds[index];
+          const width = right - left;
+          return width > best.width ? { left, right, width } : best;
+        },
+        { left: 8, right: Math.round(previewPage.width - 8), width: 0 },
+      );
+      const next = Math.round((widestGap.left + widestGap.right) / 2);
       return [...sorted, Math.min(Math.round(previewPage.width - 12), Math.max(12, next))].sort(
         (left, right) => left - right,
       );
@@ -253,6 +283,7 @@ export function PdfToExcelTool() {
         tableMode,
         includePageLabels,
         manualSeparators,
+        manualSeparatorPageWidth: previewPage?.width,
       });
       const nextDownloadUrl = createExcelDownloadUrl(bytes);
 
@@ -348,8 +379,8 @@ export function PdfToExcelTool() {
       )}
 
       {extraction && (
-        <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
-          <section className="min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
+        <div className="mt-6 grid max-w-full gap-5 overflow-hidden lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
+          <section className="min-w-0 max-w-full overflow-hidden rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-base font-semibold">
@@ -365,7 +396,7 @@ export function PdfToExcelTool() {
                   {extraction.pages.length} pages
                 </span>
                 <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
-                  {extraction.totalRows} rows
+                  {activeStats.rowCount} rows
                 </span>
                 <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
                   {detectedColumnCount} columns
@@ -438,10 +469,20 @@ export function PdfToExcelTool() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
+                      onClick={() => {
+                        resetResult();
+                        setManualSeparators(previewPage.columnSeparators);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" /> Auto detect
+                    </button>
+                    <button
+                      type="button"
                       onClick={addSeparator}
                       className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Add column
+                      <Plus className="h-3.5 w-3.5" /> Add separator
                     </button>
                     <button
                       type="button"
@@ -459,7 +500,10 @@ export function PdfToExcelTool() {
                 <div className="space-y-3">
                   {manualSeparators.length > 0 ? (
                     manualSeparators.map((separator, index) => (
-                      <div key={`${index}-${separator}`} className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_3rem] sm:items-center">
+                      <div
+                        key={`${index}-${separator}`}
+                        className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_5rem_3rem] sm:items-center"
+                      >
                         <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                           <GripVertical className="h-3.5 w-3.5" />
                           Separator {index + 1}
@@ -471,6 +515,15 @@ export function PdfToExcelTool() {
                           value={separator}
                           onChange={(event) => setSeparator(index, Number(event.target.value))}
                           className="w-full accent-primary"
+                        />
+                        <input
+                          type="number"
+                          min={8}
+                          max={Math.max(24, Math.round(previewPage.width - 8))}
+                          value={Math.round(separator)}
+                          onChange={(event) => setSeparator(index, Number(event.target.value))}
+                          className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm"
+                          aria-label={`Separator ${index + 1} position`}
                         />
                         <button
                           type="button"
@@ -492,7 +545,7 @@ export function PdfToExcelTool() {
             )}
 
             {previewRows.length > 0 ? (
-              <div className="overflow-x-auto rounded-2xl border border-border bg-background shadow-soft">
+              <div className="max-h-[28rem] max-w-full overflow-auto rounded-2xl border border-border bg-background shadow-soft">
                 <table className="min-w-full border-collapse text-left text-sm">
                   <tbody>
                     {previewRows.map((item, rowIndex) => (
@@ -501,7 +554,10 @@ export function PdfToExcelTool() {
                           P{item.page}
                         </td>
                         {item.row.map((cell, cellIndex) => (
-                          <td key={`${rowIndex}-${cellIndex}`} className="min-w-32 px-3 py-2 align-top">
+                          <td
+                            key={`${rowIndex}-${cellIndex}`}
+                            className="min-w-32 max-w-64 whitespace-normal break-words px-3 py-2 align-top"
+                          >
                             {cell}
                           </td>
                         ))}
@@ -523,7 +579,7 @@ export function PdfToExcelTool() {
             )}
           </section>
 
-          <aside className="rounded-3xl glass p-4 shadow-card sm:p-5">
+          <aside className="min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <div className="text-base font-semibold">Excel options</div>
@@ -587,7 +643,7 @@ export function PdfToExcelTool() {
             <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-card/60 p-3 text-sm">
               <div>
                 <div className="text-xs text-muted-foreground">Cells</div>
-                <div className="font-semibold">{extraction.totalCells}</div>
+                <div className="font-semibold">{activeStats.cellCount}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Text items</div>

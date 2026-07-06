@@ -13,6 +13,7 @@ export type PdfExcelOptions = {
   tableMode: PdfExcelTableMode;
   includePageLabels: boolean;
   manualSeparators?: number[];
+  manualSeparatorPageWidth?: number;
 };
 
 export type ExtractedPdfPage = {
@@ -105,6 +106,22 @@ function median(values: number[], fallback: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function uniqueSorted(values: number[], tolerance = 4) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  const unique: number[] = [];
+
+  for (const value of sorted) {
+    const previous = unique[unique.length - 1];
+    if (previous === undefined || Math.abs(previous - value) > tolerance) {
+      unique.push(Math.round(value));
+    } else {
+      unique[unique.length - 1] = Math.round((previous + value) / 2);
+    }
+  }
+
+  return unique;
 }
 
 function emptyPage(pageNumber: number, width: number, height: number, rotation: number): ExtractedPdfPage {
@@ -206,21 +223,27 @@ function mergeRowItems(row: PositionedText[], gapMultiplier: number): Positioned
   };
 }
 
-function clusterColumnStarts(rows: PositionedTextRow[], pageWidth: number) {
-  const starts = rows.flatMap((row) => row.cells.map((cell) => cell.x));
-  const tolerance = clamp(pageWidth * 0.018, 7, 18);
+function clusterValues(values: number[], tolerance: number) {
   const clusters: Array<{ values: number[]; center: number; count: number }> = [];
 
-  for (const start of starts.sort((a, b) => a - b)) {
-    const cluster = clusters.find((item) => Math.abs(item.center - start) <= tolerance);
+  for (const value of values.filter(Number.isFinite).sort((a, b) => a - b)) {
+    const cluster = clusters.find((item) => Math.abs(item.center - value) <= tolerance);
     if (cluster) {
-      cluster.values.push(start);
+      cluster.values.push(value);
       cluster.count += 1;
       cluster.center = cluster.values.reduce((sum, value) => sum + value, 0) / cluster.values.length;
     } else {
-      clusters.push({ values: [start], center: start, count: 1 });
+      clusters.push({ values: [value], center: value, count: 1 });
     }
   }
+
+  return clusters;
+}
+
+function clusterColumnStarts(rows: PositionedTextRow[], pageWidth: number) {
+  const starts = rows.flatMap((row) => row.cells.map((cell) => cell.x));
+  const tolerance = clamp(pageWidth * 0.018, 7, 18);
+  const clusters = clusterValues(starts, tolerance);
 
   const repeatedStarts = clusters
     .filter((cluster) => cluster.count >= 2 || cluster.count / Math.max(rows.length, 1) >= 0.25)
@@ -235,6 +258,36 @@ function clusterColumnStarts(rows: PositionedTextRow[], pageWidth: number) {
 
 function buildSeparatorsFromStarts(starts: number[]) {
   return starts.slice(1).map((start, index) => Math.round((starts[index] + start) / 2));
+}
+
+function detectColumnSeparators(rows: PositionedTextRow[], pageWidth: number) {
+  const gapSamples = rows.flatMap((row) =>
+    row.cells.slice(1).map((cell, index) => {
+      const previous = row.cells[index];
+      return cell.x - previous.right;
+    }),
+  );
+  const typicalGap = median(gapSamples, 8);
+  const largeGapThreshold = clamp(Math.max(typicalGap * 1.8, pageWidth * 0.025), 12, 42);
+  const gapSeparators = rows.flatMap((row) =>
+    row.cells.slice(1).flatMap((cell, index) => {
+      const previous = row.cells[index];
+      const gap = cell.x - previous.right;
+      return gap >= largeGapThreshold ? [previous.right + gap / 2] : [];
+    }),
+  );
+  const gapTolerance = clamp(pageWidth * 0.02, 8, 22);
+  const repeatedGapSeparators = clusterValues(gapSeparators, gapTolerance)
+    .filter((cluster) => cluster.count >= 2 || cluster.count / Math.max(rows.length, 1) >= 0.22)
+    .map((cluster) => Math.round(cluster.center));
+  const columnStarts = clusterColumnStarts(rows, pageWidth);
+  const startSeparators = buildSeparatorsFromStarts(columnStarts);
+  const separators = uniqueSorted([...repeatedGapSeparators, ...startSeparators], gapTolerance);
+
+  return {
+    columnStarts,
+    separators: separators.filter((separator) => separator > 4 && separator < pageWidth - 4),
+  };
 }
 
 function rowsFromSeparators(rows: PositionedTextRow[], separators: number[]) {
@@ -310,8 +363,7 @@ function buildPage(pageNumber: number, items: PositionedText[], width: number, h
   const rawTextRows = groupedRows
     .map((row) => mergeRowItems(row, 2.4).cells.map((cell) => cell.text))
     .filter((row) => row.some(Boolean));
-  const columnStarts = clusterColumnStarts(compactRows, width);
-  const separators = buildSeparatorsFromStarts(columnStarts);
+  const { columnStarts, separators } = detectColumnSeparators(compactRows, width);
   const autoRows =
     separators.length > 0
       ? rowsFromSeparators(compactRows, separators)
@@ -335,14 +387,36 @@ function buildPage(pageNumber: number, items: PositionedText[], width: number, h
   };
 }
 
-export function buildRowsWithManualSeparators(page: ExtractedPdfPage, separators: number[]) {
-  return removeDuplicateBlankRows(rowsFromSeparators(page.textRows, separators));
+function scaleSeparatorsToPage(page: ExtractedPdfPage, separators: number[], sourcePageWidth?: number) {
+  if (!sourcePageWidth || sourcePageWidth <= 0 || Math.abs(sourcePageWidth - page.width) < 1) {
+    return separators;
+  }
+
+  const scale = page.width / sourcePageWidth;
+  return separators.map((separator) => Math.round(separator * scale));
 }
 
-export function getRowsForPage(page: ExtractedPdfPage, options: Pick<PdfExcelOptions, "tableMode" | "manualSeparators">) {
+export function buildRowsWithManualSeparators(
+  page: ExtractedPdfPage,
+  separators: number[],
+  sourcePageWidth?: number,
+) {
+  return removeDuplicateBlankRows(
+    rowsFromSeparators(page.textRows, scaleSeparatorsToPage(page, separators, sourcePageWidth)),
+  );
+}
+
+export function getRowsForPage(
+  page: ExtractedPdfPage,
+  options: Pick<PdfExcelOptions, "tableMode" | "manualSeparators" | "manualSeparatorPageWidth">,
+) {
   if (options.tableMode === "raw") return page.rawRows;
   if (options.tableMode === "manual") {
-    return buildRowsWithManualSeparators(page, options.manualSeparators ?? page.columnSeparators);
+    return buildRowsWithManualSeparators(
+      page,
+      options.manualSeparators ?? page.columnSeparators,
+      options.manualSeparatorPageWidth,
+    );
   }
   return page.confidence === "low" ? page.rawRows : page.rows;
 }

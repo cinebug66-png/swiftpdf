@@ -5,9 +5,14 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
+  GripVertical,
   Loader2,
+  Plus,
+  RotateCcw,
   Shield,
+  SlidersHorizontal,
   Table2,
+  Trash2,
   Upload,
   Zap,
 } from "lucide-react";
@@ -15,12 +20,16 @@ import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 import { consumePendingFiles } from "@/lib/pending-file";
 import {
+  buildRowsWithManualSeparators,
   createExcelBytes,
   createExcelDownloadUrl,
   extractPdfForExcel,
+  getRowsForPage,
   revokeObjectUrl,
+  type ExtractedPdfPage,
   type PdfExcelExportMode,
   type PdfExcelExtraction,
+  type PdfExcelTableMode,
 } from "@/lib/pdf-to-excel";
 import { cn } from "@/lib/utils";
 
@@ -33,15 +42,45 @@ const toolInfo = {
   output_type: "xlsx",
 };
 
+const scannedMessage =
+  "This PDF looks scanned or image-based. PDF to Excel currently works best with text-based PDFs. OCR support will be added later.";
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function getPreviewRows(extraction: PdfExcelExtraction | null) {
+function confidenceLabel(confidence: PdfExcelExtraction["confidence"]) {
+  if (confidence === "high") return "High";
+  if (confidence === "medium") return "Medium";
+  return "Low";
+}
+
+function getPreviewRows(
+  extraction: PdfExcelExtraction | null,
+  tableMode: PdfExcelTableMode,
+  manualSeparators: number[],
+) {
   if (!extraction) return [];
-  return extraction.pages.flatMap((page) => page.rows.map((row) => ({ page: page.pageNumber, row }))).slice(0, 20);
+
+  return extraction.pages
+    .flatMap((page) => {
+      const rows =
+        tableMode === "manual"
+          ? buildRowsWithManualSeparators(page, manualSeparators)
+          : getRowsForPage(page, { tableMode });
+      return rows.map((row) => ({ page: page.pageNumber, row }));
+    })
+    .slice(0, 20);
+}
+
+function getFirstPreviewPage(extraction: PdfExcelExtraction | null): ExtractedPdfPage | null {
+  return extraction?.pages.find((page) => page.textRows.length > 0) ?? extraction?.pages[0] ?? null;
+}
+
+function getColumnCount(rows: Array<{ row: string[] }>, fallback: number) {
+  return Math.max(fallback, rows.reduce((max, item) => Math.max(max, item.row.length), 0));
 }
 
 export function PdfToExcelTool() {
@@ -52,7 +91,10 @@ export function PdfToExcelTool() {
   const [error, setError] = useState<string | null>(null);
   const [extraction, setExtraction] = useState<PdfExcelExtraction | null>(null);
   const [exportMode, setExportMode] = useState<PdfExcelExportMode>("one_sheet");
+  const [tableMode, setTableMode] = useState<PdfExcelTableMode>("auto");
   const [includePageLabels, setIncludePageLabels] = useState(true);
+  const [manualSeparators, setManualSeparators] = useState<number[]>([]);
+  const [allowLowTextExport, setAllowLowTextExport] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,7 +111,17 @@ export function PdfToExcelTool() {
   }, [downloadUrl]);
 
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
-  const previewRows = useMemo(() => getPreviewRows(extraction), [extraction]);
+  const previewPage = useMemo(() => getFirstPreviewPage(extraction), [extraction]);
+  const previewRows = useMemo(
+    () => getPreviewRows(extraction, tableMode, manualSeparators),
+    [extraction, manualSeparators, tableMode],
+  );
+  const detectedColumnCount = useMemo(
+    () => getColumnCount(previewRows, previewPage?.columnCount ?? 0),
+    [previewPage?.columnCount, previewRows],
+  );
+  const canTryAnyway = Boolean(extraction?.hasAnyText && !extraction.hasUsefulText);
+  const canExport = Boolean(extraction?.hasUsefulText || (extraction?.hasAnyText && allowLowTextExport));
   const hasManyRows = Boolean(extraction && extraction.totalRows > previewRows.length);
 
   const trackConversionEvent = (
@@ -78,7 +130,9 @@ export function PdfToExcelTool() {
   ) => {
     trackEvent(eventName, {
       ...toolInfo,
+      extraction_confidence: extraction?.confidence ?? "low",
       export_mode: exportMode,
+      table_mode: tableMode,
       ...extra,
     });
   };
@@ -90,12 +144,20 @@ export function PdfToExcelTool() {
     setError(null);
   };
 
+  const resetManualSeparators = (nextExtraction = extraction) => {
+    const page = getFirstPreviewPage(nextExtraction);
+    setManualSeparators(page?.columnSeparators ?? []);
+  };
+
   const clear = () => {
     revokeObjectUrl(downloadUrl);
     setDownloadUrl(null);
     setFile(null);
     setExtraction(null);
     setError(null);
+    setManualSeparators([]);
+    setAllowLowTextExport(false);
+    setTableMode("auto");
     setStatus("idle");
   };
 
@@ -105,6 +167,9 @@ export function PdfToExcelTool() {
     setFile(nextFile);
     setExtraction(null);
     setError(null);
+    setManualSeparators([]);
+    setAllowLowTextExport(false);
+    setTableMode("auto");
 
     if (!nextFile) {
       setStatus("idle");
@@ -115,17 +180,46 @@ export function PdfToExcelTool() {
       setStatus("analyzing");
       const nextExtraction = await extractPdfForExcel(nextFile);
       setExtraction(nextExtraction);
+      resetManualSeparators(nextExtraction);
       setStatus("ready");
 
       if (!nextExtraction.hasUsefulText) {
-        setError(
-          "This PDF looks scanned or image-based. PDF to Excel currently works best with text-based PDFs. OCR support will be added later.",
-        );
+        setError(scannedMessage);
       }
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "PDF text extraction failed. Please try another PDF.");
     }
+  };
+
+  const setSeparator = (index: number, value: number) => {
+    resetResult();
+    setManualSeparators((separators) =>
+      separators
+        .map((separator, separatorIndex) => (separatorIndex === index ? value : separator))
+        .sort((left, right) => left - right),
+    );
+  };
+
+  const addSeparator = () => {
+    if (!previewPage) return;
+    resetResult();
+    setTableMode("manual");
+    setManualSeparators((separators) => {
+      const sorted = [...separators].sort((left, right) => left - right);
+      const next =
+        sorted.length === 0
+          ? Math.round(previewPage.width / 2)
+          : Math.round((sorted[sorted.length - 1] + previewPage.width) / 2);
+      return [...sorted, Math.min(Math.round(previewPage.width - 12), Math.max(12, next))].sort(
+        (left, right) => left - right,
+      );
+    });
+  };
+
+  const removeSeparator = (index: number) => {
+    resetResult();
+    setManualSeparators((separators) => separators.filter((_, separatorIndex) => separatorIndex !== index));
   };
 
   const convert = async () => {
@@ -140,14 +234,12 @@ export function PdfToExcelTool() {
       return;
     }
 
-    if (!extraction.hasUsefulText) {
+    if (!canExport) {
       setStatus("error");
-      setError(
-        "This PDF looks scanned or image-based. PDF to Excel currently works best with text-based PDFs. OCR support will be added later.",
-      );
+      setError(scannedMessage);
       trackConversionEvent("conversion_error", {
         error_type: "no_extractable_text",
-        error_message_short: "No extractable text found",
+        error_message_short: "No useful extractable text found",
       });
       return;
     }
@@ -156,7 +248,12 @@ export function PdfToExcelTool() {
       trackConversionEvent("conversion_started");
       setStatus("processing");
       setError(null);
-      const bytes = createExcelBytes(extraction, { exportMode, includePageLabels });
+      const bytes = createExcelBytes(extraction, {
+        exportMode,
+        tableMode,
+        includePageLabels,
+        manualSeparators,
+      });
       const nextDownloadUrl = createExcelDownloadUrl(bytes);
 
       revokeObjectUrl(downloadUrl);
@@ -207,7 +304,7 @@ export function PdfToExcelTool() {
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          PDF to Excel works best with text-based PDFs. Scanned documents may need OCR.
+          Works best with text-based PDFs. Scanned documents may need OCR.
         </p>
       </label>
 
@@ -242,7 +339,7 @@ export function PdfToExcelTool() {
         <div className="mt-6 rounded-2xl glass p-5 shadow-card">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            Extracting text and table-like rows...
+            Detecting rows, columns, and table-like structure...
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full w-full origin-left animate-pulse bg-gradient-primary" />
@@ -257,20 +354,140 @@ export function PdfToExcelTool() {
               <div>
                 <div className="flex items-center gap-2 text-base font-semibold">
                   <Table2 className="h-4 w-4 text-primary" />
-                  Extracted preview
+                  Table preview
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  {hasManyRows ? "Previewing first 20 rows" : "Review the extracted rows before exporting"}
+                  Review the preview before downloading. PDF table extraction may need small adjustments.
                 </div>
               </div>
-              <div className="rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-medium shadow-soft">
-                {extraction.totalRows} rows
+              <div className="flex flex-wrap gap-2 text-xs font-medium">
+                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
+                  {extraction.pages.length} pages
+                </span>
+                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
+                  {extraction.totalRows} rows
+                </span>
+                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
+                  {detectedColumnCount} columns
+                </span>
+                <span
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 shadow-soft",
+                    extraction.confidence === "high"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                      : extraction.confidence === "medium"
+                        ? "border-amber-300 bg-amber-50 text-amber-800"
+                        : "border-slate-300 bg-slate-50 text-slate-700",
+                  )}
+                >
+                  {confidenceLabel(extraction.confidence)} confidence
+                </span>
               </div>
             </div>
 
             {error && !extraction.hasUsefulText && (
               <div className="mb-4 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-900">
-                {error}
+                <p>{error}</p>
+                {canTryAnyway && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAllowLowTextExport(true);
+                      setError(null);
+                    }}
+                    className="mt-3 rounded-xl bg-amber-900 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Try anyway
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="mb-4 flex flex-wrap gap-2">
+              {[
+                { value: "auto", label: "Auto detect columns" },
+                { value: "manual", label: "Use manual columns" },
+                { value: "raw", label: "Raw text rows" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    resetResult();
+                    setTableMode(option.value as PdfExcelTableMode);
+                  }}
+                  className={cn(
+                    "rounded-xl border px-3 py-2 text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                    tableMode === option.value
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {tableMode === "manual" && previewPage && (
+              <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <SlidersHorizontal className="h-4 w-4 text-primary" />
+                    Adjust columns
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={addSeparator}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add column
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetResult();
+                        resetManualSeparators();
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" /> Reset columns
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {manualSeparators.length > 0 ? (
+                    manualSeparators.map((separator, index) => (
+                      <div key={`${index}-${separator}`} className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_3rem] sm:items-center">
+                        <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                          <GripVertical className="h-3.5 w-3.5" />
+                          Separator {index + 1}
+                        </label>
+                        <input
+                          type="range"
+                          min={8}
+                          max={Math.max(24, Math.round(previewPage.width - 8))}
+                          value={separator}
+                          onChange={(event) => setSeparator(index, Number(event.target.value))}
+                          className="w-full accent-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSeparator(index)}
+                          className="inline-flex h-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+                          aria-label={`Remove separator ${index + 1}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No separators yet. Add a column separator to split rows manually.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -284,7 +501,7 @@ export function PdfToExcelTool() {
                           P{item.page}
                         </td>
                         {item.row.map((cell, cellIndex) => (
-                          <td key={`${rowIndex}-${cellIndex}`} className="min-w-32 px-3 py-2">
+                          <td key={`${rowIndex}-${cellIndex}`} className="min-w-32 px-3 py-2 align-top">
                             {cell}
                           </td>
                         ))}
@@ -298,61 +515,74 @@ export function PdfToExcelTool() {
                 No readable table rows were found.
               </div>
             )}
+
+            {hasManyRows && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Previewing the first 20 rows. The export includes all detected rows.
+              </p>
+            )}
           </section>
 
           <aside className="rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <div className="text-base font-semibold">Excel options</div>
-                <div className="mt-1 text-xs text-muted-foreground">Keep the export simple and reviewable.</div>
+                <div className="mt-1 text-xs text-muted-foreground">Export mode and page labeling.</div>
               </div>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
                 <FileSpreadsheet className="h-4 w-4" />
               </span>
             </div>
 
-            <div className="grid gap-2">
-              {[
-                { value: "one_sheet", label: "One sheet" },
-                { value: "sheets_by_page", label: "Separate sheet per page" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    resetResult();
-                    setExportMode(option.value as PdfExcelExportMode);
-                  }}
-                  disabled={status === "processing"}
-                  className={cn(
-                    "rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
-                    exportMode === option.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card/70 text-foreground hover:border-primary/60",
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Export mode
+                </div>
+                <div className="grid gap-2">
+                  {[
+                    { value: "one_sheet", label: "One sheet" },
+                    { value: "sheets_by_page", label: "Separate sheet per page" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        resetResult();
+                        setExportMode(option.value as PdfExcelExportMode);
+                      }}
+                      disabled={status === "processing"}
+                      className={cn(
+                        "rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                        exportMode === option.value
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card/70 text-foreground hover:border-primary/60",
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                resetResult();
-                setIncludePageLabels((value) => !value);
-              }}
-              disabled={status === "processing"}
-              className={cn(
-                "mt-4 flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
-                includePageLabels
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border bg-card/70 text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <span>Include page labels</span>
-              <span>{includePageLabels ? "Yes" : "No"}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetResult();
+                  setIncludePageLabels((value) => !value);
+                }}
+                disabled={status === "processing"}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                  includePageLabels
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-card/70 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span>Include page labels</span>
+                <span>{includePageLabels ? "On" : "Off"}</span>
+              </button>
+            </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-card/60 p-3 text-sm">
               <div>
@@ -360,8 +590,16 @@ export function PdfToExcelTool() {
                 <div className="font-semibold">{extraction.totalCells}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Pages</div>
-                <div className="font-semibold">{extraction.pages.length}</div>
+                <div className="text-xs text-muted-foreground">Text items</div>
+                <div className="font-semibold">{extraction.totalTextItems}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Mode</div>
+                <div className="font-semibold capitalize">{tableMode}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Confidence</div>
+                <div className="font-semibold">{confidenceLabel(extraction.confidence)}</div>
               </div>
             </div>
 
@@ -370,7 +608,7 @@ export function PdfToExcelTool() {
                 variant="hero"
                 size="lg"
                 onClick={() => void convert()}
-                disabled={status === "processing" || status === "analyzing" || !extraction.hasUsefulText}
+                disabled={status === "processing" || status === "analyzing" || !canExport}
               >
                 {status === "processing" ? (
                   <>
@@ -378,13 +616,18 @@ export function PdfToExcelTool() {
                   </>
                 ) : (
                   <>
-                    Convert to Excel <ArrowRight className="h-4 w-4" />
+                    Export to Excel <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
               {downloadUrl && (
                 <Button variant="glass" size="lg" asChild>
-                  <a href={downloadUrl} download="converted-excel.xlsx" title="converted-excel.xlsx">
+                  <a
+                    href={downloadUrl}
+                    download="converted-excel.xlsx"
+                    title="converted-excel.xlsx"
+                    onClick={() => trackConversionEvent("download_click")}
+                  >
                     <Download className="h-4 w-4" /> Download Excel
                   </a>
                 </Button>
@@ -422,7 +665,7 @@ export function PdfToExcelTool() {
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground sm:gap-6">
         <span className="inline-flex items-center gap-1.5">
-          <Shield className="h-3.5 w-3.5 text-primary" /> Browser-side extraction
+          <Shield className="h-3.5 w-3.5 text-primary" /> Browser-side text extraction
         </span>
         <span className="inline-flex items-center gap-1.5">
           <Table2 className="h-3.5 w-3.5 text-primary" /> Text-based PDFs

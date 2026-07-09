@@ -123,6 +123,7 @@ function renderRoute(pathname: string) {
       return <ContactPage />;
     case "/privacy-policy":
       return <PrivacyPolicyPage />;
+    case "/terms-of-service":
     case "/terms":
       return <TermsPage />;
     default:

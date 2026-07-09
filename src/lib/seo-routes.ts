@@ -174,9 +174,11 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
   },
   "/about": {
     path: "/about",
-    title: "About SwiftPDF | Simple Online PDF Tools",
+    title: "About SwiftPDF | Free Online PDF Tools",
     description:
-      "Learn about SwiftPDF and its fast, simple and privacy-friendly online tools for converting, compressing, merging, splitting and signing PDFs.",
+      "Learn about SwiftPDF, a simple online PDF toolkit for converting, compressing, merging, signing, protecting, and organizing PDF files.",
+    socialDescription:
+      "Learn how SwiftPDF helps users manage PDF files with simple online tools.",
     type: "website",
   },
   "/contact": {
@@ -195,11 +197,23 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
       "Read how SwiftPDF handles files, usage data, analytics, browser storage, and privacy.",
     type: "website",
   },
-  "/terms": {
-    path: "/terms",
+  "/terms-of-service": {
+    path: "/terms-of-service",
     title: "Terms of Service | SwiftPDF",
     description:
-      "Read the SwiftPDF Terms of Service and the basic rules that apply when using our online PDF tools.",
+      "Read SwiftPDF's Terms of Service to understand the rules for using our online PDF tools, file processing, user responsibilities, and service limitations.",
+    socialDescription:
+      "Understand the rules and responsibilities for using SwiftPDF online PDF tools.",
+    type: "website",
+  },
+  "/terms": {
+    path: "/terms",
+    canonicalPath: "/terms-of-service",
+    title: "Terms of Service | SwiftPDF",
+    description:
+      "Read SwiftPDF's Terms of Service to understand the rules for using our online PDF tools, file processing, user responsibilities, and service limitations.",
+    socialDescription:
+      "Understand the rules and responsibilities for using SwiftPDF online PDF tools.",
     type: "website",
   },
 };

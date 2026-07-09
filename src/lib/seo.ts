@@ -53,9 +53,27 @@ export function getStructuredData(metadata: SeoMetadata) {
   const tool = getTool(getToolSlugFromPath(metadata.path));
   const visibleFaqs = tool ? compactNeedToKnowItems : [];
   const isHomepage = metadata.path === "/";
-  const isPrivacyPolicy = metadata.path === "/privacy-policy";
+  const webpageSchemaNames: Record<string, { breadcrumbName: string; dateModified: string }> = {
+    "/about": {
+      breadcrumbName: "About SwiftPDF",
+      dateModified: "2026-07-10",
+    },
+    "/privacy-policy": {
+      breadcrumbName: "Privacy Policy",
+      dateModified: "2026-07-06",
+    },
+    "/terms-of-service": {
+      breadcrumbName: "Terms of Service",
+      dateModified: "2026-07-10",
+    },
+    "/terms": {
+      breadcrumbName: "Terms of Service",
+      dateModified: "2026-07-10",
+    },
+  };
+  const webpageSchema = webpageSchemaNames[metadata.path];
 
-  if (isPrivacyPolicy) {
+  if (webpageSchema) {
     return {
       "@context": "https://schema.org",
       "@graph": [
@@ -77,7 +95,7 @@ export function getStructuredData(metadata: SeoMetadata) {
             "@id": `${SITE_URL}/#website`,
           },
           inLanguage: "en",
-          dateModified: "2026-07-06",
+          dateModified: webpageSchema.dateModified,
         },
         {
           "@type": "BreadcrumbList",
@@ -92,7 +110,7 @@ export function getStructuredData(metadata: SeoMetadata) {
             {
               "@type": "ListItem",
               position: 2,
-              name: "Privacy Policy",
+              name: webpageSchema.breadcrumbName,
               item: canonicalUrl,
             },
           ],

@@ -40,7 +40,7 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
     path: "/pdf-to-excel",
     title: "PDF to Excel Online Free | Convert PDF Tables to XLSX",
     description:
-      "Convert PDF tables to Excel online with SwiftPDF. Extract readable table data from text-based PDFs and download an XLSX file for free.",
+      "Convert PDF tables to Excel online with SwiftPDF. Extract text-based PDF tables and use OCR Beta for scanned PDFs, then download an XLSX file.",
     type: "website",
   },
   "/compress-pdf": {

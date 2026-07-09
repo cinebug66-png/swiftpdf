@@ -75,10 +75,10 @@ export const compactToolSeoContent: Record<string, CompactToolSeoContent> = {
   "pdf-to-excel": {
     title: "Extract PDF tables into Excel",
     shortNote:
-      "PDF to Excel helps turn readable rows from text-based PDFs into an XLSX spreadsheet. It works best for digital PDFs with simple tables, invoices, reports, and bank-style rows. Scanned documents usually need OCR, so review the preview and the downloaded file before using the data.",
+      "PDF to Excel helps turn readable rows from text-based PDFs into an XLSX spreadsheet. It works best for digital PDFs with simple tables, invoices, reports, and bank-style rows. OCR Beta is available for scanned PDFs, and accuracy depends on scan quality, so review the preview and downloaded file before using the data.",
     steps: ["Upload your PDF", "Preview extracted rows", "Download Excel file"],
     faqs: [
-      { question: "Does PDF to Excel work with scanned PDFs?", answer: "Scanned PDFs need OCR, which is not supported in this MVP." },
+      { question: "Does PDF to Excel work with scanned PDFs?", answer: "Text-based PDFs work best. For scanned PDFs, OCR Beta can read clear page images in your browser." },
       { question: "Will tables be perfect?", answer: "Simple tables work best. Complex layouts should be reviewed after export." },
       { question: "What file do I get?", answer: "The tool creates an XLSX workbook." },
     ],

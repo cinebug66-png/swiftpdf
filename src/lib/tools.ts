@@ -151,7 +151,7 @@ export const tools: Tool[] = [
     name: "PDF to Excel",
     desc: "Extract tables to .xlsx",
     color: "from-emerald-500 to-cyan-500",
-    long: "Extract tables from PDF into Excel.",
+    long: "Extract text-based PDF tables into Excel, with OCR Beta for scanned PDFs.",
     cta: "Convert to Excel",
     accept: ".pdf,application/pdf",
     benefits: [
@@ -167,11 +167,15 @@ export const tools: Tool[] = [
         title: "Preview before export",
         desc: "Review extracted rows before creating the final workbook.",
       },
+      {
+        title: "OCR Beta for scans",
+        desc: "Use browser-side OCR for clear scanned PDFs when selectable text is not available.",
+      },
     ],
     faqs: [
       {
         q: "Does PDF to Excel support scanned PDFs?",
-        a: "This MVP works best with text-based PDFs. Scanned PDFs need OCR, which is not supported yet.",
+        a: "It works best with text-based PDFs. OCR Beta can process clear scanned PDFs in your browser.",
       },
       {
         q: "Will complex tables convert perfectly?",
@@ -179,7 +183,7 @@ export const tools: Tool[] = [
       },
       {
         q: "Is my PDF uploaded?",
-        a: "No. Text extraction and Excel generation run in your browser.",
+        a: "No. Text extraction, OCR Beta, and Excel generation run in your browser.",
       },
     ],
   },

@@ -7,6 +7,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 export type PdfExcelExportMode = "one_sheet" | "sheets_by_page";
 export type PdfExcelTableMode = "auto" | "manual" | "raw";
 export type PdfExcelConfidence = "high" | "medium" | "low";
+export type PdfExcelExtractionMode = "text" | "ocr_beta";
 
 export type PdfExcelOptions = {
   exportMode: PdfExcelExportMode;
@@ -40,6 +41,9 @@ export type PdfExcelExtraction = {
   hasAnyText: boolean;
   hasUsefulText: boolean;
   confidence: PdfExcelConfidence;
+  extractionMode?: PdfExcelExtractionMode;
+  ocrLanguage?: string;
+  pagesProcessedCount?: number;
 };
 
 export type PositionedText = {
@@ -74,6 +78,11 @@ type PdfPageProxy = {
   rotate?: number;
   getViewport: (options: { scale: number; rotation?: number }) => { width: number; height: number };
   getTextContent: () => Promise<{ items: unknown[] }>;
+  render?: (options: {
+    canvasContext: CanvasRenderingContext2D;
+    viewport: { width: number; height: number };
+    canvas?: HTMLCanvasElement;
+  }) => { promise: Promise<void> };
 };
 
 type PdfDocumentProxy = {
@@ -88,6 +97,21 @@ type PdfLoadingTask = {
 };
 
 const MIN_USEFUL_CHARACTERS = 20;
+export const OCR_DEFAULT_PAGE_LIMIT = 5;
+export const OCR_LANGUAGE = "eng";
+
+export type PdfExcelOcrProgress = {
+  phase: "loading" | "rendering" | "recognizing";
+  pageNumber: number;
+  totalPages: number;
+  progress: number;
+};
+
+export type PdfExcelOcrOptions = {
+  processAllPages: boolean;
+  signal?: AbortSignal;
+  onProgress?: (progress: PdfExcelOcrProgress) => void;
+};
 
 function isTextItem(item: unknown): item is TextItem {
   return Boolean(item && typeof item === "object" && "str" in item && "transform" in item);
@@ -339,6 +363,12 @@ function getConfidence(rows: string[][], columnCount: number): PdfExcelConfidenc
   return "low";
 }
 
+function getOcrConfidence(rows: string[][], confidence: number): PdfExcelConfidence {
+  if (rows.length >= 4 && confidence >= 70) return "medium";
+  if (rows.length >= 1 && confidence >= 35) return "medium";
+  return "low";
+}
+
 function confidenceScore(confidence: PdfExcelConfidence) {
   if (confidence === "high") return 3;
   if (confidence === "medium") return 2;
@@ -462,10 +492,233 @@ export async function extractPdfForExcel(file: File): Promise<PdfExcelExtraction
       hasAnyText,
       hasUsefulText: hasAnyText && totalCharacters >= MIN_USEFUL_CHARACTERS,
       confidence: combineConfidence(pages),
+      extractionMode: "text",
     };
   } catch {
     throw new Error("This PDF could not be read. It may be encrypted, password-protected, or corrupted.");
   } finally {
+    await loadingTask?.destroy().catch(() => undefined);
+    await pdfDocument?.destroy().catch(() => undefined);
+  }
+}
+
+function getOcrLines(pageData: {
+  text?: string;
+  blocks?: Array<{
+    paragraphs?: Array<{
+      lines?: Array<{
+        text?: string;
+        confidence?: number;
+        bbox?: { x0: number; x1: number };
+        words?: Array<{ text?: string; bbox?: { x0: number; x1: number } }>;
+      }>;
+    }>;
+  }> | null;
+}) {
+  const structuredLines =
+    pageData.blocks
+      ?.flatMap((block) => block.paragraphs ?? [])
+      .flatMap((paragraph) => paragraph.lines ?? [])
+      .filter((line) => normalizeText(line.text ?? "")) ?? [];
+
+  if (structuredLines.length > 0) return structuredLines;
+
+  return normalizeText(pageData.text ?? "")
+    .split(/\r?\n/u)
+    .map((line) => ({ text: line, words: [] }))
+    .filter((line) => normalizeText(line.text ?? ""));
+}
+
+function lineToOcrRow(line: {
+  text?: string;
+  bbox?: { x0: number; x1: number };
+  words?: Array<{ text?: string; bbox?: { x0: number; x1: number } }>;
+}) {
+  const words = (line.words ?? [])
+    .filter((word) => normalizeText(word.text ?? "") && word.bbox)
+    .sort((left, right) => (left.bbox?.x0 ?? 0) - (right.bbox?.x0 ?? 0));
+
+  if (words.length < 2) return [normalizeText(line.text ?? "")].filter(Boolean);
+
+  const gaps = words.slice(1).map((word, index) => (word.bbox?.x0 ?? 0) - (words[index].bbox?.x1 ?? 0));
+  const lineWidth = Math.max((line.bbox?.x1 ?? words[words.length - 1].bbox?.x1 ?? 0) - (line.bbox?.x0 ?? words[0].bbox?.x0 ?? 0), 1);
+  const gapThreshold = Math.max(median(gaps, 0) * 2.8, lineWidth * 0.08, 24);
+  const cells: string[] = [];
+  let current = normalizeText(words[0].text ?? "");
+
+  for (let index = 1; index < words.length; index += 1) {
+    const word = words[index];
+    if (gaps[index - 1] >= gapThreshold) {
+      if (current) cells.push(current);
+      current = normalizeText(word.text ?? "");
+    } else {
+      current = normalizeText(`${current} ${word.text ?? ""}`);
+    }
+  }
+
+  if (current) cells.push(current);
+  return cells.length > 0 ? cells : [normalizeText(line.text ?? "")].filter(Boolean);
+}
+
+function buildOcrPage(pageNumber: number, rows: string[][], width: number, height: number, confidence: number): ExtractedPdfPage {
+  return {
+    pageNumber,
+    width,
+    height,
+    rotation: 0,
+    rows,
+    rawRows: rows,
+    textRows: [],
+    columnStarts: [],
+    columnSeparators: [],
+    rowCount: rows.length,
+    columnCount: rows.reduce((max, row) => Math.max(max, row.length), 0),
+    confidence: getOcrConfidence(rows, confidence),
+  };
+}
+
+function assertOcrNotCancelled(signal?: AbortSignal) {
+  if (signal?.aborted) throw new Error("OCR cancelled.");
+}
+
+async function renderPageToCanvas(page: PdfPageProxy, rotation: number) {
+  if (typeof document === "undefined" || !page.render) {
+    throw new Error("PDF page rendering is not available in this browser.");
+  }
+
+  const baseViewport = page.getViewport({ scale: 1, rotation });
+  const scale = clamp(1600 / Math.max(baseViewport.width, baseViewport.height), 1.25, 2);
+  const viewport = page.getViewport({ scale, rotation });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  const canvasContext = canvas.getContext("2d", { alpha: false });
+  if (!canvasContext) throw new Error("OCR could not prepare this PDF page.");
+
+  await page.render({ canvasContext, viewport, canvas }).promise;
+  return { canvas, width: baseViewport.width, height: baseViewport.height };
+}
+
+export async function extractPdfWithOcrBeta(file: File, options: PdfExcelOcrOptions): Promise<PdfExcelExtraction> {
+  let loadingTask: PdfLoadingTask | null = null;
+  let pdfDocument: PdfDocumentProxy | null = null;
+  let worker: { recognize: (image: HTMLCanvasElement) => Promise<{ data: unknown }>; terminate: () => Promise<unknown> } | null =
+    null;
+  let cancelled = false;
+
+  const cancelWorker = () => {
+    cancelled = true;
+    void worker?.terminate().catch(() => undefined);
+  };
+
+  options.signal?.addEventListener("abort", cancelWorker, { once: true });
+
+  try {
+    assertOcrNotCancelled(options.signal);
+    options.onProgress?.({ phase: "loading", pageNumber: 0, totalPages: 0, progress: 0 });
+    const [{ createWorker }, data] = await Promise.all([
+      import("tesseract.js") as Promise<{
+        createWorker: (
+          language: string,
+          oem?: number,
+          options?: { logger?: (message: { status: string; progress: number }) => void },
+        ) => Promise<{ recognize: (image: HTMLCanvasElement) => Promise<{ data: unknown }>; terminate: () => Promise<unknown> }>;
+      }>,
+      file.arrayBuffer(),
+    ]);
+
+    assertOcrNotCancelled(options.signal);
+    loadingTask = pdfjsLib.getDocument({ data: data.slice(0) }) as unknown as PdfLoadingTask;
+    pdfDocument = await loadingTask.promise;
+    const pagesToProcess = options.processAllPages
+      ? pdfDocument.numPages
+      : Math.min(OCR_DEFAULT_PAGE_LIMIT, pdfDocument.numPages);
+    let currentPageNumber = 0;
+
+    worker = await createWorker(OCR_LANGUAGE, 1, {
+      logger: (message) => {
+        if (message.status !== "recognizing text" || currentPageNumber === 0) return;
+        const pageProgress = clamp(message.progress, 0, 1);
+        options.onProgress?.({
+          phase: "recognizing",
+          pageNumber: currentPageNumber,
+          totalPages: pagesToProcess,
+          progress: ((currentPageNumber - 1) + pageProgress) / Math.max(pagesToProcess, 1),
+        });
+      },
+    });
+
+    const pages: ExtractedPdfPage[] = [];
+    let totalRows = 0;
+    let totalCells = 0;
+    let totalCharacters = 0;
+
+    for (let pageNumber = 1; pageNumber <= pagesToProcess; pageNumber += 1) {
+      assertOcrNotCancelled(options.signal);
+      currentPageNumber = pageNumber;
+      options.onProgress?.({
+        phase: "rendering",
+        pageNumber,
+        totalPages: pagesToProcess,
+        progress: (pageNumber - 1) / Math.max(pagesToProcess, 1),
+      });
+
+      const page = await pdfDocument.getPage(pageNumber);
+      const rotation = Number(page.rotate ?? 0);
+      const renderedPage = await renderPageToCanvas(page, rotation);
+      assertOcrNotCancelled(options.signal);
+      const result = await worker.recognize(renderedPage.canvas);
+      const ocrData = result.data as {
+        text?: string;
+        confidence?: number;
+        blocks?: Array<{
+          paragraphs?: Array<{
+            lines?: Array<{
+              text?: string;
+              confidence?: number;
+              bbox?: { x0: number; x1: number };
+              words?: Array<{ text?: string; bbox?: { x0: number; x1: number } }>;
+            }>;
+          }>;
+        }> | null;
+      };
+      const rows = removeDuplicateBlankRows(getOcrLines(ocrData).map(lineToOcrRow).filter((row) => row.some(Boolean)));
+      const extractedPage = buildOcrPage(
+        pageNumber,
+        rows,
+        renderedPage.width,
+        renderedPage.height,
+        Number(ocrData.confidence ?? 0),
+      );
+
+      pages.push(extractedPage);
+      totalRows += rows.length;
+      totalCells += rows.reduce((sum, row) => sum + row.length, 0);
+      totalCharacters += rows.flat().join("").length;
+    }
+
+    const hasAnyText = totalCharacters > 0;
+
+    return {
+      pages,
+      totalRows,
+      totalCells,
+      totalCharacters,
+      totalTextItems: totalRows,
+      hasAnyText,
+      hasUsefulText: hasAnyText,
+      confidence: combineConfidence(pages),
+      extractionMode: "ocr_beta",
+      ocrLanguage: OCR_LANGUAGE,
+      pagesProcessedCount: pages.length,
+    };
+  } catch (error) {
+    if (cancelled || options.signal?.aborted) throw new Error("OCR cancelled.");
+    if (error instanceof Error && error.message === "OCR cancelled.") throw error;
+    throw new Error("OCR could not read text from this PDF. Try a clearer scan or use a text-based PDF.");
+  } finally {
+    options.signal?.removeEventListener("abort", cancelWorker);
+    await worker?.terminate().catch(() => undefined);
     await loadingTask?.destroy().catch(() => undefined);
     await pdfDocument?.destroy().catch(() => undefined);
   }

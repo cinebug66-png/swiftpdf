@@ -24,16 +24,21 @@ import {
   createExcelBytes,
   createExcelDownloadUrl,
   extractPdfForExcel,
+  extractPdfWithOcrBeta,
   getRowsForPage,
+  OCR_DEFAULT_PAGE_LIMIT,
+  OCR_LANGUAGE,
   revokeObjectUrl,
   type ExtractedPdfPage,
   type PdfExcelExportMode,
   type PdfExcelExtraction,
+  type PdfExcelOcrProgress,
   type PdfExcelTableMode,
 } from "@/lib/pdf-to-excel";
 import { cn } from "@/lib/utils";
 
 type ToolStatus = "idle" | "analyzing" | "ready" | "processing" | "done" | "error";
+type OcrStatus = "idle" | "loading" | "processing" | "done" | "error" | "cancelled";
 
 const toolInfo = {
   tool_name: "PDF to Excel",
@@ -42,8 +47,8 @@ const toolInfo = {
   output_type: "xlsx",
 };
 
-const scannedMessage =
-  "This PDF looks scanned or image-based. PDF to Excel currently works best with text-based PDFs. OCR support will be added later.";
+const scannedMessage = "This looks like a scanned PDF. Normal text extraction found little or no selectable text.";
+const ocrReadFailure = "OCR could not read text from this PDF. Try a clearer scan or use a text-based PDF.";
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -107,11 +112,17 @@ function getColumnCount(rows: Array<{ row: string[] }>, fallback: number) {
 
 export function PdfToExcelTool() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const ocrAbortRef = useRef<AbortController | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [status, setStatus] = useState<ToolStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [extraction, setExtraction] = useState<PdfExcelExtraction | null>(null);
+  const [ocrExtraction, setOcrExtraction] = useState<PdfExcelExtraction | null>(null);
+  const [ocrStatus, setOcrStatus] = useState<OcrStatus>("idle");
+  const [ocrError, setOcrError] = useState<string | null>(null);
+  const [ocrProgress, setOcrProgress] = useState<PdfExcelOcrProgress | null>(null);
+  const [processAllOcrPages, setProcessAllOcrPages] = useState(false);
   const [exportMode, setExportMode] = useState<PdfExcelExportMode>("one_sheet");
   const [tableMode, setTableMode] = useState<PdfExcelTableMode>("auto");
   const [includePageLabels, setIncludePageLabels] = useState(true);
@@ -129,22 +140,33 @@ export function PdfToExcelTool() {
   }, []);
 
   useEffect(() => {
-    return () => revokeObjectUrl(downloadUrl);
+    return () => {
+      ocrAbortRef.current?.abort();
+      revokeObjectUrl(downloadUrl);
+    };
   }, [downloadUrl]);
 
   const fileSize = useMemo(() => (file ? formatFileSize(file.size) : null), [file]);
-  const previewPage = useMemo(() => getFirstPreviewPage(extraction), [extraction]);
+  const activeExtraction = ocrExtraction ?? extraction;
+  const isOcrMode = activeExtraction?.extractionMode === "ocr_beta";
+  const activeTableMode: PdfExcelTableMode = isOcrMode ? "raw" : tableMode;
+  const previewPage = useMemo(() => getFirstPreviewPage(activeExtraction), [activeExtraction]);
   const previewRows = useMemo(
-    () => getPreviewRows(extraction, tableMode, manualSeparators, previewPage?.width),
-    [extraction, manualSeparators, previewPage?.width, tableMode],
+    () => getPreviewRows(activeExtraction, activeTableMode, manualSeparators, previewPage?.width),
+    [activeExtraction, activeTableMode, manualSeparators, previewPage?.width],
   );
   const activeStats = useMemo(
-    () => getActiveTableStats(extraction, tableMode, manualSeparators, previewPage?.width),
-    [extraction, manualSeparators, previewPage?.width, tableMode],
+    () => getActiveTableStats(activeExtraction, activeTableMode, manualSeparators, previewPage?.width),
+    [activeExtraction, activeTableMode, manualSeparators, previewPage?.width],
   );
   const detectedColumnCount = getColumnCount(previewRows, activeStats.columnCount || previewPage?.columnCount || 0);
   const canTryAnyway = Boolean(extraction?.hasAnyText && !extraction.hasUsefulText);
-  const canExport = Boolean(extraction?.hasUsefulText || (extraction?.hasAnyText && allowLowTextExport));
+  const isScannedLike = Boolean(extraction && !extraction.hasUsefulText);
+  const totalOcrPages = extraction?.pages.length ?? 0;
+  const plannedOcrPages = processAllOcrPages ? totalOcrPages : Math.min(OCR_DEFAULT_PAGE_LIMIT, totalOcrPages);
+  const canExport = Boolean(
+    ocrExtraction?.hasUsefulText || extraction?.hasUsefulText || (extraction?.hasAnyText && allowLowTextExport),
+  );
   const hasManyRows = activeStats.rowCount > previewRows.length;
 
   const trackConversionEvent = (
@@ -153,9 +175,20 @@ export function PdfToExcelTool() {
   ) => {
     trackEvent(eventName, {
       ...toolInfo,
-      extraction_confidence: extraction?.confidence ?? "low",
+      extraction_confidence: activeExtraction?.confidence ?? "low",
       export_mode: exportMode,
-      table_mode: tableMode,
+      table_mode: activeTableMode,
+      extraction_mode: isOcrMode ? "ocr_beta" : "text",
+      ...extra,
+    });
+  };
+
+  const trackOcrEvent = (eventName: string, extra: Record<string, string | number | boolean> = {}) => {
+    trackEvent(eventName, {
+      ...toolInfo,
+      extraction_mode: "ocr_beta",
+      pages_processed_count: ocrExtraction?.pagesProcessedCount ?? plannedOcrPages,
+      ocr_language: OCR_LANGUAGE,
       ...extra,
     });
   };
@@ -165,6 +198,16 @@ export function PdfToExcelTool() {
     setDownloadUrl(null);
     setStatus((current) => (current === "done" ? "ready" : current));
     setError(null);
+  };
+
+  const resetOcr = () => {
+    ocrAbortRef.current?.abort();
+    ocrAbortRef.current = null;
+    setOcrExtraction(null);
+    setOcrStatus("idle");
+    setOcrError(null);
+    setOcrProgress(null);
+    setProcessAllOcrPages(false);
   };
 
   const resetManualSeparators = (nextExtraction = extraction) => {
@@ -177,6 +220,7 @@ export function PdfToExcelTool() {
     setDownloadUrl(null);
     setFile(null);
     setExtraction(null);
+    resetOcr();
     setError(null);
     setManualSeparators([]);
     setAllowLowTextExport(false);
@@ -189,6 +233,7 @@ export function PdfToExcelTool() {
     setDownloadUrl(null);
     setFile(nextFile);
     setExtraction(null);
+    resetOcr();
     setError(null);
     setManualSeparators([]);
     setAllowLowTextExport(false);
@@ -252,13 +297,83 @@ export function PdfToExcelTool() {
     setManualSeparators((separators) => separators.filter((_, separatorIndex) => separatorIndex !== index));
   };
 
+  const startOcr = async () => {
+    if (!file || !extraction) return;
+
+    ocrAbortRef.current?.abort();
+    const controller = new AbortController();
+    ocrAbortRef.current = controller;
+    revokeObjectUrl(downloadUrl);
+    setDownloadUrl(null);
+    setOcrExtraction(null);
+    setOcrError(null);
+    setOcrProgress({
+      phase: "loading",
+      pageNumber: 0,
+      totalPages: plannedOcrPages,
+      progress: 0,
+    });
+    setOcrStatus("loading");
+
+    try {
+      trackOcrEvent("ocr_beta_started", {
+        pages_processed_count: plannedOcrPages,
+      });
+      const result = await extractPdfWithOcrBeta(file, {
+        processAllPages: processAllOcrPages,
+        signal: controller.signal,
+        onProgress: (progress) => {
+          setOcrProgress(progress);
+          setOcrStatus(progress.phase === "loading" ? "loading" : "processing");
+        },
+      });
+
+      if (!result.hasUsefulText) {
+        setOcrStatus("error");
+        setOcrError(ocrReadFailure);
+        trackOcrEvent("ocr_beta_error", {
+          pages_processed_count: result.pagesProcessedCount ?? plannedOcrPages,
+        });
+        return;
+      }
+
+      setOcrExtraction(result);
+      setOcrStatus("done");
+      setOcrProgress({
+        phase: "recognizing",
+        pageNumber: result.pagesProcessedCount ?? plannedOcrPages,
+        totalPages: result.pagesProcessedCount ?? plannedOcrPages,
+        progress: 1,
+      });
+      setError(null);
+      trackEvent("conversion_success", {
+        ...toolInfo,
+        extraction_mode: "ocr_beta",
+        pages_processed_count: result.pagesProcessedCount ?? plannedOcrPages,
+        ocr_language: OCR_LANGUAGE,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : ocrReadFailure;
+      const cancelled = message.toLowerCase().includes("cancelled");
+      setOcrStatus(cancelled ? "cancelled" : "error");
+      setOcrError(cancelled ? "OCR cancelled." : message);
+      trackOcrEvent(cancelled ? "ocr_beta_cancelled" : "ocr_beta_error");
+    } finally {
+      ocrAbortRef.current = null;
+    }
+  };
+
+  const cancelOcr = () => {
+    ocrAbortRef.current?.abort();
+  };
+
   const convert = async () => {
     if (!file) {
       inputRef.current?.click();
       return;
     }
 
-    if (!extraction) {
+    if (!activeExtraction) {
       setStatus("error");
       setError("Upload a PDF and wait for extraction before converting.");
       return;
@@ -278,9 +393,9 @@ export function PdfToExcelTool() {
       trackConversionEvent("conversion_started");
       setStatus("processing");
       setError(null);
-      const bytes = createExcelBytes(extraction, {
+      const bytes = createExcelBytes(activeExtraction, {
         exportMode,
-        tableMode,
+        tableMode: activeTableMode,
         includePageLabels,
         manualSeparators,
         manualSeparatorPageWidth: previewPage?.width,
@@ -334,8 +449,8 @@ export function PdfToExcelTool() {
         <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Works best with text-based PDFs. Scanned documents may need OCR.
+          <p className="mt-1 text-sm text-muted-foreground">
+          Works best with text-based PDFs. OCR Beta is available for scanned PDFs.
         </p>
       </label>
 
@@ -378,7 +493,7 @@ export function PdfToExcelTool() {
         </div>
       )}
 
-      {extraction && (
+      {activeExtraction && (
         <div className="mt-6 grid max-w-full gap-5 overflow-hidden lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
           <section className="min-w-0 max-w-full overflow-hidden rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -393,7 +508,7 @@ export function PdfToExcelTool() {
               </div>
               <div className="flex flex-wrap gap-2 text-xs font-medium">
                 <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
-                  {extraction.pages.length} pages
+                  {activeExtraction.pages.length} pages
                 </span>
                 <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
                   {activeStats.rowCount} rows
@@ -404,21 +519,56 @@ export function PdfToExcelTool() {
                 <span
                   className={cn(
                     "rounded-full border px-3 py-1.5 shadow-soft",
-                    extraction.confidence === "high"
+                    activeExtraction.confidence === "high"
                       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                      : extraction.confidence === "medium"
+                      : activeExtraction.confidence === "medium"
                         ? "border-amber-300 bg-amber-50 text-amber-800"
                         : "border-slate-300 bg-slate-50 text-slate-700",
                   )}
                 >
-                  {confidenceLabel(extraction.confidence)} confidence
+                  {confidenceLabel(activeExtraction.confidence)} confidence
                 </span>
               </div>
             </div>
 
-            {error && !extraction.hasUsefulText && (
-              <div className="mb-4 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-900">
-                <p>{error}</p>
+            {isScannedLike && !ocrExtraction && (
+              <div className="mb-4 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-950">
+                <div className="text-base font-semibold">Scanned PDF detected</div>
+                <p className="mt-1">{scannedMessage}</p>
+                <p className="mt-2">
+                  This PDF may be image-based. Use OCR Beta to read text from scanned pages and export it to Excel.
+                </p>
+                <p className="mt-2 text-xs text-amber-900">
+                  OCR can take longer on phones and large scanned PDFs.
+                </p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="inline-flex items-center gap-2 text-xs font-medium">
+                    <input
+                      type="checkbox"
+                      checked={processAllOcrPages}
+                      onChange={(event) => setProcessAllOcrPages(event.target.checked)}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    Process all pages
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void startOcr()}
+                    disabled={ocrStatus === "loading" || ocrStatus === "processing"}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {ocrStatus === "loading" || ocrStatus === "processing" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> OCR running
+                      </>
+                    ) : (
+                      "Try OCR Beta"
+                    )}
+                  </button>
+                </div>
+                <p className="mt-3 text-xs text-amber-900">
+                  OCR accuracy depends on scan quality. Please review the preview before using the Excel file.
+                </p>
                 {canTryAnyway && (
                   <button
                     type="button"
@@ -434,6 +584,57 @@ export function PdfToExcelTool() {
               </div>
             )}
 
+            {(ocrStatus === "loading" || ocrStatus === "processing" || ocrStatus === "done" || ocrError) && (
+              <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">OCR Beta</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {ocrProgress?.pageNumber
+                        ? `Reading page ${ocrProgress.pageNumber} of ${ocrProgress.totalPages}`
+                        : "Preparing OCR"}
+                    </div>
+                  </div>
+                  {(ocrStatus === "loading" || ocrStatus === "processing") && (
+                    <button
+                      type="button"
+                      onClick={cancelOcr}
+                      className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-destructive/50 hover:text-destructive"
+                    >
+                      Cancel OCR
+                    </button>
+                  )}
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-gradient-primary transition-[width] duration-200"
+                    style={{ width: `${Math.round((ocrProgress?.progress ?? 0) * 100)}%` }}
+                  />
+                </div>
+                {ocrError && <p className="mt-3 text-sm text-destructive">{ocrError}</p>}
+                {ocrExtraction && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground">OCR pages processed</div>
+                      <div className="font-semibold">{ocrExtraction.pagesProcessedCount}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Rows found</div>
+                      <div className="font-semibold">{ocrExtraction.totalRows}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Mode</div>
+                      <div className="font-semibold">OCR Beta</div>
+                    </div>
+                  </div>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">
+                  OCR Beta works best with clear scanned documents.
+                </p>
+              </div>
+            )}
+
+            {!isOcrMode && (
             <div className="mb-4 flex flex-wrap gap-2">
               {[
                 { value: "auto", label: "Auto detect columns" },
@@ -458,8 +659,9 @@ export function PdfToExcelTool() {
                 </button>
               ))}
             </div>
+            )}
 
-            {tableMode === "manual" && previewPage && (
+            {!isOcrMode && tableMode === "manual" && previewPage && (
               <div className="mb-4 rounded-2xl border border-border bg-card p-4">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm font-semibold">
@@ -647,24 +849,63 @@ export function PdfToExcelTool() {
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Text items</div>
-                <div className="font-semibold">{extraction.totalTextItems}</div>
+                <div className="font-semibold">{activeExtraction.totalTextItems}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Mode</div>
-                <div className="font-semibold capitalize">{tableMode}</div>
+                <div className="font-semibold">{isOcrMode ? "OCR Beta" : activeTableMode}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Confidence</div>
-                <div className="font-semibold">{confidenceLabel(extraction.confidence)}</div>
+                <div className="font-semibold">{confidenceLabel(activeExtraction.confidence)}</div>
               </div>
             </div>
+
+            {!isScannedLike && !ocrExtraction && (
+              <div className="mt-4 rounded-2xl border border-border bg-card/60 p-3 text-sm">
+                <div className="font-semibold">Advanced</div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  OCR Beta is available for scanned PDFs. OCR accuracy depends on scan quality.
+                </p>
+                <label className="mt-3 inline-flex items-center gap-2 text-xs font-medium">
+                  <input
+                    type="checkbox"
+                    checked={processAllOcrPages}
+                    onChange={(event) => setProcessAllOcrPages(event.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  Process all pages
+                </label>
+                <Button
+                  variant="glass"
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => void startOcr()}
+                  disabled={ocrStatus === "loading" || ocrStatus === "processing"}
+                >
+                  {ocrStatus === "loading" || ocrStatus === "processing" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> OCR running
+                    </>
+                  ) : (
+                    "Try OCR Beta"
+                  )}
+                </Button>
+              </div>
+            )}
 
             <div className="mt-5 grid gap-2">
               <Button
                 variant="hero"
                 size="lg"
                 onClick={() => void convert()}
-                disabled={status === "processing" || status === "analyzing" || !canExport}
+                disabled={
+                  status === "processing" ||
+                  status === "analyzing" ||
+                  ocrStatus === "loading" ||
+                  ocrStatus === "processing" ||
+                  !canExport
+                }
               >
                 {status === "processing" ? (
                   <>
@@ -672,7 +913,7 @@ export function PdfToExcelTool() {
                   </>
                 ) : (
                   <>
-                    Export to Excel <ArrowRight className="h-4 w-4" />
+                    {isOcrMode ? "Download Excel" : "Export to Excel"} <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -680,8 +921,8 @@ export function PdfToExcelTool() {
                 <Button variant="glass" size="lg" asChild>
                   <a
                     href={downloadUrl}
-                    download="converted-excel.xlsx"
-                    title="converted-excel.xlsx"
+                    download={isOcrMode ? "swiftpdf-ocr-excel.xlsx" : "converted-excel.xlsx"}
+                    title={isOcrMode ? "swiftpdf-ocr-excel.xlsx" : "converted-excel.xlsx"}
                     onClick={() => trackConversionEvent("download_click")}
                   >
                     <Download className="h-4 w-4" /> Download Excel

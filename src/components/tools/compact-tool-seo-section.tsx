@@ -115,7 +115,30 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
           <h3 className="mt-2 text-2xl font-semibold tracking-tight">
             Continue with another PDF tool
           </h3>
-          <div className="related-tools-grid mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="related-tools-mobile mt-5 md:hidden">
+            {relatedTools.slice(0, 3).map((related) => (
+              <Link
+                key={related.slug}
+                to={getToolPath(related.slug)}
+                className="related-tools-mobile-row"
+              >
+                <span className="related-tools-mobile-icon">
+                  <related.icon className="h-5 w-5" />
+                </span>
+                <span className="related-tools-mobile-copy">
+                  <span className="related-tools-mobile-title">
+                    {related.name}
+                  </span>
+                  <span className="related-tools-mobile-description">
+                    {related.desc}
+                  </span>
+                </span>
+                <ArrowRight className="related-tools-mobile-arrow h-4 w-4" />
+              </Link>
+            ))}
+          </div>
+
+          <div className="related-tools-desktop mt-5 hidden gap-4 md:grid md:grid-cols-3">
             {relatedTools.slice(0, 3).map((related) => (
               <Link
                 key={related.slug}

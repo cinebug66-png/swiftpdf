@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowRight,
   CheckCircle2,
   Download,
   FileSpreadsheet,
@@ -57,9 +56,9 @@ function formatFileSize(bytes: number) {
 }
 
 function confidenceLabel(confidence: PdfExcelExtraction["confidence"]) {
-  if (confidence === "high") return "High";
+  if (confidence === "high") return "Good";
   if (confidence === "medium") return "Medium";
-  return "Low";
+  return "Basic";
 }
 
 function getPreviewRows(
@@ -110,6 +109,10 @@ function getColumnCount(rows: Array<{ row: string[] }>, fallback: number) {
   return Math.max(fallback, rows.reduce((max, item) => Math.max(max, item.row.length), 0));
 }
 
+function getExcelFileName(isOcrMode: boolean) {
+  return isOcrMode ? "swiftpdf-ocr-excel.xlsx" : "converted-excel.xlsx";
+}
+
 export function PdfToExcelTool() {
   const inputRef = useRef<HTMLInputElement>(null);
   const ocrAbortRef = useRef<AbortController | null>(null);
@@ -129,6 +132,8 @@ export function PdfToExcelTool() {
   const [manualSeparators, setManualSeparators] = useState<number[]>([]);
   const [allowLowTextExport, setAllowLowTextExport] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [manualColumnsOpen, setManualColumnsOpen] = useState(false);
 
   useEffect(() => {
     const pending = consumePendingFiles(".pdf,application/pdf", false);
@@ -167,8 +172,6 @@ export function PdfToExcelTool() {
   const canExport = Boolean(
     ocrExtraction?.hasUsefulText || extraction?.hasUsefulText || (extraction?.hasAnyText && allowLowTextExport),
   );
-  const hasManyRows = activeStats.rowCount > previewRows.length;
-
   const trackConversionEvent = (
     eventName: string,
     extra: Record<string, string | number | boolean> = {},
@@ -225,6 +228,10 @@ export function PdfToExcelTool() {
     setManualSeparators([]);
     setAllowLowTextExport(false);
     setTableMode("auto");
+    setExportMode("one_sheet");
+    setIncludePageLabels(true);
+    setAdvancedOpen(false);
+    setManualColumnsOpen(false);
     setStatus("idle");
   };
 
@@ -238,6 +245,10 @@ export function PdfToExcelTool() {
     setManualSeparators([]);
     setAllowLowTextExport(false);
     setTableMode("auto");
+    setExportMode("one_sheet");
+    setIncludePageLabels(true);
+    setAdvancedOpen(false);
+    setManualColumnsOpen(false);
 
     if (!nextFile) {
       setStatus("idle");
@@ -367,7 +378,7 @@ export function PdfToExcelTool() {
     ocrAbortRef.current?.abort();
   };
 
-  const convert = async () => {
+  const convert = async (autoDownload = false) => {
     if (!file) {
       inputRef.current?.click();
       return;
@@ -406,6 +417,16 @@ export function PdfToExcelTool() {
       setDownloadUrl(nextDownloadUrl);
       setStatus("done");
       trackConversionEvent("conversion_success");
+
+      if (autoDownload) {
+        const link = document.createElement("a");
+        link.href = nextDownloadUrl;
+        link.download = getExcelFileName(isOcrMode);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        trackConversionEvent("download_click");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Excel generation failed. Please try again.";
       setStatus("error");
@@ -450,7 +471,7 @@ export function PdfToExcelTool() {
           {file ? file.name : "Drop your PDF here or click to browse"}
         </p>
           <p className="mt-1 text-sm text-muted-foreground">
-          Works best with text-based PDFs. OCR Beta is available for scanned PDFs.
+          Upload your PDF, review the Excel preview, then download your file.
         </p>
       </label>
 
@@ -494,40 +515,22 @@ export function PdfToExcelTool() {
       )}
 
       {activeExtraction && (
-        <div className="mt-6 grid max-w-full gap-5 overflow-hidden lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
-          <section className="min-w-0 max-w-full overflow-hidden rounded-3xl glass p-4 shadow-card sm:p-5">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 text-base font-semibold">
-                  <Table2 className="h-4 w-4 text-primary" />
-                  Table preview
+        <div className="mt-6 grid max-w-full gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
+          <section className="min-w-0 max-w-full rounded-3xl glass p-4 shadow-card sm:p-5">
+            <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-base font-semibold">Excel preview ready</div>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    SwiftPDF detected rows and columns automatically. Review the preview, then download your Excel file.
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    PDF table extraction may not be perfect. Review the preview before using the Excel file.
+                  </p>
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Review the preview before downloading. PDF table extraction may need small adjustments.
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs font-medium">
-                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
-                  {activeExtraction.pages.length} pages
-                </span>
-                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
-                  {activeStats.rowCount} rows
-                </span>
-                <span className="rounded-full border border-border bg-card/80 px-3 py-1.5 shadow-soft">
-                  {detectedColumnCount} columns
-                </span>
-                <span
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 shadow-soft",
-                    activeExtraction.confidence === "high"
-                      ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                      : activeExtraction.confidence === "medium"
-                        ? "border-amber-300 bg-amber-50 text-amber-800"
-                        : "border-slate-300 bg-slate-50 text-slate-700",
-                  )}
-                >
-                  {confidenceLabel(activeExtraction.confidence)} confidence
-                </span>
               </div>
             </div>
 
@@ -536,10 +539,7 @@ export function PdfToExcelTool() {
                 <div className="text-base font-semibold">Scanned PDF detected</div>
                 <p className="mt-1">{scannedMessage}</p>
                 <p className="mt-2">
-                  This PDF may be image-based. Use OCR Beta to read text from scanned pages and export it to Excel.
-                </p>
-                <p className="mt-2 text-xs text-amber-900">
-                  OCR can take longer on phones and large scanned PDFs.
+                  OCR Beta can try to read scanned pages. It may take longer, especially on phones.
                 </p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <label className="inline-flex items-center gap-2 text-xs font-medium">
@@ -613,138 +613,31 @@ export function PdfToExcelTool() {
                 </div>
                 {ocrError && <p className="mt-3 text-sm text-destructive">{ocrError}</p>}
                 {ocrExtraction && (
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-                    <div>
-                      <div className="text-xs text-muted-foreground">OCR pages processed</div>
-                      <div className="font-semibold">{ocrExtraction.pagesProcessedCount}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Rows found</div>
-                      <div className="font-semibold">{ocrExtraction.totalRows}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Mode</div>
-                      <div className="font-semibold">OCR Beta</div>
-                    </div>
-                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    OCR processed {ocrExtraction.pagesProcessedCount} pages. Review the preview before downloading.
+                  </p>
                 )}
-                <p className="mt-3 text-xs text-muted-foreground">
-                  OCR Beta works best with clear scanned documents.
-                </p>
               </div>
             )}
 
-            {!isOcrMode && (
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[
-                { value: "auto", label: "Auto detect columns" },
-                { value: "manual", label: "Use manual columns" },
-                { value: "raw", label: "Raw text rows" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    resetResult();
-                    setTableMode(option.value as PdfExcelTableMode);
-                  }}
-                  className={cn(
-                    "rounded-xl border px-3 py-2 text-sm font-medium transition-[background-color,border-color,color] duration-200",
-                    tableMode === option.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {option.label}
-                </button>
+                { label: "Pages scanned", value: activeExtraction.pages.length },
+                { label: "Rows found", value: activeStats.rowCount },
+                { label: "Columns detected", value: detectedColumnCount },
+                { label: "Detection quality", value: confidenceLabel(activeExtraction.confidence) },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border bg-background p-3">
+                  <div className="text-xs text-muted-foreground">{item.label}</div>
+                  <div className="mt-1 text-base font-semibold">{item.value}</div>
+                </div>
               ))}
             </div>
-            )}
 
-            {!isOcrMode && tableMode === "manual" && previewPage && (
-              <div className="mb-4 rounded-2xl border border-border bg-card p-4">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold">
-                    <SlidersHorizontal className="h-4 w-4 text-primary" />
-                    Adjust columns
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetResult();
-                        setManualSeparators(previewPage.columnSeparators);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" /> Auto detect
-                    </button>
-                    <button
-                      type="button"
-                      onClick={addSeparator}
-                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add separator
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetResult();
-                        resetManualSeparators();
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" /> Reset columns
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {manualSeparators.length > 0 ? (
-                    manualSeparators.map((separator, index) => (
-                      <div
-                        key={`${index}-${separator}`}
-                        className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_5rem_3rem] sm:items-center"
-                      >
-                        <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                          <GripVertical className="h-3.5 w-3.5" />
-                          Separator {index + 1}
-                        </label>
-                        <input
-                          type="range"
-                          min={8}
-                          max={Math.max(24, Math.round(previewPage.width - 8))}
-                          value={separator}
-                          onChange={(event) => setSeparator(index, Number(event.target.value))}
-                          className="w-full accent-primary"
-                        />
-                        <input
-                          type="number"
-                          min={8}
-                          max={Math.max(24, Math.round(previewPage.width - 8))}
-                          value={Math.round(separator)}
-                          onChange={(event) => setSeparator(index, Number(event.target.value))}
-                          className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm"
-                          aria-label={`Separator ${index + 1} position`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeSeparator(index)}
-                          className="inline-flex h-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-destructive/50 hover:text-destructive"
-                          aria-label={`Remove separator ${index + 1}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No separators yet. Add a column separator to split rows manually.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+            <div className="mb-3 flex items-center gap-2 text-base font-semibold">
+              <Table2 className="h-4 w-4 text-primary" />
+              Preview table
+            </div>
 
             {previewRows.length > 0 ? (
               <div className="max-h-[28rem] max-w-full overflow-auto rounded-2xl border border-border bg-background shadow-soft">
@@ -774,162 +667,299 @@ export function PdfToExcelTool() {
               </div>
             )}
 
-            {hasManyRows && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Previewing the first 20 rows. The export includes all detected rows.
-              </p>
-            )}
+            <p className="mt-3 text-xs text-muted-foreground">
+              Preview shows the first rows. The Excel file includes all detected rows.
+            </p>
           </section>
 
           <aside className="min-w-0 rounded-3xl glass p-4 shadow-card sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <div className="text-base font-semibold">Excel options</div>
-                <div className="mt-1 text-xs text-muted-foreground">Export mode and page labeling.</div>
+                <div className="text-base font-semibold">Excel output</div>
+                <div className="mt-1 text-xs text-muted-foreground">Auto Best Output is selected.</div>
               </div>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
                 <FileSpreadsheet className="h-4 w-4" />
               </span>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Export mode
-                </div>
-                <div className="grid gap-2">
-                  {[
-                    { value: "one_sheet", label: "One sheet" },
-                    { value: "sheets_by_page", label: "Separate sheet per page" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        resetResult();
-                        setExportMode(option.value as PdfExcelExportMode);
-                      }}
-                      disabled={status === "processing"}
-                      className={cn(
-                        "rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
-                        exportMode === option.value
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card/70 text-foreground hover:border-primary/60",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
+            <div className="grid gap-2 rounded-2xl bg-card/60 p-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Format</span>
+                <span className="font-semibold">XLSX</span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  resetResult();
-                  setIncludePageLabels((value) => !value);
-                }}
-                disabled={status === "processing"}
-                className={cn(
-                  "flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
-                  includePageLabels
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border bg-card/70 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span>Include page labels</span>
-                <span>{includePageLabels ? "On" : "Off"}</span>
-              </button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-card/60 p-3 text-sm">
-              <div>
-                <div className="text-xs text-muted-foreground">Cells</div>
-                <div className="font-semibold">{activeStats.cellCount}</div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Layout</span>
+                <span className="font-semibold">{exportMode === "one_sheet" ? "One sheet" : "Separate sheets"}</span>
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Text items</div>
-                <div className="font-semibold">{activeExtraction.totalTextItems}</div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Detection</span>
+                <span className="font-semibold">{confidenceLabel(activeExtraction.confidence)}</span>
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Mode</div>
-                <div className="font-semibold">{isOcrMode ? "OCR Beta" : activeTableMode}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Confidence</div>
-                <div className="font-semibold">{confidenceLabel(activeExtraction.confidence)}</div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">OCR</span>
+                <span className="font-semibold">{isOcrMode ? "On" : "Off"}</span>
               </div>
             </div>
-
-            {!isScannedLike && !ocrExtraction && (
-              <div className="mt-4 rounded-2xl border border-border bg-card/60 p-3 text-sm">
-                <div className="font-semibold">Advanced</div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  OCR Beta is available for scanned PDFs. OCR accuracy depends on scan quality.
-                </p>
-                <label className="mt-3 inline-flex items-center gap-2 text-xs font-medium">
-                  <input
-                    type="checkbox"
-                    checked={processAllOcrPages}
-                    onChange={(event) => setProcessAllOcrPages(event.target.checked)}
-                    className="h-4 w-4 accent-primary"
-                  />
-                  Process all pages
-                </label>
-                <Button
-                  variant="glass"
-                  size="sm"
-                  className="mt-3 w-full"
-                  onClick={() => void startOcr()}
-                  disabled={ocrStatus === "loading" || ocrStatus === "processing"}
-                >
-                  {ocrStatus === "loading" || ocrStatus === "processing" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> OCR running
-                    </>
-                  ) : (
-                    "Try OCR Beta"
-                  )}
-                </Button>
-              </div>
-            )}
 
             <div className="mt-5 grid gap-2">
-              <Button
-                variant="hero"
-                size="lg"
-                onClick={() => void convert()}
-                disabled={
-                  status === "processing" ||
-                  status === "analyzing" ||
-                  ocrStatus === "loading" ||
-                  ocrStatus === "processing" ||
-                  !canExport
-                }
-              >
-                {status === "processing" ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Creating Excel
-                  </>
-                ) : (
-                  <>
-                    {isOcrMode ? "Download Excel" : "Export to Excel"} <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-              {downloadUrl && (
-                <Button variant="glass" size="lg" asChild>
+              {downloadUrl ? (
+                <Button variant="hero" size="lg" asChild>
                   <a
                     href={downloadUrl}
-                    download={isOcrMode ? "swiftpdf-ocr-excel.xlsx" : "converted-excel.xlsx"}
-                    title={isOcrMode ? "swiftpdf-ocr-excel.xlsx" : "converted-excel.xlsx"}
+                    download={getExcelFileName(isOcrMode)}
+                    title={getExcelFileName(isOcrMode)}
                     onClick={() => trackConversionEvent("download_click")}
                   >
                     <Download className="h-4 w-4" /> Download Excel
                   </a>
                 </Button>
+              ) : (
+                <Button
+                  variant="hero"
+                  size="lg"
+                  onClick={() => void convert(true)}
+                  disabled={
+                    status === "processing" ||
+                    status === "analyzing" ||
+                    ocrStatus === "loading" ||
+                    ocrStatus === "processing" ||
+                    !canExport
+                  }
+                >
+                  {status === "processing" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Creating Excel
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" /> Download Excel
+                    </>
+                  )}
+                </Button>
               )}
+
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen((value) => !value)}
+                className="justify-self-center text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Advanced settings
+              </button>
             </div>
+
+            {advancedOpen && (
+              <div className="mt-4 rounded-2xl border border-border bg-card/70 p-4 text-sm">
+                <div className="font-semibold">Advanced settings</div>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Only use this if the preview does not look right.
+                </p>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Export layout
+                    </div>
+                    <div className="grid gap-2">
+                      {[
+                        { value: "one_sheet", label: "One sheet" },
+                        { value: "sheets_by_page", label: "Separate sheets per page" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            resetResult();
+                            setExportMode(option.value as PdfExcelExportMode);
+                          }}
+                          disabled={status === "processing"}
+                          className={cn(
+                            "rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                            exportMode === option.value
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background text-foreground hover:border-primary/60",
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetResult();
+                      setIncludePageLabels((value) => !value);
+                    }}
+                    disabled={status === "processing"}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                      includePageLabels
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-background text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <span>Include page labels</span>
+                    <span>{includePageLabels ? "On" : "Off"}</span>
+                  </button>
+
+                  {!isOcrMode && (
+                    <div>
+                      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Extraction fallback
+                      </div>
+                      <div className="grid gap-2">
+                        {[
+                          { value: "auto", label: "Smart table" },
+                          { value: "raw", label: "Plain text fallback" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              resetResult();
+                              setManualColumnsOpen(false);
+                              setTableMode(option.value as PdfExcelTableMode);
+                            }}
+                            className={cn(
+                              "rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-[background-color,border-color,color] duration-200",
+                              tableMode === option.value && !manualColumnsOpen
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background text-foreground hover:border-primary/60",
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!isOcrMode && previewPage && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetResult();
+                          setManualColumnsOpen((value) => {
+                            const next = !value;
+                            setTableMode(next ? "manual" : "auto");
+                            return next;
+                          });
+                        }}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-semibold hover:border-primary/60"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        Adjust columns manually
+                      </button>
+
+                      {manualColumnsOpen && tableMode === "manual" && (
+                        <div className="mt-3 rounded-2xl border border-border bg-background p-3">
+                          <div className="mb-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={addSeparator}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Add separator
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                resetResult();
+                                setManualSeparators(previewPage.columnSeparators);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/60"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" /> Reset auto detection
+                            </button>
+                          </div>
+
+                          <div className="space-y-3">
+                            {manualSeparators.length > 0 ? (
+                              manualSeparators.map((separator, index) => (
+                                <div
+                                  key={`${index}-${separator}`}
+                                  className="grid gap-2 sm:grid-cols-[7rem_minmax(0,1fr)_5rem_3rem] sm:items-center"
+                                >
+                                  <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                    <GripVertical className="h-3.5 w-3.5" />
+                                    Separator {index + 1}
+                                  </label>
+                                  <input
+                                    type="range"
+                                    min={8}
+                                    max={Math.max(24, Math.round(previewPage.width - 8))}
+                                    value={separator}
+                                    onChange={(event) => setSeparator(index, Number(event.target.value))}
+                                    className="w-full accent-primary"
+                                  />
+                                  <input
+                                    type="number"
+                                    min={8}
+                                    max={Math.max(24, Math.round(previewPage.width - 8))}
+                                    value={Math.round(separator)}
+                                    onChange={(event) => setSeparator(index, Number(event.target.value))}
+                                    className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm"
+                                    aria-label={`Separator ${index + 1} position`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSeparator(index)}
+                                    className="inline-flex h-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+                                    aria-label={`Remove separator ${index + 1}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-muted-foreground">
+                                No separators yet. Add a separator to split rows manually.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!ocrExtraction && (
+                    <div className="rounded-2xl border border-border bg-background p-3">
+                      <div className="font-semibold">OCR Beta</div>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Optional for scanned PDFs. OCR accuracy depends on scan quality.
+                      </p>
+                      <label className="mt-3 inline-flex items-center gap-2 text-xs font-medium">
+                        <input
+                          type="checkbox"
+                          checked={processAllOcrPages}
+                          onChange={(event) => setProcessAllOcrPages(event.target.checked)}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        Process all pages
+                      </label>
+                      <Button
+                        variant="glass"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => void startOcr()}
+                        disabled={ocrStatus === "loading" || ocrStatus === "processing"}
+                      >
+                        {ocrStatus === "loading" || ocrStatus === "processing" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> OCR running
+                          </>
+                        ) : (
+                          "Try OCR Beta"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       )}

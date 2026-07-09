@@ -74,7 +74,7 @@ export function SeoHead({ pathname }: SeoHeadProps) {
     const metadata = getSeoMetadata(pathname);
     const canonicalUrl = getCanonicalUrl(getCanonicalPath(metadata));
     const socialDescription = metadata.socialDescription ?? metadata.description;
-    const robots = "index,follow";
+    const robots = metadata.noindex ? "noindex,follow" : "index,follow";
 
     document.title = metadata.title;
     document.documentElement.lang = "en";

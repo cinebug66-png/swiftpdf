@@ -34,6 +34,12 @@ export type Tool = {
   multiple?: boolean;
 };
 
+export const PDF_TO_EXCEL_ENABLED = false;
+
+export function isToolPublic(slug: string) {
+  return PDF_TO_EXCEL_ENABLED || slug !== "pdf-to-excel";
+}
+
 export const tools: Tool[] = [
   {
     slug: "pdf-to-word",
@@ -706,6 +712,8 @@ export const tools: Tool[] = [
     ],
   },
 ];
+
+export const publicTools = tools.filter((tool) => isToolPublic(tool.slug));
 
 export function getTool(slug: string): Tool | undefined {
   return tools.find((tool) => tool.slug === slug);

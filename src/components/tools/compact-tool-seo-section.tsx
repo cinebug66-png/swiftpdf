@@ -13,7 +13,7 @@ import {
   getCompactToolSeoContentOrFallback,
   type CompactToolSeoContent,
 } from "@/lib/compact-tool-seo-content";
-import { getTool, type Tool } from "@/lib/tools";
+import { getTool, isToolPublic, type Tool } from "@/lib/tools";
 
 type CompactToolSeoSectionProps = {
   tool: Tool;
@@ -177,6 +177,7 @@ function getStepDescription(toolName: string, index: number) {
 function getRelatedTools(content: CompactToolSeoContent, currentSlug: string) {
   const tools = content.relatedTools
     .filter((slug) => slug !== currentSlug)
+    .filter(isToolPublic)
     .map((slug) => getTool(slug))
     .filter((tool): tool is Tool => Boolean(tool));
 

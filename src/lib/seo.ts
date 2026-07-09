@@ -73,6 +73,33 @@ export function getStructuredData(metadata: SeoMetadata) {
   };
   const webpageSchema = webpageSchemaNames[metadata.path];
 
+  if (metadata.noindex) {
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": `${SITE_URL}/#website`,
+          url: `${SITE_URL}/`,
+          name: SITE_NAME,
+          description: routeMetadata["/"].description,
+          inLanguage: "en",
+        },
+        {
+          "@type": "WebPage",
+          "@id": `${canonicalUrl}#webpage`,
+          url: canonicalUrl,
+          name: metadata.title,
+          description: metadata.description,
+          isPartOf: {
+            "@id": `${SITE_URL}/#website`,
+          },
+          inLanguage: "en",
+        },
+      ],
+    };
+  }
+
   if (webpageSchema) {
     return {
       "@context": "https://schema.org",

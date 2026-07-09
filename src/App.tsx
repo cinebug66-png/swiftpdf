@@ -1,16 +1,18 @@
 import { Component, type ErrorInfo, type ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SeoHead } from "@/components/seo-head";
-import { RouterProvider, useNavigate, usePathname } from "@/lib/app-router";
+import { RouterProvider, Link, useNavigate, usePathname } from "@/lib/app-router";
+import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/site/Navbar";
+import { Footer } from "@/components/site/Footer";
 import { trackPageView } from "@/lib/analytics";
 import { getSeoMetadata } from "@/lib/seo";
-import { getTool } from "@/lib/tools";
+import { getTool, isToolPublic } from "@/lib/tools";
 import { getToolPath } from "@/lib/tool-routes";
 import HomePage from "@/pages/home-page";
 import PdfToWordPage from "@/pages/pdf-to-word-page";
 import PdfToJpgPage from "@/pages/pdf-to-jpg-page";
 import PdfToPngPage from "@/pages/pdf-to-png-page";
-import PdfToExcelPage from "@/pages/pdf-to-excel-page";
 import CompressPdfPage from "@/pages/compress-pdf-page";
 import MergePdfPage from "@/pages/merge-pdf-page";
 import WordToPdfPage from "@/pages/word-to-pdf-page";
@@ -83,7 +85,7 @@ function renderRoute(pathname: string) {
     case "/pdf-to-png":
       return <PdfToPngPage />;
     case "/pdf-to-excel":
-      return <PdfToExcelPage />;
+      return <PdfToExcelComingSoonPage />;
     case "/compress-pdf":
       return <CompressPdfPage />;
     case "/merge-pdf":
@@ -131,6 +133,36 @@ function renderRoute(pathname: string) {
   }
 }
 
+function PdfToExcelComingSoonPage() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <main className="px-4 pt-32 pb-20 sm:pt-40">
+        <section className="mx-auto max-w-2xl rounded-3xl border border-border bg-card p-6 text-center shadow-soft sm:p-10">
+          <div className="mx-auto mb-4 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+            Coming soon
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            PDF to Excel is being improved
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+            We're improving PDF to Excel accuracy and OCR support. Please try PDF to Word or PDF to JPG for now.
+          </p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button variant="hero" asChild>
+              <Link to="/#tools">Back to tools</Link>
+            </Button>
+            <Button variant="glass" asChild>
+              <Link to="/pdf-to-word">Try PDF to Word</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 function AppRoutes() {
   const pathname = usePathname();
   const navigate = useNavigate();
@@ -148,7 +180,7 @@ function AppRoutes() {
       return;
     }
 
-    const tool = getTool(slug);
+    const tool = isToolPublic(slug) ? getTool(slug) : undefined;
     navigate(tool ? getToolPath(tool.slug) : "/", { replace: true });
   }, [navigate, pathname]);
 

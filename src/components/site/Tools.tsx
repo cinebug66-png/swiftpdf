@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
-import { tools } from "@/lib/tools";
+import { publicTools } from "@/lib/tools";
 
 export function Tools() {
   return (
@@ -20,7 +20,7 @@ export function Tools() {
         </div>
 
         <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))] [grid-auto-rows:1fr] gap-3 sm:gap-5">
-          {tools.map((t) => (
+          {publicTools.map((t) => (
             <Link
               key={t.slug}
               to={getToolPath(t.slug)}

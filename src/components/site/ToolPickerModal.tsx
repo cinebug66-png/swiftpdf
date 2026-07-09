@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useNavigate } from "@/lib/app-router";
 import { getToolPath } from "@/lib/tool-routes";
 import { suggestToolsFor } from "@/lib/pending-file";
-import { tools } from "@/lib/tools";
+import { publicTools, type Tool } from "@/lib/tools";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -17,7 +17,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
   const navigate = useNavigate();
   const suggested = file ? suggestToolsFor(file) : [];
   const suggestedSlugs = new Set(suggested.map((tool) => tool.slug));
-  const others = tools.filter((tool) => !suggestedSlugs.has(tool.slug));
+  const others = publicTools.filter((tool) => !suggestedSlugs.has(tool.slug));
 
   useLockedBodyScroll(open);
 
@@ -40,7 +40,7 @@ export function ToolPickerModal({ open, onOpenChange, file }: Props) {
 
   const go = (slug: string) => {
     close();
-    const tool = tools.find((item) => item.slug === slug);
+    const tool = publicTools.find((item) => item.slug === slug);
     if (tool) {
       navigate(getToolPath(tool.slug));
     }
@@ -162,7 +162,7 @@ function ToolCard({
   onClick,
   highlight,
 }: {
-  tool: (typeof tools)[number];
+  tool: Tool;
   onClick: () => void;
   highlight?: boolean;
 }) {

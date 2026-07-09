@@ -1,4 +1,4 @@
-import { tools, type Tool } from "./tools";
+import { publicTools, type Tool } from "./tools";
 
 let pending: File[] | null = null;
 
@@ -64,7 +64,6 @@ export function suggestToolsFor(file: File): Tool[] {
         "add-page-numbers",
         "pdf-to-jpg",
         "pdf-to-png",
-        "pdf-to-excel",
         "pdf-to-word",
         "merge-pdf",
         "split-pdf",
@@ -78,7 +77,7 @@ export function suggestToolsFor(file: File): Tool[] {
         : [];
 
   return order
-    .map((slug) => tools.find((tool) => tool.slug === slug))
+    .map((slug) => publicTools.find((tool) => tool.slug === slug))
     .filter((tool): tool is Tool => Boolean(tool))
     .slice(0, 3);
 }

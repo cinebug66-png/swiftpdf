@@ -4,6 +4,7 @@ export type RouteSeoMetadata = {
   title: string;
   description: string;
   socialDescription?: string;
+  noindex?: boolean;
   type: "website";
 };
 
@@ -38,9 +39,10 @@ export const routeMetadata: Record<string, RouteSeoMetadata> = {
   },
   "/pdf-to-excel": {
     path: "/pdf-to-excel",
-    title: "PDF to Excel Online Free | Convert PDF Tables to XLSX",
+    title: "PDF to Excel is being improved | SwiftPDF",
     description:
-      "Convert PDF tables to Excel online with SwiftPDF. Extract text-based PDF tables and use OCR Beta for scanned PDFs, then download an XLSX file.",
+      "SwiftPDF is temporarily improving PDF to Excel accuracy and OCR support. Please try another PDF tool for now.",
+    noindex: true,
     type: "website",
   },
   "/compress-pdf": {
@@ -224,7 +226,6 @@ export const toolFeatureNames = [
   "PDF to Word",
   "PDF to JPG",
   "PDF to PNG",
-  "PDF to Excel",
   "Compress PDF",
   "Merge PDF",
   "Split PDF",

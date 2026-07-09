@@ -108,34 +108,34 @@ export function CompactToolSeoSection({ tool }: CompactToolSeoSectionProps) {
           </div>
         </div>
 
-        <div className="mx-auto mt-14 max-w-5xl text-center sm:mt-16">
+        <div className="related-tools-section mx-auto mt-14 max-w-5xl text-center sm:mt-16">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">
             Related tools
           </div>
           <h3 className="mt-2 text-2xl font-semibold tracking-tight">
             Continue with another PDF tool
           </h3>
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            {relatedTools.map((related) => (
+          <div className="related-tools-grid mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {relatedTools.slice(0, 3).map((related) => (
               <Link
                 key={related.slug}
                 to={getToolPath(related.slug)}
-                className="group flex min-w-0 items-center gap-4 rounded-2xl border border-border/80 bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-accent/70"
+                className="related-tool-card flex min-w-0 items-center gap-3 rounded-xl border border-border/80 bg-card p-4 text-left hover:border-primary/40 hover:bg-accent/70"
               >
                 <span
-                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${related.color} text-white shadow-soft`}
+                  className={`related-tool-icon grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${related.color} text-white`}
                 >
                   <related.icon className="h-5 w-5" />
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-foreground">
+                <span className="related-tool-copy min-w-0 flex-1">
+                  <span className="related-tool-title block text-sm font-semibold leading-5 text-foreground">
                     {related.name}
                   </span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                  <span className="related-tool-description mt-0.5 block text-xs leading-5 text-muted-foreground">
                     {related.desc}
                   </span>
                 </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </Link>
             ))}
           </div>

@@ -270,6 +270,59 @@ body.pdf-reorder-dragging {
   touch-action: none;
 }
 
+.related-tools-section {
+  position: relative;
+  height: auto;
+  min-height: auto;
+  margin-bottom: 0;
+  overflow: visible;
+  transform: none;
+  will-change: auto;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  filter: none;
+}
+
+.related-tools-grid {
+  position: relative;
+  height: auto;
+  min-height: auto;
+  overflow: visible;
+  transform: none;
+  will-change: auto;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  filter: none;
+}
+
+.related-tool-card {
+  position: relative;
+  height: auto;
+  min-height: auto;
+  width: 100%;
+  overflow: visible;
+  transform: none;
+  will-change: auto;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.related-tool-copy,
+.related-tool-title,
+.related-tool-description {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.related-tool-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
 .mobile-tools-overlay {
   position: fixed;
   inset: 0;
@@ -740,6 +793,37 @@ body.pdf-reorder-dragging {
   .sign-pdf-preview-page,
   .sign-pdf-preview-page canvas {
     max-width: 100%;
+  }
+
+  .related-tools-section {
+    height: auto;
+    min-height: auto;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .related-tools-grid {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .related-tool-card {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: auto;
+    gap: 12px;
+    overflow: visible;
+    transform: none;
+    will-change: auto;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    filter: none;
+    box-shadow: none;
   }
 }
 

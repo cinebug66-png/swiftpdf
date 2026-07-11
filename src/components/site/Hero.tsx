@@ -1,9 +1,24 @@
 import { useRef, useState } from "react";
-import { Upload, Sparkles, FileText, ArrowRight, Shield, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  ShieldCheck,
+  Smartphone,
+  Upload,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ToolPickerModal } from "./ToolPickerModal";
 import { setPendingFiles } from "@/lib/pending-file";
+
+const trustChips = [
+  { label: "Free to use", icon: CheckCircle2 },
+  { label: "Fast processing", icon: Zap },
+  { label: "Secure handling", icon: ShieldCheck },
+  { label: "Works on phone", icon: Smartphone },
+];
 
 export function Hero() {
   const [drag, setDrag] = useState(false);
@@ -30,8 +45,8 @@ export function Hero() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="mx-auto max-w-3xl text-center animate-fade-up">
           <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            Trusted by 2M+ users worldwide
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            Fast PDF tools for everyday work
           </div>
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05]">
             Convert & Manage PDFs <br className="hidden sm:block" />
@@ -45,7 +60,7 @@ export function Hero() {
             <Button
               variant="hero"
               size="xl"
-              className="h-[54px] w-[196px] rounded-[20px] !bg-[linear-gradient(135deg,#0B66FF_0%,#19B8FF_100%)] px-7 text-base font-bold text-white !shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition-[background,box-shadow,color] hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0757E6_0%,#12A8EB_100%)] hover:!shadow-[0_14px_30px_rgba(37,99,235,0.32)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#064BC7_0%,#0F95D1_100%)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:min-w-[190px]"
+              className="h-[54px] w-[196px] rounded-[20px] !bg-[linear-gradient(135deg,#0B66FF_0%,#19B8FF_100%)] px-7 text-base font-bold text-white !shadow-[0_12px_28px_rgba(37,99,235,0.24)] transition-[background,box-shadow,color] hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0757E6_0%,#12A8EB_100%)] hover:!shadow-[0_14px_30px_rgba(37,99,235,0.28)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#064BC7_0%,#0F95D1_100%)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:min-w-[190px]"
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-5 w-5 text-white" /> Upload PDF
@@ -96,19 +111,20 @@ export function Hero() {
               {file ? file.name : "Drop your PDF here or click to browse"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Files are processed securely and deleted after 1 hour.
+              Choose a PDF to start, then pick the tool you need.
             </p>
 
-            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-primary" /> Secure
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-primary" /> Lightning fast
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-primary" /> All formats
-              </span>
+            <div className="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-3 text-xs text-muted-foreground sm:max-w-none sm:grid-cols-4 sm:gap-4">
+              {trustChips.map((chip) => {
+                const Icon = chip.icon;
+
+                return (
+                  <span key={chip.label} className="inline-flex items-center justify-center gap-1.5">
+                    <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                    {chip.label}
+                  </span>
+                );
+              })}
             </div>
           </label>
         </div>

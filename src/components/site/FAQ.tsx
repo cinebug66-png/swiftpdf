@@ -7,7 +7,7 @@ import {
 
 const faqs = [
   { q: "Is SwiftPDF really free?", a: "Yes — every core tool is free with no watermarks, no signup, and no daily limits." },
-  { q: "Are my files safe?", a: "Files are encrypted in transit and at rest, and automatically deleted after 1 hour." },
+  { q: "Are my files safe?", a: "SwiftPDF is designed for secure handling and does not require an account for core tools." },
   { q: "Do I need to install anything?", a: "No. SwiftPDF runs entirely in your browser on any device." },
   { q: "What file size can I upload?", a: "Up to 100 MB per file on the free plan. Need more? Get in touch." },
   { q: "Does it work on mobile?", a: "Absolutely. SwiftPDF is fully responsive and feels native on phones and tablets." },

@@ -1,8 +1,8 @@
 import { Zap, Shield, UserX, Sparkles, Smartphone } from "lucide-react";
 
 const items = [
-  { icon: Zap, title: "Ultra fast processing", desc: "Optimized engines convert files in under 3 seconds." },
-  { icon: Shield, title: "Bank-grade security", desc: "256-bit encryption. Files auto-deleted after 1 hour." },
+  { icon: Zap, title: "Fast processing", desc: "Optimized for quick everyday PDF tasks." },
+  { icon: Shield, title: "Secure handling", desc: "Built to handle PDF work carefully without unnecessary friction." },
   { icon: UserX, title: "No sign up required", desc: "Use every tool instantly — no accounts, no friction." },
   { icon: Sparkles, title: "Clean user experience", desc: "Beautifully designed for clarity and speed." },
   { icon: Smartphone, title: "Works everywhere", desc: "Mobile, tablet, desktop. Same delightful feel." },

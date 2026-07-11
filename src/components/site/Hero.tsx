@@ -60,7 +60,7 @@ export function Hero() {
             <Button
               variant="hero"
               size="xl"
-              className="h-[54px] w-[196px] rounded-[20px] !bg-[linear-gradient(135deg,#0B66FF_0%,#19B8FF_100%)] px-7 text-base font-bold text-white !shadow-[0_12px_28px_rgba(37,99,235,0.24)] transition-[background,box-shadow,color] hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0757E6_0%,#12A8EB_100%)] hover:!shadow-[0_14px_30px_rgba(37,99,235,0.28)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#064BC7_0%,#0F95D1_100%)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:min-w-[190px]"
+              className="h-14 w-[228px] rounded-[21px] border border-white/35 !bg-[linear-gradient(135deg,#064FE8_0%,#087BFF_54%,#00A3FF_100%)] px-8 text-base font-extrabold text-white !shadow-[0_10px_24px_rgba(7,91,255,0.30)] transition-[background,box-shadow,color] hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0547D1_0%,#076EE8_54%,#0094EA_100%)] hover:!shadow-[0_10px_24px_rgba(7,91,255,0.34)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#043DB5_0%,#065FCB_54%,#0082D2_100%)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:min-w-[200px]"
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-5 w-5 text-white" /> Upload PDF

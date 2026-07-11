@@ -41,11 +41,21 @@ export function Hero() {
             Fast, secure PDF tools — all in your browser.
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Button variant="hero" size="xl" onClick={() => inputRef.current?.click()}>
-              <Upload className="w-5 h-5" /> Upload PDF
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              variant="hero"
+              size="xl"
+              className="h-[54px] w-[196px] rounded-[20px] !bg-[linear-gradient(135deg,#0B66FF_0%,#19B8FF_100%)] px-7 text-base font-bold text-white !shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition-[background,box-shadow,color] hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0757E6_0%,#12A8EB_100%)] hover:!shadow-[0_14px_30px_rgba(37,99,235,0.32)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#064BC7_0%,#0F95D1_100%)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto sm:min-w-[190px]"
+              onClick={() => inputRef.current?.click()}
+            >
+              <Upload className="h-5 w-5 text-white" /> Upload PDF
             </Button>
-            <Button variant="glass" size="xl" asChild>
+            <Button
+              variant="outline"
+              size="xl"
+              className="h-[54px] w-[196px] rounded-[20px] border-primary/15 bg-background/70 px-7 text-base font-semibold text-foreground/85 shadow-none hover:border-primary/25 hover:bg-background/90 hover:text-foreground sm:w-auto sm:min-w-[190px]"
+              asChild
+            >
               <a href="#tools">
                 Explore Tools <ArrowRight className="w-4 h-4" />
               </a>

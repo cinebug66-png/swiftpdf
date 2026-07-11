@@ -5,8 +5,8 @@ import { RouterProvider, Link, useNavigate, usePathname } from "@/lib/app-router
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
-import { trackPageView } from "@/lib/analytics";
-import { getSeoMetadata } from "@/lib/seo";
+import { trackEvent, trackPageView } from "@/lib/analytics";
+import { getSeoMetadata, routeMetadata } from "@/lib/seo";
 import { getTool, isToolPublic } from "@/lib/tools";
 import { getToolPath } from "@/lib/tool-routes";
 import HomePage from "@/pages/home-page";
@@ -32,6 +32,7 @@ import AboutPage from "@/pages/about-page";
 import ContactPage from "@/pages/contact-page";
 import PrivacyPolicyPage from "@/pages/privacy-policy-page";
 import TermsPage from "@/pages/terms-page";
+import NotFoundPage from "@/pages/not-found-page";
 
 type RouteErrorBoundaryProps = {
   children: ReactNode;
@@ -129,7 +130,7 @@ function renderRoute(pathname: string) {
     case "/terms":
       return <TermsPage />;
     default:
-      return <HomePage />;
+      return <NotFoundPage />;
   }
 }
 
@@ -172,6 +173,14 @@ function AppRoutes() {
   }, [pathname]);
 
   useEffect(() => {
+    if (routeMetadata[pathname]) return;
+
+    trackEvent("page_not_found", {
+      path: pathname,
+    });
+  }, [pathname]);
+
+  useEffect(() => {
     if (!pathname.startsWith("/tools/")) return;
 
     const slug = pathname.replace(/^\/tools\//, "");
@@ -181,7 +190,9 @@ function AppRoutes() {
     }
 
     const tool = isToolPublic(slug) ? getTool(slug) : undefined;
-    navigate(tool ? getToolPath(tool.slug) : "/", { replace: true });
+    if (tool) {
+      navigate(getToolPath(tool.slug), { replace: true });
+    }
   }, [navigate, pathname]);
 
   return (

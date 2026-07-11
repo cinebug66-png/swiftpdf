@@ -24,6 +24,7 @@ export function getSeoMetadata(pathname: string): SeoMetadata {
       path: pathname,
       title: `Page Not Found | ${SITE_NAME}`,
       description: "The requested SwiftPDF page could not be found.",
+      noindex: true,
       type: "website",
     }
   );

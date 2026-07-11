@@ -45,7 +45,7 @@ export function Navbar() {
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent">
                 <img
-                  src="/brand/swiftpdf-logo-icon.png"
+                  src="/brand/swiftpdf-icon.png"
                   alt=""
                   className="block h-9 w-9 object-contain"
                   width="36"

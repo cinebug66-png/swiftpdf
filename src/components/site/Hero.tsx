@@ -107,9 +107,16 @@ export function Hero() {
             <div className="mx-auto mb-5 grid place-items-center w-16 h-16 rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow group-hover:scale-110 transition-transform">
               <Upload className="w-7 h-7" />
             </div>
-            <p className="responsive-file-name mx-auto text-lg font-medium" title={file?.name}>
-              {file ? file.name : "Drop your PDF here or click to browse"}
-            </p>
+            {file ? (
+              <p className="responsive-file-name mx-auto text-lg font-medium" title={file.name}>
+                {file.name}
+              </p>
+            ) : (
+              <p className="mx-auto max-w-[18rem] text-base font-semibold leading-snug sm:max-w-none sm:text-lg">
+                <span className="sm:hidden">Tap to upload your PDF</span>
+                <span className="hidden sm:inline">Drag &amp; drop your PDF here, or browse</span>
+              </p>
+            )}
             <p className="mt-1 text-sm text-muted-foreground">
               Choose a PDF to start, then pick the tool you need.
             </p>

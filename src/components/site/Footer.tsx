@@ -45,11 +45,11 @@ export function Footer() {
                 className="flex items-center gap-2.5 font-semibold tracking-tight"
                 aria-label="SwiftPDF home"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent">
                   <img
                     src="/brand/swiftpdf-logo-icon.png"
                     alt=""
-                    className="h-9 w-9 object-contain"
+                    className="block h-9 w-9 object-contain"
                     width="36"
                     height="36"
                   />

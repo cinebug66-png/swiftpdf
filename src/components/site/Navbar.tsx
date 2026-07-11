@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Moon, Sun, FileText, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { Link } from "@/lib/app-router";
@@ -38,12 +38,22 @@ export function Navbar() {
             scrolled ? "glass shadow-soft" : "bg-transparent",
           )}
         >
-          <Link to="/" className="flex min-w-0 items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
-              <FileText className="w-4 h-4" />
-            </span>
-            <span className="text-lg">SwiftPDF</span>
-          </Link>
+            <Link
+              to="/"
+              className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight"
+              aria-label="SwiftPDF home"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center">
+                <img
+                  src="/brand/swiftpdf-logo-icon.png"
+                  alt=""
+                  className="h-9 w-9 object-contain sm:h-10 sm:w-10"
+                  width="40"
+                  height="40"
+                />
+              </span>
+              <span className="text-lg leading-none">SwiftPDF</span>
+            </Link>
 
           <div className="hidden md:flex items-center gap-8">
             {links.map((l) => (

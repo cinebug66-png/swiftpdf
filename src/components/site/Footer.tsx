@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import { Link } from "@/lib/app-router";
 
 const columns = [
@@ -41,12 +40,22 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
-                <FileText className="h-4 w-4" />
-              </span>
-              <span className="text-lg">SwiftPDF</span>
-            </Link>
+              <Link
+                to="/"
+                className="flex items-center gap-2.5 font-semibold tracking-tight"
+                aria-label="SwiftPDF home"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center">
+                  <img
+                    src="/brand/swiftpdf-logo-icon.png"
+                    alt=""
+                    className="h-9 w-9 object-contain"
+                    width="36"
+                    height="36"
+                  />
+                </span>
+                <span className="text-lg leading-none">SwiftPDF</span>
+              </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
               Fast, secure, browser-based PDF tools. Convert, compress, merge, split and sign PDFs
               for free.

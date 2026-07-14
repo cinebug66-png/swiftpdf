@@ -43,8 +43,8 @@ export function Hero() {
       <div className="pointer-events-none absolute top-20 -right-32 w-[520px] h-[520px] rounded-full bg-primary-glow/25 blur-3xl animate-blob [animation-delay:-6s]" />
 
       <div className="mx-auto max-w-7xl px-4">
-        <div className="mx-auto max-w-3xl text-center animate-fade-up">
-          <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-blue-200/80 bg-white/80 px-4 py-1.5 text-xs font-medium text-slate-700 shadow-[0_1px_0_rgba(37,99,235,0.08)] transition-none">
             <Zap className="w-3.5 h-3.5 text-primary" />
             Fast PDF tools for everyday work
           </div>
@@ -58,9 +58,9 @@ export function Hero() {
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
-              variant="hero"
+              variant="default"
               size="xl"
-              className="h-14 w-[228px] rounded-[21px] border border-white/25 !bg-[#1677FF] !bg-none px-8 text-base font-bold text-white !shadow-[0_8px_20px_rgba(22,119,255,0.24)] transition-[background-color,box-shadow,color] hover:translate-y-0 hover:!bg-[#0F68E8] hover:!bg-none hover:!shadow-[0_8px_20px_rgba(22,119,255,0.28)] active:translate-y-0 active:!bg-[#0B5CCD] active:!bg-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:h-12 sm:w-auto sm:min-w-[184px] sm:rounded-2xl sm:px-8 sm:font-semibold"
+              className="h-14 w-[228px] rounded-[21px] border border-white/35 !bg-[linear-gradient(135deg,#064FE8_0%,#087BFF_54%,#00A3FF_100%)] px-8 text-base font-extrabold text-white !shadow-[0_10px_24px_rgba(7,91,255,0.30)] transition-none hover:translate-y-0 hover:!bg-[linear-gradient(135deg,#0547D1_0%,#076EE8_54%,#0094EA_100%)] hover:!shadow-[0_10px_24px_rgba(7,91,255,0.30)] active:translate-y-0 active:!bg-[linear-gradient(135deg,#043DB5_0%,#065FCB_54%,#0082D2_100%)] focus-visible:ring-2 focus-visible:ring-[#1677FF] focus-visible:ring-offset-2 sm:h-12 sm:w-auto sm:min-w-[184px] sm:rounded-2xl sm:border-white/25 sm:!bg-[#1677FF] sm:!bg-none sm:px-8 sm:font-semibold sm:!shadow-[0_8px_20px_rgba(22,119,255,0.22)] sm:hover:!bg-[#0F68E8] sm:hover:!bg-none sm:hover:!shadow-[0_8px_20px_rgba(22,119,255,0.24)] sm:active:!bg-[#0B5CCD] sm:active:!bg-none"
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="h-5 w-5 text-white" /> Upload PDF
@@ -68,7 +68,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="xl"
-              className="h-[54px] w-[196px] rounded-[20px] border-primary/15 bg-background/70 px-7 text-base font-semibold text-foreground/85 shadow-none hover:border-primary/25 hover:bg-background/90 hover:text-foreground sm:w-auto sm:min-w-[190px]"
+              className="h-[54px] w-[196px] rounded-[20px] border-blue-200/80 !bg-white/70 px-7 text-base font-semibold text-slate-800 !shadow-none transition-none hover:border-blue-300 hover:!bg-white/90 hover:text-slate-900 sm:w-auto sm:min-w-[190px]"
               asChild
             >
               <a href="#tools">
